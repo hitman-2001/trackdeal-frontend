@@ -40,12 +40,18 @@ const store = useStore();
 const route = useRoute();
 const isEducation = computed(() => store.getters['organization/isEducationTenant']);
 
-const settingsMenu = computed(() => [
-  { name: isEducation.value ? 'Institute Profile' : 'Organization', to: '/app/settings/org', icon: PhBuildings, permission: 'organizations.read' },
-  { name: isEducation.value ? 'Campuses & Centres' : 'Branches', to: '/app/settings/branches', icon: PhMapPin, permission: 'branches.read' },
-  { name: isEducation.value ? 'Staff Directory' : 'Users', to: '/app/settings/users', icon: PhUsersThree, permission: 'users.read' },
-  { name: 'Roles & Permissions', to: '/app/settings/roles', icon: PhShieldCheck, permission: 'roles.read' },
-]);
+const settingsMenu = computed(() => {
+  const items = [
+    { name: isEducation.value ? 'Institute Profile' : 'Organization', to: '/app/settings/org', icon: PhBuildings, permission: 'organizations.read' },
+    { name: isEducation.value ? 'Campuses & Centres' : 'Branches', to: '/app/settings/branches', icon: PhMapPin, permission: 'branches.read' },
+    { name: isEducation.value ? 'Staff Directory' : 'Users', to: '/app/settings/users', icon: PhUsersThree, permission: 'users.read' },
+  ];
+  // Only include Roles & Permissions tab for non-education verticals
+  if (!isEducation.value) {
+    items.push({ name: 'Roles & Permissions', to: '/app/settings/roles', icon: PhShieldCheck, permission: 'roles.read' });
+  }
+  return items;
+});
 
 const isActive = (to) => route.path === to || route.path.startsWith(`${to}/`);
 

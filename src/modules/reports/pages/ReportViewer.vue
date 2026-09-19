@@ -5,14 +5,23 @@
       <div>
         <h2 class="font-heading text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 capitalize">
           <PhTrendUp :size="20" class="text-primary" />
-          <span>{{ reportTitle }} Analytics Report</span>
+          <span>{{ reportTitle }}</span>
         </h2>
         <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-          Dynamic database metrics compilation and data visualization dashboard.
+          Realtime database metrics compilation and data visualization dashboard.
         </p>
       </div>
 
       <div class="flex items-center gap-2.5 shrink-0 flex-wrap">
+        <button 
+          @click="loadData"
+          :disabled="loading"
+          class="btn btn-sm btn-ghost text-xs h-8 px-3 gap-1.5"
+          title="Refresh live database data"
+        >
+          <PhArrowsClockwise :size="13" :class="{ 'animate-spin': loading }" />
+          <span>Refresh</span>
+        </button>
         <button 
           @click="shareReport"
           class="btn btn-sm btn-secondary text-xs h-8 px-3"
@@ -66,11 +75,17 @@
         <h4 class="font-heading font-bold text-slate-800 dark:text-slate-200 uppercase text-[9px] tracking-wider">
           Compiled Tabular Records
         </h4>
-        <span class="text-[9px] font-mono text-slate-450">Sample Rows: {{ records.length }}</span>
+        <span class="text-[9px] font-mono text-slate-450">Active Records: {{ records.length }}</span>
       </div>
 
       <div class="overflow-x-auto">
-        <table class="w-full text-xs text-left">
+        <div v-if="loading" class="py-8 text-center text-slate-400">
+          Loading live database records...
+        </div>
+        <div v-else-if="records.length === 0" class="py-8 text-center text-slate-400">
+          No records found in current database scope.
+        </div>
+        <table v-else class="w-full text-xs text-left">
           <thead>
             <tr class="border-b border-default text-slate-400 font-bold uppercase text-[9px] tracking-wider bg-slate-50/50 dark:bg-slate-900/30">
               <th v-for="col in tableHeaders" :key="col" class="py-2.5 px-3 capitalize">{{ col }}</th>
@@ -83,7 +98,7 @@
                   {{ formatCurrency(row[col]) }}
                 </span>
                 <span v-else class="text-slate-700 dark:text-slate-350">
-                  {{ row[col] }}
+                  {{ row[col] || '—' }}
                 </span>
               </td>
             </tr>
@@ -95,278 +110,303 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useStore } from 'vuex';
-import { PhTrendUp, PhShare, PhBookOpen } from '@phosphor-icons/vue';
+import { PhTrendUp, PhShare, PhBookOpen, PhArrowsClockwise } from '@phosphor-icons/vue';
 import KPIWidget from '../components/KPIWidget.vue';
 import AnalyticsChart from '../components/AnalyticsChart.vue';
 import ForecastChart from '../components/ForecastChart.vue';
+import {
+  fetchEducationAnalytics,
+  fetchEducationLeads,
+  fetchEducationClasses,
+} from '@/modules/education/api/endpoints';
+import { fetchReportsDashboardStats } from '@/modules/reports/api/endpoints';
 
 const route = useRoute();
 const store = useStore();
+const isEducation = computed(() => store.getters['organization/isEducationTenant']);
 
 const reportType = computed(() => route.params.type || 'leads');
 
+const loading = ref(false);
+const liveAnalytics = ref(null);
+const liveLeads = ref([]);
+const liveClasses = ref([]);
+
 const reportTitle = computed(() => {
-  const mapping = {
-    leads: 'Lead Funnel & Source',
-    sales: 'Sales Deals Pipeline',
-    properties: 'Inventory & Projects Aging',
-    commissions: 'Expected vs Collected Commission',
-    performance: 'Agent SLA & Compliance',
-    forecast: 'Revenue Forecast'
+  if (isEducation.value) {
+    const educationMap = {
+      leads: 'Student Inquiries & Channel Funnel',
+      sales: 'Admissions & Enrollment Velocity',
+      properties: 'Course Batches & Capacity Distribution',
+      commissions: 'Expected vs Collected Fees & Revenues',
+      performance: 'Counselor SLA & Productivity Audit',
+      forecast: 'Quarterly Admissions & Fee Forecast',
+      branch: 'Campus Branch Performance Metrics',
+    };
+    return educationMap[reportType.value] || `${reportType.value} Analytics Report`;
+  }
+
+  const realEstateMap = {
+    leads: 'Lead Funnel & Source Performance',
+    sales: 'Sales Deals Pipeline & Close Ratios',
+    properties: 'Inventory & Projects Aging Report',
+    commissions: 'Expected vs Collected Commission Ledger',
+    performance: 'Agent SLA & Outreach Compliance',
+    forecast: 'Revenue Forecast & Milestone Clearings',
+    branch: 'Agency Branch Performance Metrics',
   };
-  return mapping[reportType.value] || reportType.value;
+  return realEstateMap[reportType.value] || `${reportType.value} Analytics Report`;
+});
+
+async function loadData() {
+  loading.value = true;
+  try {
+    if (isEducation.value) {
+      const [analyticsRes, leadsRes, classesRes] = await Promise.allSettled([
+        fetchEducationAnalytics({ range: 'all' }),
+        fetchEducationLeads({ limit: 20 }),
+        fetchEducationClasses({ limit: 20 }),
+      ]);
+      if (analyticsRes.status === 'fulfilled') {
+        liveAnalytics.value = analyticsRes.value?.data || analyticsRes.value;
+      }
+      if (leadsRes.status === 'fulfilled') {
+        liveLeads.value = leadsRes.value?.data?.data || leadsRes.value?.data || [];
+      }
+      if (classesRes.status === 'fulfilled') {
+        liveClasses.value = classesRes.value?.data?.data || classesRes.value?.data || [];
+      }
+    } else {
+      const statsRes = await fetchReportsDashboardStats({ range: 'all' });
+      liveAnalytics.value = statsRes?.data || statsRes;
+    }
+  } catch (err) {
+    console.warn('Failed to load dynamic report viewer data:', err);
+  } finally {
+    loading.value = false;
+  }
+}
+
+watch(reportType, () => {
+  loadData();
+});
+
+onMounted(() => {
+  loadData();
 });
 
 const reportKpis = computed(() => {
   const t = reportType.value;
-  
+  const metrics = liveAnalytics.value?.summaryMetrics || {
+    totalInquiries: 0,
+    confirmedConversions: 0,
+    conversionRate: 0,
+    pipelineInProgress: 0,
+    slaCompliance: 100,
+    totalClasses: 0,
+    totalStudents: 0,
+  };
+
+  if (isEducation.value) {
+    if (t === 'leads') {
+      return [
+        { title: 'Total Inquiries Sourced', value: String(metrics.totalInquiries), description: 'Dynamic intake registrations', trend: 'Live', trendDirection: 'up' },
+        { title: 'Inquiries In Progress', value: String(metrics.pipelineInProgress), description: 'In counseling or trial demo', trend: 'Live', trendDirection: 'up' },
+        { title: 'Confirmed Enrollments', value: String(metrics.confirmedConversions), description: 'Students enrolled in cohorts', trend: 'Live', trendDirection: 'up' },
+        { title: 'Overall Conversion Rate', value: `${metrics.conversionRate}%`, description: 'Leads converted to students', trend: 'Live', trendDirection: 'up' },
+      ];
+    } else if (t === 'sales') {
+      return [
+        { title: 'Confirmed Enrollments', value: String(metrics.confirmedConversions), description: 'Registered students enrolled', trend: 'Live', trendDirection: 'up' },
+        { title: 'Admissions Conversion Rate', value: `${metrics.conversionRate}%`, description: 'Intake ratio benchmark', trend: 'Live', trendDirection: 'up' },
+        { title: 'Inquiries In Progress', value: String(metrics.pipelineInProgress), description: 'Trial class sessions scheduled', trend: 'Live', trendDirection: 'up' },
+        { title: 'Active Class Batches', value: String(metrics.totalClasses || liveClasses.value.length), description: 'Ongoing academic cohorts', trend: 'Live', trendDirection: 'up' },
+      ];
+    } else if (t === 'properties') {
+      const classCount = metrics.totalClasses || liveClasses.value.length || 0;
+      const studentCount = metrics.totalStudents || 0;
+      return [
+        { title: 'Total Course Batches', value: String(classCount), description: 'Active academic batches', trend: 'Live', trendDirection: 'up' },
+        { title: 'Active Students Enrolled', value: String(studentCount), description: 'Total matriculated students', trend: 'Live', trendDirection: 'up' },
+        { title: 'Avg Cohort Capacity', value: classCount > 0 ? String(Math.round(studentCount / classCount)) : '0', description: 'Students per active batch', trend: 'Live', trendDirection: 'up' },
+        { title: 'Course Offerings Active', value: String(classCount), description: 'Curriculum streams live', trend: 'Live', trendDirection: 'up' },
+      ];
+    } else if (t === 'commissions') {
+      return [
+        { title: 'Enrolled Students', value: String(metrics.confirmedConversions), description: 'Fee eligible admissions', trend: 'Live', trendDirection: 'up' },
+        { title: 'Inquiries In Progress', value: String(metrics.pipelineInProgress), description: 'Expected next fee collections', trend: 'Live', trendDirection: 'up' },
+        { title: 'Intake Conversion Yield', value: `${metrics.conversionRate}%`, description: 'Confirmed enrollments ratio', trend: 'Live', trendDirection: 'up' },
+        { title: 'Total Academic Batches', value: String(metrics.totalClasses || liveClasses.value.length), description: 'Active class cohorts', trend: 'Live', trendDirection: 'up' },
+      ];
+    } else if (t === 'performance') {
+      const counselors = liveAnalytics.value?.counselorPerformanceData || [];
+      return [
+        { title: 'Total Admissions Closed', value: String(metrics.confirmedConversions), description: 'Confirmed by counselors', trend: 'Live', trendDirection: 'up' },
+        { title: 'Active Counseling Staff', value: String(counselors.length), description: 'Assigned counselor team', trend: 'Live', trendDirection: 'up' },
+        { title: 'Inquiries Under Counseling', value: String(metrics.pipelineInProgress), description: 'Counseling sessions queued', trend: 'Live', trendDirection: 'up' },
+        { title: 'Overall Conversion Rate', value: `${metrics.conversionRate}%`, description: 'Average admissions success rate', trend: 'Live', trendDirection: 'up' },
+      ];
+    } else {
+      return [
+        { title: 'Expected Intake (30d)', value: String(Math.round(metrics.totalInquiries * 0.4)), description: 'Weighted 30d forecast', trend: 'Live', trendDirection: 'up' },
+        { title: 'Expected Intake (60d)', value: String(Math.round(metrics.totalInquiries * 0.7)), description: 'Weighted 60d forecast', trend: 'Live', trendDirection: 'up' },
+        { title: 'Expected Intake (90d)', value: String(metrics.totalInquiries), description: 'Weighted 90d forecast', trend: 'Live', trendDirection: 'up' },
+        { title: 'Pipeline In Progress', value: String(metrics.pipelineInProgress), description: 'Current active trials pool', trend: 'Live', trendDirection: 'up' },
+      ];
+    }
+  }
+
+  // Real Estate KPIs
+  const leadTotal = metrics.totalInquiries || 0;
+  const closedTotal = metrics.confirmedConversions || 0;
+  const inNegotiation = metrics.pipelineInProgress || 0;
+
   if (t === 'leads') {
     return [
-      { title: 'Total Leads Sourced', value: '450', description: 'Leads registered in period', trend: '12%', trendDirection: 'up' },
-      { title: 'Funnel Conversion Rate', value: '24.2%', description: 'Leads converted to won deals', trend: '3.4%', trendDirection: 'up' },
-      { title: 'Lost Leads Count', value: '82', description: 'Leads marked lost', trend: '2.1%', trendDirection: 'down' },
-      { title: 'Avg Response SLA', value: '1.8 Hrs', description: 'Outreach response speed', trend: '15%', trendDirection: 'up' }
+      { title: 'Total Leads Sourced', value: String(leadTotal), description: 'Database pipeline inquiries', trend: 'Live', trendDirection: 'up' },
+      { title: 'Leads In Progress', value: String(inNegotiation), description: 'Active deal discussions', trend: 'Live', trendDirection: 'up' },
+      { title: 'Closed Deals Count', value: String(closedTotal), description: 'Confirmed property bookings', trend: 'Live', trendDirection: 'up' },
+      { title: 'Funnel Conversion Rate', value: `${metrics.conversionRate}%`, description: 'Leads converted to won deals', trend: 'Live', trendDirection: 'up' },
     ];
   } else if (t === 'sales') {
     return [
-      { title: 'Won Deals Count', value: '38', description: 'Confirmed B2B bookings', trend: '18%', trendDirection: 'up' },
-      { title: 'Deal Win Rate', value: '72.4%', description: 'Booking conversions target met', trend: '5.2%', trendDirection: 'up' },
-      { title: 'Average Sales Cycle', value: '42 Days', description: 'Lead-to-booking calendar days', trend: '4 Days', trendDirection: 'up' },
-      { title: 'Gross Deal Volume', value: '₹12,45,00,000', description: 'Base contract value sum', trend: '11%', trendDirection: 'up' }
-    ];
-  } else if (t === 'properties') {
-    return [
-      { title: 'Total Listings units', value: '180', description: 'Units catalog inventory', trend: '25%', trendDirection: 'up' },
-      { title: 'Available inventory', value: '84', description: 'Available for reservation', trend: '12%', trendDirection: 'down' },
-      { title: 'Active Hold Reservations', value: '18', description: 'Units locked under SLA hold', trend: '10%', trendDirection: 'up' },
-      { title: 'Average aging period', value: '15 Days', description: 'Avg hold duration before sold', trend: '2 Days', trendDirection: 'down' }
-    ];
-  } else if (t === 'commissions') {
-    return [
-      { title: 'Expected Revenue', value: '₹55,00,000', description: 'Sum of won deal values commissions', trend: '12%', trendDirection: 'up' },
-      { title: 'Collected Revenue', value: '₹45,00,000', description: 'Gross bank cleared collections', trend: '15%', trendDirection: 'up' },
-      { title: 'Outstanding collections', value: '₹22,50,000', description: 'Outstanding raised invoice balances', trend: '4%', trendDirection: 'up' },
-      { title: 'Clawbacks exposures', value: '₹3,60,000', description: 'Cancelled deals recovery values', trend: '10%', trendDirection: 'down' }
-    ];
-  } else if (t === 'performance') {
-    return [
-      { title: 'SLA Compliance Rate', value: '94.2%', description: 'Follow-ups met inside 2 hours', trend: '2.5%', trendDirection: 'up' },
-      { title: 'Agent follow-up met', value: '284', description: 'Met outreach follow-ups count', trend: '11%', trendDirection: 'up' },
-      { title: 'Branch Productivity', value: '₹4.2 Cr', description: 'Avg sales closed volume per branch', trend: '8%', trendDirection: 'up' },
-      { title: 'WhatsApp compliance', value: '98.5%', description: 'Outreach messaging compliance', trend: '1.2%', trendDirection: 'up' }
+      { title: 'Won Deals Count', value: String(closedTotal), description: 'Confirmed property bookings', trend: 'Live', trendDirection: 'up' },
+      { title: 'Deal Win Rate', value: `${metrics.conversionRate}%`, description: 'Booking conversions target met', trend: 'Live', trendDirection: 'up' },
+      { title: 'Active Negotiations', value: String(inNegotiation), description: 'Pipeline under documentation', trend: 'Live', trendDirection: 'up' },
+      { title: 'Total Leads Pool', value: String(leadTotal), description: 'Total registered client accounts', trend: 'Live', trendDirection: 'up' },
     ];
   } else {
-    // forecast
     return [
-      { title: '30 Day forecast', value: '₹18,50,000', description: 'Expected commission clearings', trend: '15%', trendDirection: 'up' },
-      { title: '60 Day forecast', value: '₹24,50,000', description: 'Agreement milestone payments expected', trend: '10%', trendDirection: 'up' },
-      { title: '90 Day forecast', value: '₹12,00,000', description: 'Registration clearings expected', trend: '5%', trendDirection: 'up' },
-      { title: 'Total Forecast Value', value: '₹55,00,000', description: 'Total probability weighted forecast', trend: '11%', trendDirection: 'up' }
+      { title: 'Active Pipeline Deals', value: String(inNegotiation), description: 'Deals in negotiation stages', trend: 'Live', trendDirection: 'up' },
+      { title: 'Closed Transactions', value: String(closedTotal), description: 'Settled transaction count', trend: 'Live', trendDirection: 'up' },
+      { title: 'Conversion Rate', value: `${metrics.conversionRate}%`, description: 'Closing percentage ratio', trend: 'Live', trendDirection: 'up' },
+      { title: 'SLA Compliance Rate', value: `${metrics.slaCompliance}%`, description: 'Speed to client follow-up', trend: 'Live', trendDirection: 'up' },
     ];
   }
 });
 
 const reportCharts = computed(() => {
-  const t = reportType.value;
-  
-  if (t === 'leads') {
-    return [
-      {
-        title: 'Lead Conversion Funnel',
-        subtitle: 'Conversion stages statistics',
-        type: 'funnel',
-        data: [
-          { label: 'Sourced Leads', value: 450, percent: 100 },
-          { label: 'Outreach Contacted', value: 380, percent: 84 },
-          { label: 'Site Visit Scheduled', value: 240, percent: 53 },
-          { label: 'Token Paid', value: 120, percent: 26 },
-          { label: 'Won Deals', value: 110, percent: 24 }
-        ]
-      },
-      {
-        title: 'Lead Source Performance',
-        subtitle: 'Sourced channels ratio comparison',
-        type: 'donut',
-        data: [
-          { label: 'WhatsApp Campaign', value: 180, percent: 40, color: '#10b981' },
-          { label: 'Google Search Ads', value: 135, percent: 30, color: '#3b82f6' },
-          { label: 'Organic Referrals', value: 90, percent: 20, color: '#a855f7' },
-          { label: 'Direct Walk-In', value: 45, percent: 10, color: '#f59e0b' }
-        ]
-      }
-    ];
-  } else if (t === 'sales') {
-    return [
-      {
-        title: 'Sales Booking Funnel',
-        subtitle: 'Confirmed deals milestones funnel',
-        type: 'funnel',
-        data: [
-          { label: 'Reservations Holds', value: 120, percent: 100 },
-          { label: 'Token Deposits Cleared', value: 90, percent: 75 },
-          { label: 'Builder Allotment Letters', value: 85, percent: 70 },
-          { label: 'Agreement Contracts Signed', value: 50, percent: 41 },
-          { label: 'Registration Done', value: 38, percent: 31 }
-        ]
-      },
-      {
-        title: 'Sales win rate Trends',
-        subtitle: 'Monthly win rate trends',
-        type: 'line',
-        data: [
-          { label: 'Jan', value: 65 },
-          { label: 'Feb', value: 68 },
-          { label: 'Mar', value: 74 },
-          { label: 'Apr', value: 70 },
-          { label: 'May', value: 72 }
-        ]
-      }
-    ];
-  } else if (t === 'properties') {
-    return [
-      {
-        title: 'Listings Status Ratio',
-        subtitle: 'Current unit inventory distributions',
-        type: 'donut',
-        data: [
-          { label: 'Available', value: 84, percent: 46, color: '#10b981' },
-          { label: 'Reserved Holds', value: 18, percent: 10, color: '#f59e0b' },
-          { label: 'Blocked Waitlist', value: 12, percent: 7, color: '#3b82f6' },
-          { label: 'Sold Units', value: 66, percent: 37, color: '#ef4444' }
-        ]
-      },
-      {
-        title: 'Active Holds Aging Trend',
-        subtitle: 'Average holds duration trend (days)',
-        type: 'line',
-        data: [
-          { label: 'Wk 1', value: 12 },
-          { label: 'Wk 2', value: 15 },
-          { label: 'Wk 3', value: 18 },
-          { label: 'Wk 4', value: 14 }
-        ]
-      }
-    ];
-  } else if (t === 'commissions') {
-    return [
-      {
-        title: 'Billing Invoice Distributions',
-        subtitle: 'Billing collection stage values ratios',
-        type: 'donut',
-        data: [
-          { label: 'Expected Unbilled', value: 1800000, percent: 32, color: '#94a3b8' },
-          { label: 'Invoiced Outstanding', value: 2250000, percent: 41, color: '#3b82f6' },
-          { label: 'Collected Paid', value: 1500000, percent: 27, color: '#10b981' }
-        ]
-      },
-      {
-        title: 'Collections Revenue Trend',
-        subtitle: 'Cleared bank deposits trends (INR)',
-        type: 'line',
-        data: [
-          { label: 'Jan', value: 1200000 },
-          { label: 'Feb', value: 1800000 },
-          { label: 'Mar', value: 2400000 },
-          { label: 'Apr', value: 3100000 },
-          { label: 'May', value: 4500000 }
-        ]
-      }
-    ];
-  } else {
-    // performance
-    return [
-      {
-        title: 'Outreach compliance ratio',
-        subtitle: 'Met compliance target channels ratio',
-        type: 'donut',
-        data: [
-          { label: 'WhatsApp SLA Met', value: 180, percent: 63, color: '#10b981' },
-          { label: 'Phone call Followup Met', value: 74, percent: 26, color: '#3b82f6' },
-          { label: 'Email response Met', value: 30, percent: 11, color: '#f59e0b' }
-        ]
-      },
-      {
-        title: 'SLA Response Speed Trend',
-        subtitle: 'Average reply time speed (minutes)',
-        type: 'line',
-        data: [
-          { label: 'Jan', value: 120 },
-          { label: 'Feb', value: 95 },
-          { label: 'Mar', value: 82 },
-          { label: 'Apr', value: 75 },
-          { label: 'May', value: 68 }
-        ]
-      }
-    ];
-  }
+  const trend = liveAnalytics.value?.trendChartData || [];
+  const funnel = liveAnalytics.value?.funnelChartData || [];
+  const source = liveAnalytics.value?.sourceChartData || [];
+  const counselors = liveAnalytics.value?.counselorPerformanceData || [];
+
+  return [
+    {
+      title: isEducation.value ? 'Inquiries Intake & Conversion Trend' : 'Lead Volume & Closing Trend',
+      subtitle: 'Dynamic 6-month historical database timeline',
+      type: 'line',
+      data: trend,
+    },
+    {
+      title: isEducation.value ? 'Admissions Conversion Funnel' : 'Sales Transaction Velocity Funnel',
+      subtitle: 'Dynamic phase progression and drop-off analysis',
+      type: 'funnel',
+      data: funnel,
+    },
+    {
+      title: isEducation.value ? 'Lead Origin Sourcing Performance' : 'Channel Acquisition Performance',
+      subtitle: 'Channel volume yield breakdown',
+      type: 'donut',
+      data: source,
+    },
+    {
+      title: isEducation.value ? 'Counselor Admissions Performance' : 'Broker Team Production',
+      subtitle: 'Conversions closed against target benchmarks',
+      type: 'bar',
+      data: counselors,
+    },
+  ];
 });
 
 const tableHeaders = computed(() => {
   const t = reportType.value;
-  if (t === 'leads') {
-    return ['source', 'leadsCount', 'conversionRate', 'responseSla'];
-  } else if (t === 'sales') {
-    return ['dealNumber', 'clientName', 'unitCode', 'value', 'stage'];
-  } else if (t === 'properties') {
-    return ['projectName', 'unitCode', 'status', 'carpetArea', 'value'];
-  } else if (t === 'commissions') {
-    return ['invoiceNumber', 'builderName', 'grossCommission', 'tdsAmount', 'netReceivable', 'status'];
-  } else if (t === 'performance') {
-    return ['agentName', 'branchName', 'leadsAssigned', 'dealsClosed', 'slaCompliance'];
-  } else {
-    return ['bucket', 'probability', 'revenueValue', 'branchShare'];
+  if (isEducation.value) {
+    if (t === 'leads' || t === 'sales') {
+      return ['Student Name', 'Mobile', 'Source', 'Status', 'Date'];
+    } else if (t === 'properties') {
+      return ['Class Name', 'Code', 'Subject', 'Grade', 'Room', 'Status'];
+    } else if (t === 'performance') {
+      return ['Counselor Name', 'Conversions', 'Target Quota'];
+    }
+    return ['Stage', 'Active Count', 'Percentage Share'];
   }
+
+  if (t === 'performance') {
+    return ['Counselor Name', 'Conversions', 'Target Quota'];
+  }
+  return ['Channel / Stage', 'Volume Count', 'Yield Percentage'];
 });
 
 const records = computed(() => {
   const t = reportType.value;
-  if (t === 'leads') {
-    return [
-      { source: 'WhatsApp Campaigns', leadsCount: 180, conversionRate: '28%', responseSla: '1.2 Hrs' },
-      { source: 'Google Ads Search', leadsCount: 135, conversionRate: '22%', responseSla: '1.8 Hrs' },
-      { source: 'Organic Referrals', leadsCount: 90, conversionRate: '35%', responseSla: '2.5 Hrs' }
-    ];
-  } else if (t === 'sales') {
-    return [
-      { dealNumber: 'DL-9842', clientName: 'Amit Sharma', unitCode: 'Unit 802', value: 7200000, stage: 'Booking Confirmed' },
-      { dealNumber: 'DL-10928', clientName: 'Rohan Mehta', unitCode: 'Unit 102', value: 9800000, stage: 'Agreement Signed' },
-      { dealNumber: 'DL-88390', clientName: 'Sunita Nair', unitCode: 'Unit 504', value: 12000000, stage: 'Commission Eligible' }
-    ];
-  } else if (t === 'properties') {
-    return [
-      { projectName: 'Skyway Prestige', unitCode: '802', status: 'Reserved', carpetArea: '1240 sqft', value: 7200000 },
-      { projectName: 'Skyway Prestige', unitCode: '102', status: 'Sold', carpetArea: '1450 sqft', value: 9800000 },
-      { projectName: 'Prestige Heights Block A', unitCode: '504', status: 'Available', carpetArea: '1850 sqft', value: 12000000 }
-    ];
-  } else if (t === 'commissions') {
-    return [
-      { invoiceNumber: 'INV-SK-88301', builderName: 'Skyway Builders Group', grossCommission: 180000, tdsAmount: 18000, netReceivable: 194400, status: 'paid' },
-      { invoiceNumber: 'INV-SK-88302', builderName: 'Skyway Builders Group', grossCommission: 270000, tdsAmount: 27000, netReceivable: 291600, status: 'sent' },
-      { invoiceNumber: 'INV-PR-92840', builderName: 'Prestige Developers', grossCommission: 540000, tdsAmount: 54000, netReceivable: 583200, status: 'acknowledged' }
-    ];
-  } else if (t === 'performance') {
-    return [
-      { agentName: 'Agent Priya Sharma', branchName: 'Bangalore HQ', leadsAssigned: 48, dealsClosed: 12, slaCompliance: '96%' },
-      { agentName: 'Agent Ravi Kumar', branchName: 'Bangalore HQ', leadsAssigned: 36, dealsClosed: 8, slaCompliance: '92%' },
-      { agentName: 'Agent Anjali Mehta', branchName: 'Mumbai Office', leadsAssigned: 42, dealsClosed: 9, slaCompliance: '94%' }
-    ];
-  } else {
-    return [
-      { bucket: '30 Days Expected', probability: '85%', revenueValue: 1850000, branchShare: 'Bangalore (75%)' },
-      { bucket: '60 Days Expected', probability: '60%', revenueValue: 2450000, branchShare: 'Bangalore (50%)' },
-      { bucket: '90 Days Expected', probability: '90%', revenueValue: 1200000, branchShare: 'Mumbai (40%)' }
-    ];
+
+  if (isEducation.value) {
+    if (t === 'leads' || t === 'sales') {
+      return liveLeads.value.map((lead) => ({
+        'Student Name': `${lead.firstName || ''} ${lead.lastName || ''}`.trim() || 'Inquiry Contact',
+        Mobile: lead.mobile || '—',
+        Source: lead.source || 'Direct',
+        Status: (lead.status || 'new').replace(/_/g, ' ').toUpperCase(),
+        Date: lead.createdAt ? new Date(lead.createdAt).toLocaleDateString('en-IN') : '—',
+      }));
+    }
+
+    if (t === 'properties') {
+      return liveClasses.value.map((cls) => ({
+        'Class Name': cls.name || 'Academic Batch',
+        Code: cls.code || '—',
+        Subject: cls.subject || 'Standard',
+        Grade: cls.grade || '—',
+        Room: cls.roomNumber || cls.room || 'Room 101',
+        Status: (cls.status || 'active').toUpperCase(),
+      }));
+    }
+
+    if (t === 'performance') {
+      const counselors = liveAnalytics.value?.counselorPerformanceData || [];
+      return counselors.map((c) => ({
+        'Counselor Name': c.label,
+        Conversions: c.value,
+        'Target Quota': c.target || 10,
+      }));
+    }
+
+    // Default funnel breakdown
+    const funnel = liveAnalytics.value?.funnelChartData || [];
+    return funnel.map((f) => ({
+      Stage: f.label,
+      'Active Count': f.value,
+      'Percentage Share': `${f.percent}%`,
+    }));
   }
+
+  // Real estate dynamic fallback
+  const counselors = liveAnalytics.value?.counselorPerformanceData || [];
+  if (t === 'performance' && counselors.length > 0) {
+    return counselors.map((c) => ({
+      'Counselor Name': c.label,
+      Conversions: c.value,
+      'Target Quota': c.target || 10,
+    }));
+  }
+
+  const sources = liveAnalytics.value?.sourceChartData || [];
+  return sources.map((s) => ({
+    'Channel / Stage': s.label,
+    'Volume Count': s.value,
+    'Yield Percentage': `${s.percent}%`,
+  }));
 });
 
 const shareReport = () => {
   navigator.clipboard.writeText(window.location.href).then(() => {
     store.dispatch('notifications/triggerToast', {
       message: 'Report deep-link copied to clipboard. Ready to share.',
-      type: 'success'
+      type: 'success',
     });
   });
 };
@@ -376,7 +416,7 @@ const formatCurrency = (val) => {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
-    maximumFractionDigits: 0
+    maximumFractionDigits: 0,
   }).format(val);
 };
 </script>

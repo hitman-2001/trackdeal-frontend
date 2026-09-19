@@ -633,6 +633,7 @@ import {
   PhChalkboardTeacher,
   PhBookOpen,
   PhGraduationCap,
+  PhChartLineUp,
 } from "@phosphor-icons/vue";
 
 import GlobalSearchModal from "@/components/GlobalSearchModal.vue";
@@ -755,8 +756,8 @@ const activePageName = computed(() => {
   ) {
     return "Commissions";
   }
-  if (route.path === "/app/reports" || route.path.startsWith("/app/reports/")) {
-    return isEducationWorkspace.value ? "Admission Reports" : "Reports";
+  if (route.path === "/app/reports" || route.path.startsWith("/app/reports/") || route.path === "/app/analytics") {
+    return isEducationWorkspace.value ? "Admissions Analytics" : "Analytics & Reports Dashboard";
   }
   if (route.path === "/app/settings/users") {
     return isEducationWorkspace.value ? "Staff Directory" : "Team";
@@ -802,8 +803,18 @@ const currentYear = computed(() => new Date().getFullYear());
 // ── Navigation Menu Data ───────────────────────────────────────────────────
 const realEstateMenuGroups = [
   {
-    title: "Overview",
-    items: [{ name: "Dashboard", to: "/app/dashboard", icon: PhChartBar }],
+    title: "Analytics & Dashboard",
+    items: [
+      { name: "Executive Dashboard", to: "/app/dashboard", icon: PhChartBar },
+      {
+        name: "Analytics & Reports",
+        to: "/app/reports",
+        icon: PhChartLineUp,
+        permission: "reports:read",
+        featureFlag: "reportsModule",
+        module: "reports",
+      },
+    ],
   },
   {
     title: "Sales",
@@ -905,19 +916,6 @@ const realEstateMenuGroups = [
     ],
   },
   {
-    title: "Analytics",
-    items: [
-      {
-        name: "Reports",
-        to: "/app/reports",
-        icon: PhTrendUp,
-        permission: "reports:read",
-        featureFlag: "reportsModule",
-        module: "reports",
-      },
-    ],
-  },
-  {
     title: "Admin",
     items: [
       {
@@ -941,8 +939,17 @@ const realEstateMenuGroups = [
 
 const educationMenuGroups = [
   {
-    title: "Overview",
-    items: [{ name: "Dashboard", to: "/app/dashboard", icon: PhChartBar }],
+    title: "Analytics & Dashboard",
+    items: [
+      { name: "Executive Dashboard", to: "/app/dashboard", icon: PhChartBar },
+      {
+        name: "Admissions Analytics",
+        to: "/app/reports",
+        icon: PhChartLineUp,
+        permission: "reports:read",
+        module: "reports",
+      },
+    ],
   },
   {
     title: "Admissions",
@@ -979,18 +986,6 @@ const educationMenuGroups = [
         icon: PhCheckSquare,
         permission: "tasks:read",
         module: "tasks",
-      },
-    ],
-  },
-  {
-    title: "Analytics",
-    items: [
-      {
-        name: "Reports",
-        to: "/app/reports",
-        icon: PhBookOpen,
-        permission: "reports:read",
-        module: "reports",
       },
     ],
   },
@@ -1078,6 +1073,7 @@ const filteredMenuGroups = computed(() => {
         // 4. Granular permission check
         if (
           item.permission &&
+          !isOrgAdmin.value &&
           !store.getters["permissions/hasCapability"](item.permission)
         ) {
           return false;

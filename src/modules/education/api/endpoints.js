@@ -5,6 +5,11 @@ export async function fetchEducationSummary() {
   return res.data;
 }
 
+export async function fetchEducationAnalytics(params = {}) {
+  const res = await apiClient.get('/education/analytics', { params });
+  return res.data;
+}
+
 export async function fetchEducationClasses(params = {}) {
   const res = await apiClient.get('/education/classes', { params });
   return res.data;
@@ -37,6 +42,11 @@ export async function createEducationStudent(data) {
 
 export async function updateEducationStudent(id, data) {
   const res = await apiClient.put(`/education/students/${id}`, data);
+  return res.data;
+}
+
+export async function deleteEducationStudent(id) {
+  const res = await apiClient.delete(`/education/students/${id}`);
   return res.data;
 }
 

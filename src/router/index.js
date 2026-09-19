@@ -269,6 +269,10 @@ const routes = [
         },
       },
       {
+        path: "analytics",
+        redirect: "/app/reports/dashboard",
+      },
+      {
         path: "reports",
         component: ReportLayout,
         meta: { featureFlag: "reportsModule", module: "reports" },

@@ -1,5 +1,10 @@
 import apiClient from '@/api/client';
 
+export async function fetchReportsDashboardStats(params = {}) {
+  const response = await apiClient.get('/reports/dashboard', { params });
+  return response.data;
+}
+
 export async function fetchLeadAnalytics(params) {
   const response = await apiClient.get('/analytics/leads', { params });
   return response.data;

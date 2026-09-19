@@ -66,10 +66,11 @@ export default {
         const parts = normalized.split('.');
         if (parts.length === 2) {
           const [scope, action] = parts;
-          if (userPerms[scope] && userPerms[scope][action] === false) {
+          const alternateAction = action === 'read' ? 'view' : action === 'view' ? 'read' : null;
+          if (userPerms[scope] && (userPerms[scope][action] === false || (alternateAction && userPerms[scope][alternateAction] === false))) {
             return false;
           }
-          if (userPerms[scope] && userPerms[scope][action] === true) {
+          if (userPerms[scope] && (userPerms[scope][action] === true || (alternateAction && userPerms[scope][alternateAction] === true))) {
             return true;
           }
         }
@@ -83,11 +84,20 @@ export default {
       // 4. Wildcard check
       if (state.capabilities.includes('*')) return true;
 
-      // 5. Capabilities list check
+      // 5. Capabilities list check (with read/view synonyms)
+      const alternateNormalized = normalized.endsWith('.read')
+        ? normalized.replace(/\.read$/, '.view')
+        : normalized.endsWith('.view')
+        ? normalized.replace(/\.view$/, '.read')
+        : null;
+      const alternateColon = alternateNormalized ? alternateNormalized.replace(/\./g, ':') : null;
+
       return (
         state.capabilities.includes(normalized) ||
         state.capabilities.includes(colonFormat) ||
-        state.capabilities.includes(permission)
+        state.capabilities.includes(permission) ||
+        (alternateNormalized && state.capabilities.includes(alternateNormalized)) ||
+        (alternateColon && state.capabilities.includes(alternateColon))
       );
     }
   }
