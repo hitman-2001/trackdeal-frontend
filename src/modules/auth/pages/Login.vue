@@ -18,17 +18,12 @@
     <form @submit="onSubmit" class="space-y-4">
       <!-- Organization Input -->
       <div class="space-y-1">
-        <label
-          for="organization"
-          class="label-text"
-        >
-          Organization
-        </label>
+        <label for="organization" class="label-text"> Organization </label>
         <input
           id="organization"
           v-model="organization"
           type="text"
-          placeholder="Organization name (leave blank for Super Admin)"
+          placeholder="Organization name"
           autocomplete="organization"
           class="input-field text-caption text-neutral-900"
           :class="{ 'input-field-error': errors.organization }"
@@ -41,7 +36,7 @@
           {{ errors.organization }}
         </span>
         <span v-else class="text-[10px] text-neutral-400 block mt-1">
-          Required for organization users. Super Admin can leave this blank.
+          Required for organization users.
         </span>
       </div>
 
@@ -142,7 +137,6 @@
         <span>{{ isPending ? "Signing in..." : "Sign In" }}</span>
       </button>
     </form>
-
   </div>
 </template>
 
@@ -183,7 +177,9 @@ onMounted(() => {
     email.value = savedEmail;
     rememberMe.value = true;
   }
-  const savedOrganization = localStorage.getItem("remembered_organization") || localStorage.getItem("remembered_tenant");
+  const savedOrganization =
+    localStorage.getItem("remembered_organization") ||
+    localStorage.getItem("remembered_tenant");
   if (savedOrganization) {
     organization.value = savedOrganization;
   }
@@ -202,7 +198,11 @@ const onSubmit = handleSubmit((values) => {
 
   // Trigger mutation
   mutate(
-    { organization: values.organization.trim(), email: values.email, password: values.password },
+    {
+      organization: values.organization.trim(),
+      email: values.email,
+      password: values.password,
+    },
     {
       onError: (err) => {
         // Render server errors

@@ -83,6 +83,9 @@ export async function inviteUser(data) {
   if (data.branch || data.branchId) {
     payload.branchId = data.branch || data.branchId;
   }
+  if (data.permissionOverrides) {
+    payload.permissionOverrides = data.permissionOverrides;
+  }
   if (data.password) {
     payload.password = data.password;
     if (data.phone) payload.phone = data.phone;
@@ -103,10 +106,17 @@ export async function createUser(data) {
   return inviteUser(data);
 }
 
-export async function suspendUser({ id, suspend }) {
-  const endpoint = suspend ? `/settings/users/${id}/suspend` : `/settings/users/${id}/activate`;
+export async function updateUserStatus({ id, status }) {
+  const endpoint = status === 'active'
+    ? `/settings/users/${id}/activate`
+    : `/settings/users/${id}/deactivate`;
   const response = await apiClient.post(endpoint, {});
-  return response.data;
+  return response.data?.data || response.data;
+}
+
+export async function updateUserPermissions({ id, added, removed }) {
+  const response = await apiClient.put(`/settings/users/${id}/permissions`, { added, removed });
+  return response.data?.data || response.data;
 }
 
 export async function transferUserBranch({ id, branchId, leadsReassignment }) {
@@ -170,12 +180,14 @@ export async function fetchRoles() {
     const rolesData = response.data?.data || response.data;
     if (Array.isArray(rolesData)) {
       return rolesData.map(role => {
+        const permissionKeys = Array.isArray(role.permissions) ? role.permissions : [];
         const permissions = Array.isArray(role.permissions)
-          ? convertPermissionsArrayToObject(role.permissions)
+          ? convertPermissionsArrayToObject(permissionKeys)
           : (role.permissions || {});
         return {
           ...role,
           id: role.id || role._id,
+          permissionKeys,
           permissions
         };
       });
@@ -295,7 +307,8 @@ export default {
   updateBranch,
   fetchUsers,
   inviteUser,
-  suspendUser,
+  updateUserStatus,
+  updateUserPermissions,
   transferUserBranch,
   changeUserRole,
   fetchRoles,
@@ -314,3 +327,18 @@ export default {
   fetchEmailTemplates,
   saveEmailTemplate
 };
+
+export async function fetchGroupedPermissions() {
+  const response = await apiClient.get('/permissions/grouped');
+  const groups = response.data?.data || response.data || {};
+  return Object.fromEntries(
+    Object.entries(groups).map(([group, permissions]) => [
+      group,
+      permissions.map((permission) => ({
+        ...permission,
+        key: permission.permissionKey,
+        label: permission.description || permission.permissionKey,
+      })),
+    ]),
+  );
+}

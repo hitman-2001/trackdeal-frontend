@@ -1,98 +1,143 @@
 <template>
-  <div class="dashboard-view mx-auto max-w-[1600px] space-y-5">
-    <header class="page-header">
-      <div class="max-w-2xl">
-        <p class="eyebrow">Workspace overview</p>
-        <h1
-          class="mt-1 font-heading text-2xl font-extrabold tracking-[-0.04em] text-text-primary sm:text-3xl"
-        >
-          {{ greeting }}, {{ userName }}
+  <div class="dash-root mx-auto max-w-[1600px]">
+    <!-- ═══════════════════════════════════════════════
+         HERO HEADER — KokonutUI bento-style greeting
+         ═══════════════════════════════════════════════ -->
+    <header class="dash-hero" aria-label="Dashboard header">
+      <!-- Left: Greeting & subtitle -->
+      <div class="dash-hero__copy">
+        <div class="dash-hero__eyebrow">
+          <span class="eyebrow-dot"></span>
+          <span>{{ formattedToday }}</span>
+        </div>
+        <h1 class="dash-hero__title">
+          {{ greeting }},&nbsp;<span class="dash-hero__name">{{
+            firstName
+          }}</span>
         </h1>
-        <p class="mt-1.5 text-body-sm text-text-muted">
-          A focused view of pipeline movement, client commitments and revenue
-          risk for {{ formattedToday }}.
+        <p class="dash-hero__sub">
+          Here's your pipeline at a glance — follow-ups due, deals in motion,
+          and what needs your attention today.
         </p>
       </div>
 
-      <div class="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
-        <router-link to="/app/leads" class="btn-md btn-primary self-end">
-          <AppIcon name="add" :size="15" weight="bold" />
-          New lead
-        </router-link>
-        <div
-          class="period-control max-w-full overflow-x-auto"
-          aria-label="Dashboard reporting period"
-        >
+      <!-- Right: Controls row -->
+      <div class="dash-hero__controls">
+        <!-- Period selector -->
+        <div class="period-pill" role="group" aria-label="Reporting period">
           <button
-            v-for="period in periods"
-            :key="period"
+            v-for="p in periods"
+            :key="p.value"
             type="button"
-            :aria-pressed="selectedPeriod === period"
-            :class="{ active: selectedPeriod === period }"
-            @click="setPeriod(period)"
+            :aria-pressed="selectedPeriod === p.value"
+            :class="[
+              'period-pill__btn',
+              selectedPeriod === p.value && 'period-pill__btn--active',
+            ]"
+            @click="setPeriod(p.value)"
           >
-            {{ formatPeriodLabel(period) }}
+            {{ p.label }}
           </button>
+        </div>
+        <!-- Refresh + CTA -->
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            class="icon-btn"
+            :class="{ spin: refreshing }"
+            @click="refreshData"
+            aria-label="Refresh dashboard"
+            :disabled="loading"
+          >
+            <AppIcon name="refresh" :size="16" />
+          </button>
+          <router-link
+            to="/app/leads"
+            class="btn btn-primary btn-sm gap-1.5 font-semibold"
+          >
+            <AppIcon name="add" :size="14" weight="bold" />
+            <span>New Lead</span>
+          </router-link>
         </div>
       </div>
     </header>
 
-    <div
-      v-if="loading"
-      class="dashboard-skeleton grid gap-4 lg:grid-cols-12"
-      aria-label="Loading dashboard"
-    >
-      <div class="skeleton h-72 lg:col-span-8"></div>
-      <div class="skeleton h-72 lg:col-span-4"></div>
+    <!-- Loading skeleton -->
+    <div v-if="loading" class="dash-skeleton">
+      <div v-for="i in 4" :key="i" class="dash-skeleton__card"></div>
+      <div class="dash-skeleton__wide"></div>
+      <div class="dash-skeleton__side"></div>
     </div>
 
     <template v-else>
-      <section class="grid gap-4 lg:grid-cols-12">
-        <div
-          class="pulse-panel relative overflow-hidden p-5 sm:p-7 lg:col-span-8"
+      <!-- ═══════════════════════════════════════════════
+           ROW 1: KPI Headline Strip — 4 metric tiles
+           ═══════════════════════════════════════════════ -->
+      <section class="kpi-strip" aria-label="Key performance indicators">
+        <router-link
+          v-for="m in kpiMetrics"
+          :key="m.label"
+          :to="m.to"
+          class="kpi-tile group"
+          :class="`kpi-tile--${m.tone}`"
         >
-          <div
-            class="relative z-10 flex h-full min-h-[260px] flex-col justify-between"
-          >
+          <!-- Icon -->
+          <div class="kpi-tile__icon" :class="`kpi-tile__icon--${m.tone}`">
+            <AppIcon :name="m.icon" :size="18" weight="duotone" />
+          </div>
+
+          <!-- Value -->
+          <p class="kpi-tile__value">{{ m.value }}</p>
+          <p class="kpi-tile__label">{{ m.label }}</p>
+          <p class="kpi-tile__detail">{{ m.detail }}</p>
+
+          <!-- Hover arrow -->
+          <div class="kpi-tile__arrow">
+            <AppIcon name="arrowRight" :size="13" />
+          </div>
+        </router-link>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════
+           ROW 2: Pulse Hero + Priority Queue (bento grid)
+           ═══════════════════════════════════════════════ -->
+      <section class="bento-row">
+        <!-- Pipeline Pulse Card (large, dark) -->
+        <div class="pulse-card">
+          <!-- Subtle animated noise overlay -->
+          <div class="pulse-card__noise" aria-hidden="true"></div>
+
+          <div class="pulse-card__body">
+            <!-- Top: metric -->
             <div class="flex items-start justify-between gap-4">
               <div>
-                <p
-                  class="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-300"
-                >
-                  Active pipeline value
-                </p>
-                <p
-                  class="mt-2 font-heading text-4xl font-extrabold tracking-[-0.05em] text-white sm:text-5xl"
-                >
+                <p class="pulse-card__eyebrow">Active pipeline value</p>
+                <p class="pulse-card__figure">
                   ₹{{ formatCompact(kpis.activePipelineValue || 0) }}
                 </p>
-                <p class="mt-2 max-w-md text-caption leading-5 text-stone-400">
-                  {{ kpis.activeDeals || 0 }} live deals moving across
-                  {{ pipelineStages.length }} commercial stages.
+                <p class="pulse-card__caption">
+                  {{ kpis.activeDeals || 0 }} live deals across
+                  {{ pipelineStages.length }} stages
                 </p>
               </div>
-              <span class="pulse-icon"
-                ><AppIcon name="trend" :size="22" weight="duotone"
-              /></span>
+              <div class="pulse-icon-wrap">
+                <AppIcon name="trend" :size="20" weight="duotone" />
+              </div>
             </div>
 
+            <!-- Pipeline bar chart (Bklit-inspired) -->
             <div>
-              <div
-                class="mb-2 flex items-center justify-between text-[10px] font-semibold text-stone-400"
-              >
+              <div class="pulse-chart-header">
                 <span>Pipeline distribution</span>
-                <router-link
-                  to="/app/leads"
-                  class="inline-flex items-center gap-1 text-emerald-300 hover:text-emerald-200"
-                >
-                  Open pipeline <AppIcon name="arrowRight" :size="12" />
+                <router-link to="/app/leads" class="pulse-chart-link">
+                  Open pipeline <AppIcon name="arrowRight" :size="11" />
                 </router-link>
               </div>
               <PipelineChart
                 :items="
-                  pipelineStages.map((stage) => ({
-                    label: stage.label,
-                    value: getStageCount(stage.key),
+                  pipelineStages.map((s) => ({
+                    label: s.label,
+                    value: getStageCount(s.key),
                   }))
                 "
                 class="text-emerald-300"
@@ -101,285 +146,294 @@
           </div>
         </div>
 
-        <aside class="section-panel p-4 sm:p-5 lg:col-span-4">
-          <div
-            class="flex items-center justify-between border-b border-default pb-3"
-          >
+        <!-- Priority Queue Panel -->
+        <aside class="priority-panel">
+          <div class="priority-panel__header">
             <div>
               <p class="eyebrow">Action queue</p>
-              <h2
-                class="mt-0.5 font-heading text-h3 font-bold text-text-primary"
-              >
-                Today’s priorities
-              </h2>
+              <h2 class="priority-panel__title">Today's priorities</h2>
             </div>
-            <span
-              class="flex h-8 w-8 items-center justify-center rounded-[9px] bg-warning-bg text-warning-text"
-            >
-              <AppIcon name="lightning" :size="16" weight="duotone" />
+            <span class="priority-badge">
+              <AppIcon name="lightning" :size="15" weight="duotone" />
             </span>
           </div>
-          <div class="divide-y divide-border-default">
+
+          <div class="priority-list">
             <router-link
               v-for="item in priorityItems"
               :key="item.label"
               :to="item.to"
               class="priority-row group"
             >
-              <span class="priority-icon" :class="item.tone"
-                ><AppIcon :name="item.icon" :size="15" weight="duotone"
-              /></span>
-              <span class="min-w-0 flex-1">
-                <span
-                  class="block text-caption font-semibold text-text-primary"
-                  >{{ item.label }}</span
-                >
-                <span class="block truncate text-[10px] text-text-muted">{{
-                  item.detail
-                }}</span>
-              </span>
               <span
-                class="font-mono text-body font-semibold text-text-primary"
-                >{{ item.value }}</span
+                class="priority-row__icon"
+                :class="`priority-row__icon--${item.tone}`"
               >
+                <AppIcon :name="item.icon" :size="15" weight="duotone" />
+              </span>
+              <div class="priority-row__body">
+                <span class="priority-row__label">{{ item.label }}</span>
+                <span class="priority-row__detail">{{ item.detail }}</span>
+              </div>
+              <span
+                class="priority-row__count"
+                :class="
+                  item.value > 0 ? `priority-row__count--${item.tone}` : ''
+                "
+              >
+                {{ item.value }}
+              </span>
               <AppIcon
                 name="arrowRight"
-                :size="13"
-                class="text-text-muted transition-transform group-hover:translate-x-0.5"
+                :size="12"
+                class="priority-row__arrow"
               />
             </router-link>
           </div>
         </aside>
       </section>
 
+      <!-- ═══════════════════════════════════════════════
+           ROW 3: Sales Pipeline Stage Funnel
+           ═══════════════════════════════════════════════ -->
       <section
-        class="metrics-strip section-panel"
-        aria-label="Key performance indicators"
+        class="section-panel overflow-hidden"
+        aria-label="Sales pipeline funnel"
       >
-        <router-link
-          v-for="metric in headlineMetrics"
-          :key="metric.label"
-          :to="metric.to"
-          class="metric-cell group"
-        >
-          <div class="flex items-center justify-between gap-3">
-            <span class="metric-icon"
-              ><AppIcon :name="metric.icon" :size="16" weight="duotone"
-            /></span>
-            <AppIcon
-              name="arrowRight"
-              :size="13"
-              class="text-text-muted opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100"
-            />
-          </div>
-          <p
-            class="mt-4 font-heading text-2xl font-extrabold tracking-[-0.04em] text-text-primary"
-          >
-            {{ metric.value }}
-          </p>
-          <p
-            class="mt-1 text-[10px] font-bold uppercase tracking-[0.11em] text-text-muted"
-          >
-            {{ metric.label }}
-          </p>
-          <p class="mt-0.5 text-[10px] text-text-muted">{{ metric.detail }}</p>
-        </router-link>
-      </section>
-
-      <section class="section-panel overflow-hidden">
-        <header
-          class="flex flex-col gap-3 border-b border-default px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
-        >
+        <header class="funnel-header">
           <div>
             <p class="eyebrow">Opportunities</p>
-            <h2 class="mt-0.5 font-heading text-h3 font-bold text-text-primary">
-              Sales pipeline
-            </h2>
+            <h2 class="funnel-title">Sales pipeline</h2>
           </div>
-          <p class="text-caption text-text-muted">
+          <p class="funnel-subtitle">
             Live opportunity volume and estimated stage value
           </p>
         </header>
-        <div class="pipeline-grid">
+
+        <!-- Stage cards — horizontal scroll on mobile -->
+        <div class="funnel-grid">
           <router-link
             v-for="(stage, index) in pipelineStages"
             :key="stage.key"
             to="/app/leads"
-            class="pipeline-stage group"
+            class="funnel-stage group"
           >
-            <div class="flex items-center justify-between">
-              <span class="stage-index">{{
+            <!-- Stage index + gradient accent line -->
+            <div class="funnel-stage__top">
+              <span class="funnel-stage__index">{{
                 String(index + 1).padStart(2, "0")
               }}</span>
               <AppIcon
                 name="arrowRight"
-                :size="13"
-                class="text-text-muted opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100"
+                :size="12"
+                class="funnel-stage__arrow"
               />
             </div>
-            <p
-              class="mt-6 font-heading text-2xl font-extrabold text-text-primary"
-            >
-              {{ getStageCount(stage.key) }}
-            </p>
-            <p class="mt-1 text-caption font-semibold text-text-primary">
-              {{ stage.label }}
-            </p>
-            <p class="mt-0.5 font-mono text-[10px] text-accent-600">
+
+            <!-- Bar fill representing lead count -->
+            <div class="funnel-stage__bar-wrap" aria-hidden="true">
+              <div
+                class="funnel-stage__bar"
+                :style="{
+                  height: `${(getStageCount(stage.key) / Math.max(1, maxStageCount)) * 100}%`,
+                }"
+              ></div>
+            </div>
+
+            <p class="funnel-stage__count">{{ getStageCount(stage.key) }}</p>
+            <p class="funnel-stage__label">{{ stage.label }}</p>
+            <p class="funnel-stage__value">
               ₹{{ formatCompact(getStageValue(stage.key)) }}
             </p>
           </router-link>
         </div>
       </section>
 
-      <section class="grid gap-4 xl:grid-cols-12">
-        <div class="section-panel overflow-hidden xl:col-span-7">
-          <header
-            class="flex items-center justify-between border-b border-default px-5 py-4"
-          >
+      <!-- ═══════════════════════════════════════════════
+           ROW 4: Follow-ups + Commission + Loan
+           ═══════════════════════════════════════════════ -->
+      <section class="bottom-row">
+        <!-- Follow-ups Panel -->
+        <div class="section-panel overflow-hidden followup-panel">
+          <header class="followup-header">
             <div>
               <p class="eyebrow">Client commitments</p>
-              <h2
-                class="mt-0.5 font-heading text-h3 font-bold text-text-primary"
-              >
-                Follow-ups
-              </h2>
+              <h2 class="followup-title">Follow-ups</h2>
             </div>
-            <router-link to="/app/tasks" class="btn-sm btn-secondary"
-              >View all</router-link
+            <router-link
+              to="/app/tasks"
+              class="btn btn-secondary btn-sm text-xs font-semibold"
             >
+              View all
+            </router-link>
           </header>
+
           <div
             v-if="followupItems.length"
-            class="divide-y divide-border-default"
+            class="divide-y"
+            style="border-color: hsl(var(--neutral-100))"
           >
             <div
-              v-for="task in followupItems.slice(0, 6)"
-              :key="task.id"
-              class="followup-row"
+              v-for="task in followupItems.slice(0, 5)"
+              :key="task.id || task._id"
+              class="followup-row-item"
             >
-              <span
-                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-100 text-accent-600"
-                ><AppIcon name="phone" :size="14" weight="duotone"
-              /></span>
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-2">
-                  <p
-                    class="truncate text-body-sm font-semibold text-text-primary"
-                  >
-                    {{ task.leadName || task.title }}
+              <!-- Channel icon -->
+              <span class="followup-row-item__icon">
+                <AppIcon name="phone" :size="14" weight="duotone" />
+              </span>
+
+              <!-- Lead info -->
+              <div class="followup-row-item__body">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <p class="followup-row-item__name">
+                    {{ task.leadName || task.title || "Client follow-up" }}
                   </p>
-                  <span v-if="task.temperature === 'hot'" class="status-hot"
-                    >High intent</span
-                  >
+                  <span v-if="task.temperature === 'hot'" class="hot-badge">
+                    Hot
+                  </span>
+                  <span v-if="task.isOverdue" class="overdue-badge">
+                    Overdue
+                  </span>
                 </div>
-                <p class="truncate text-caption text-text-muted">
-                  {{ task.title || task.type }}
+                <p class="followup-row-item__sub">
+                  {{ task.type || task.title || "Follow-up" }}
                 </p>
               </div>
-              <div class="text-right">
-                <p
-                  class="font-mono text-caption font-semibold text-text-primary"
-                >
-                  {{ task.dueTime || "11:00 AM" }}
-                </p>
-                <p class="text-[10px] text-text-muted">
-                  {{ task.type || "Follow-up" }}
-                </p>
+
+              <!-- Time -->
+              <div class="text-right shrink-0">
+                <p class="followup-row-item__time">{{ task.dueTime || "—" }}</p>
+                <p class="followup-row-item__type">{{ task.type || "Call" }}</p>
               </div>
             </div>
           </div>
-          <div v-else class="empty-state">
-            <span class="empty-icon"
-              ><AppIcon name="checkCircle" :size="24" weight="duotone"
-            /></span>
-            <p class="font-heading text-body font-bold text-text-primary">
-              Queue cleared
-            </p>
-            <p class="text-caption text-text-muted">
+
+          <!-- Empty state -->
+          <div v-else class="followup-empty">
+            <span class="followup-empty__icon">
+              <AppIcon name="checkCircle" :size="22" weight="duotone" />
+            </span>
+            <p class="followup-empty__title">Queue cleared</p>
+            <p class="followup-empty__sub">
               No pending calls or visits for today.
             </p>
           </div>
         </div>
 
-        <div class="space-y-4 xl:col-span-5">
-          <div class="section-panel p-5">
+        <!-- Right column: Commission + Loan -->
+        <div class="side-stack">
+          <!-- Commission collection card -->
+          <div class="section-panel commission-card">
             <div class="flex items-start justify-between">
               <div>
                 <p class="eyebrow">Collections</p>
-                <h2
-                  class="mt-0.5 font-heading text-h3 font-bold text-text-primary"
-                >
-                  Commission collections
-                </h2>
+                <h2 class="commission-card__title">Commission collections</h2>
               </div>
-              <span class="metric-icon"
-                ><AppIcon name="currency" :size="16" weight="duotone"
-              /></span>
+              <span class="commission-icon">
+                <AppIcon name="currency" :size="16" weight="duotone" />
+              </span>
             </div>
-            <div class="mt-5 grid grid-cols-2 gap-4">
+
+            <div class="commission-card__grid">
               <div>
-                <p class="metric-label">Receivable</p>
-                <p class="metric-value">
+                <p class="commission-card__meta-label">Receivable</p>
+                <p class="commission-card__meta-value">
                   ₹{{ formatCompact(kpis.commissionReceivable || 0) }}
                 </p>
               </div>
               <div>
-                <p class="metric-label">Received</p>
-                <p class="metric-value text-success-text">
+                <p class="commission-card__meta-label">Received</p>
+                <p
+                  class="commission-card__meta-value commission-card__meta-value--green"
+                >
                   ₹{{ formatCompact(kpis.commissionReceived || 0) }}
                 </p>
               </div>
             </div>
-            <div class="mt-5">
-              <div class="mb-2 flex justify-between text-caption">
-                <span class="text-text-muted">Collection progress</span
-                ><span class="font-mono font-semibold text-success-text"
-                  >{{ kpis.collectionRate || 0 }}%</span
+
+            <!-- Collection progress bar -->
+            <div class="commission-card__progress-wrap">
+              <div class="flex justify-between text-xs mb-2">
+                <span style="color: hsl(var(--neutral-400))"
+                  >Collection progress</span
                 >
+                <span
+                  class="font-mono font-bold"
+                  style="color: hsl(var(--success-text))"
+                >
+                  {{ kpis.collectionRate || 0 }}%
+                </span>
               </div>
-              <div class="h-1.5 overflow-hidden rounded-full bg-neutral-100">
+              <div class="commission-card__track">
                 <div
-                  class="h-full rounded-full bg-accent-500 transition-all duration-500"
+                  class="commission-card__bar"
                   :style="{
                     width: `${Math.min(100, kpis.collectionRate || 0)}%`,
                   }"
                 ></div>
               </div>
             </div>
+
+            <!-- Quick stats row -->
+            <div class="commission-card__stats">
+              <div
+                v-if="kpis.commissionOverdue"
+                class="commission-card__stat commission-card__stat--danger"
+              >
+                <AppIcon name="warning" :size="13" weight="duotone" />
+                <span
+                  >₹{{ formatCompact(kpis.commissionOverdue) }} overdue</span
+                >
+              </div>
+              <div
+                v-else
+                class="commission-card__stat commission-card__stat--success"
+              >
+                <AppIcon name="checkCircle" :size="13" weight="duotone" />
+                <span>Accounts on track</span>
+              </div>
+            </div>
           </div>
 
-          <router-link to="/app/loans" class="loan-panel group block p-5">
-            <div class="flex items-start justify-between">
-              <div>
-                <p
-                  class="text-[10px] font-bold uppercase tracking-[0.14em] text-sky-300"
-                >
-                  Financing desk
-                </p>
-                <h2 class="mt-1 font-heading text-h3 font-bold text-white">
-                  Home-loan pipeline
-                </h2>
+          <!-- Home Loan Pipeline (dark card) -->
+          <router-link to="/app/loans" class="loan-card group">
+            <div class="loan-card__noise" aria-hidden="true"></div>
+            <div class="relative z-10">
+              <div class="flex items-start justify-between">
+                <div>
+                  <p class="loan-card__eyebrow">Financing desk</p>
+                  <h2 class="loan-card__title">Home-loan pipeline</h2>
+                </div>
+                <span class="loan-card__icon-wrap">
+                  <AppIcon name="bank" :size="18" weight="duotone" />
+                </span>
               </div>
-              <span
-                class="flex h-9 w-9 items-center justify-center rounded-[10px] bg-white/10 text-sky-200"
-                ><AppIcon name="bank" :size="18" weight="duotone"
-              /></span>
-            </div>
-            <div class="mt-6 grid grid-cols-3 gap-3">
-              <div>
-                <p class="loan-value">{{ loanSummary.activeCases || 0 }}</p>
-                <p class="loan-label">Active</p>
+
+              <div class="loan-card__stats">
+                <div>
+                  <p class="loan-card__stat-value">
+                    {{ loanSummary.activeCases || 0 }}
+                  </p>
+                  <p class="loan-card__stat-label">Active</p>
+                </div>
+                <div>
+                  <p class="loan-card__stat-value">
+                    {{ loanSummary.sanctionedCount || 0 }}
+                  </p>
+                  <p class="loan-card__stat-label">Sanctioned</p>
+                </div>
+                <div>
+                  <p class="loan-card__stat-value">
+                    ₹{{ formatCompact(loanSummary.disbursedThisMonth || 0) }}
+                  </p>
+                  <p class="loan-card__stat-label">Disbursed</p>
+                </div>
               </div>
-              <div>
-                <p class="loan-value">{{ loanSummary.sanctionedCount || 0 }}</p>
-                <p class="loan-label">Sanctioned</p>
-              </div>
-              <div>
-                <p class="loan-value">
-                  ₹{{ formatCompact(loanSummary.disbursedThisMonth || 0) }}
-                </p>
-                <p class="loan-label">Disbursed</p>
+
+              <div class="loan-card__footer">
+                <span>View loan desk</span>
+                <AppIcon name="arrowRight" :size="13" />
               </div>
             </div>
           </router-link>
@@ -391,21 +445,25 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import PipelineChart from "@/components/ui/PipelineChart.vue";
 import { useStore } from "vuex";
+import PipelineChart from "@/components/ui/PipelineChart.vue";
+import AppIcon from "@/components/AppIcon.vue";
 import { fetchBrokerDashboard } from "../api/endpoints";
 import apiClient from "@/api/client";
 
 const store = useStore();
+
+// ── State ──────────────────────────────────────────────────────────────────
 const periods = [
-  "today",
-  "this_week",
-  "this_month",
-  "this_quarter",
-  "this_year",
+  { value: "today", label: "Today" },
+  { value: "this_week", label: "Week" },
+  { value: "this_month", label: "Month" },
+  { value: "this_quarter", label: "Quarter" },
+  { value: "this_year", label: "Year" },
 ];
 const selectedPeriod = ref("this_month");
 const loading = ref(true);
+const refreshing = ref(false);
 
 const kpis = ref({
   activeLeads: 0,
@@ -427,12 +485,9 @@ const kpis = ref({
   hotLeads: 0,
 });
 const salesPipeline = ref({});
-const leadSources = ref({});
 const leadTemperatures = ref({ hot: 0, warm: 0, cold: 0 });
 const todayFollowups = ref([]);
 const overdueFollowups = ref([]);
-const expectedCollections = ref([]);
-const recentLeads = ref([]);
 const loanSummary = ref({
   activeCases: 0,
   sanctionedCount: 0,
@@ -442,16 +497,18 @@ const loanSummary = ref({
   commissionReceivable: 0,
 });
 
-const userName = computed(() => {
-  const user = store.state.auth.currentUser;
-  return user?.firstName
-    ? `${user.firstName} ${user.lastName || ""}`.trim()
-    : user?.name || "there";
+// ── Computed ───────────────────────────────────────────────────────────────
+const user = computed(() => store.state.auth?.currentUser || {});
+const firstName = computed(() => {
+  const u = user.value;
+  return u?.firstName
+    ? `${u.firstName} ${u.lastName || ""}`.trim()
+    : u?.name || "there";
 });
 const greeting = computed(() => {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
   return "Good evening";
 });
 const formattedToday = computed(() =>
@@ -461,23 +518,28 @@ const formattedToday = computed(() =>
     month: "long",
   }),
 );
+
 const pipelineStages = [
   { key: "new", label: "New" },
   { key: "qualified", label: "Qualified" },
-  { key: "property_shared", label: "Property shared" },
-  { key: "site_visit", label: "Site visit" },
-  { key: "negotiation", label: "Negotiation" },
+  { key: "property_shared", label: "Shared" },
+  { key: "site_visit", label: "Site Visit" },
+  { key: "negotiation", label: "Negotiate" },
   { key: "booking", label: "Booking" },
   { key: "closed_won", label: "Closed" },
 ];
+const maxStageCount = computed(() =>
+  Math.max(1, ...pipelineStages.map((s) => getStageCount(s.key))),
+);
 
-const headlineMetrics = computed(() => [
+const kpiMetrics = computed(() => [
   {
     label: "Active leads",
     value: kpis.value.activeLeads || 0,
     detail: `${kpis.value.newLeadsThisMonth || 0} new this month`,
     to: "/app/leads",
     icon: "users",
+    tone: "accent",
   },
   {
     label: "Live deals",
@@ -485,6 +547,7 @@ const headlineMetrics = computed(() => [
     detail: `₹${formatCompact(kpis.value.activePipelineValue || 0)} in motion`,
     to: "/app/deals",
     icon: "handshake",
+    tone: "info",
   },
   {
     label: "Available inventory",
@@ -492,25 +555,28 @@ const headlineMetrics = computed(() => [
     detail: "Units ready to match",
     to: "/app/properties",
     icon: "buildings",
+    tone: "purple",
   },
   {
-    label: "Receivable",
+    label: "Commission receivable",
     value: `₹${formatCompact(kpis.value.commissionReceivable || 0)}`,
     detail: kpis.value.commissionOverdue
       ? `₹${formatCompact(kpis.value.commissionOverdue)} overdue`
       : "Accounts on track",
     to: "/app/commissions/receivables",
     icon: "currency",
+    tone: kpis.value.commissionOverdue ? "danger" : "success",
   },
 ]);
+
 const priorityItems = computed(() => [
   {
     label: "Follow-ups due",
-    detail: "Client calls and commitments",
+    detail: "Client calls & commitments",
     value: kpis.value.followupsDueTodayCount || 0,
     to: "/app/tasks",
     icon: "phone",
-    tone: "tone-accent",
+    tone: "accent",
   },
   {
     label: "Site visits",
@@ -518,7 +584,7 @@ const priorityItems = computed(() => [
     value: kpis.value.siteVisitsScheduledCount || 0,
     to: "/app/tasks",
     icon: "house",
-    tone: "tone-info",
+    tone: "info",
   },
   {
     label: "High-intent leads",
@@ -526,37 +592,40 @@ const priorityItems = computed(() => [
     value: kpis.value.hotLeads || leadTemperatures.value.hot || 0,
     to: "/app/leads",
     icon: "flame",
-    tone: "tone-danger",
+    tone: "danger",
   },
   {
     label: "Overdue actions",
-    detail: "Past service commitment",
+    detail: "Past service commitments",
     value: kpis.value.overdueFollowupsCount || 0,
     to: "/app/tasks",
     icon: "warning",
-    tone: "tone-warning",
+    tone: "warning",
   },
 ]);
+
 const followupItems = computed(() => [
-  ...overdueFollowups.value,
+  ...overdueFollowups.value.map((f) => ({ ...f, isOverdue: true })),
   ...todayFollowups.value,
 ]);
 
-function formatPeriodLabel(period) {
-  return (
-    {
-      today: "Today",
-      this_week: "Week",
-      this_month: "Month",
-      this_quarter: "Quarter",
-      this_year: "Year",
-    }[period] || period
-  );
+// ── Methods ────────────────────────────────────────────────────────────────
+const getStageCount = (key) => salesPipeline.value[key]?.count || 0;
+const getStageValue = (key) => salesPipeline.value[key]?.value || 0;
+
+function formatCompact(val) {
+  const n = Number(val) || 0;
+  if (n >= 10_000_000) return `${(n / 10_000_000).toFixed(2)} Cr`;
+  if (n >= 100_000) return `${(n / 100_000).toFixed(2)} L`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)} K`;
+  return n.toLocaleString("en-IN");
 }
+
 function setPeriod(period) {
   selectedPeriod.value = period;
-  loadDashboardData();
+  loadData();
 }
+
 function getPeriodDates() {
   const now = new Date();
   let start = new Date();
@@ -585,266 +654,1013 @@ function getPeriodDates() {
     endDate: end.toISOString().slice(0, 10),
   };
 }
-async function loadDashboardData() {
-  loading.value = true;
+
+async function loadData(isRefresh = false) {
+  if (isRefresh) refreshing.value = true;
+  else loading.value = true;
+
   try {
-    const [res, loanRes] = await Promise.allSettled([
+    const [dashRes, loanRes] = await Promise.allSettled([
       fetchBrokerDashboard(getPeriodDates()),
       apiClient.get("/loans/summary"),
     ]);
-    if (res.status === "fulfilled") {
-      const data = res.value?.data || res.value;
+    if (dashRes.status === "fulfilled") {
+      const data = dashRes.value?.data || dashRes.value;
       if (data) {
         if (data.kpis) kpis.value = { ...kpis.value, ...data.kpis };
         if (data.salesPipeline) salesPipeline.value = data.salesPipeline;
-        if (data.leadSources) leadSources.value = data.leadSources;
         if (data.leadTemperatures)
           leadTemperatures.value = data.leadTemperatures;
         if (data.todayFollowups) todayFollowups.value = data.todayFollowups;
         if (data.overdueFollowups)
           overdueFollowups.value = data.overdueFollowups;
-        if (data.expectedCollections)
-          expectedCollections.value = data.expectedCollections;
-        if (data.recentLeads) recentLeads.value = data.recentLeads;
       }
     }
     if (loanRes.status === "fulfilled")
       loanSummary.value =
         loanRes.value?.data?.data || loanRes.value?.data || loanSummary.value;
-  } catch (error) {
-    console.error("Failed to load broker dashboard:", error);
+  } catch (err) {
+    console.error("Dashboard load failed:", err);
   } finally {
     loading.value = false;
+    refreshing.value = false;
   }
 }
-const getStageCount = (key) => salesPipeline.value[key]?.count || 0;
-const getStageValue = (key) => salesPipeline.value[key]?.value || 0;
-function formatCompact(value) {
-  const number = Number(value) || 0;
-  if (number >= 10000000) return `${(number / 10000000).toFixed(2)} Cr`;
-  if (number >= 100000) return `${(number / 100000).toFixed(2)} L`;
-  if (number >= 1000) return `${(number / 1000).toFixed(1)} K`;
-  return number.toLocaleString("en-IN");
+
+async function refreshData() {
+  await loadData(true);
 }
-onMounted(loadDashboardData);
+
+onMounted(() => loadData());
 </script>
 
 <style scoped>
-.period-control {
+/* ────────────────────────────────────────────────────────────────
+   DASH ROOT
+──────────────────────────────────────────────────────────────── */
+.dash-root {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-bottom: 3rem;
+}
+
+/* ────────────────────────────────────────────────────────────────
+   HERO HEADER
+──────────────────────────────────────────────────────────────── */
+.dash-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid hsl(var(--neutral-100));
+}
+.dash-hero__copy {
+  max-width: 32rem;
+  flex: 1 1 260px;
+}
+.dash-hero__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: hsl(var(--accent-600));
+  margin-bottom: 0.4rem;
+}
+.eyebrow-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: hsl(var(--accent-500));
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.7);
+  }
+}
+.dash-hero__title {
+  font-family: "Manrope", "Inter", system-ui, sans-serif;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  color: hsl(var(--neutral-900));
+  line-height: 1.1;
+}
+.dash-hero__name {
+  color: hsl(var(--accent-600));
+}
+.dash-hero__sub {
+  margin-top: 0.5rem;
+  font-size: 13px;
+  color: hsl(var(--neutral-400));
+  line-height: 1.55;
+}
+.dash-hero__controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+  flex: 0 0 auto;
+}
+
+/* Period pill selector */
+.period-pill {
   display: flex;
   gap: 2px;
   padding: 3px;
   border: 1px solid hsl(var(--neutral-100));
   border-radius: 9px;
   background: hsl(var(--bg-surface));
+  overflow-x: auto;
 }
-.period-control button {
+.period-pill__btn {
   flex: none;
-  padding: 6px 10px;
+  padding: 5px 10px;
   border-radius: 6px;
-  color: hsl(var(--neutral-400));
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
+  color: hsl(var(--neutral-400));
   transition: all 150ms ease;
+  white-space: nowrap;
 }
-.period-control button:hover {
+.period-pill__btn:hover {
   color: hsl(var(--neutral-900));
 }
-.period-control button.active {
-  color: hsl(var(--accent-700));
+.period-pill__btn--active {
   background: hsl(var(--accent-100));
-  box-shadow: inset 0 0 0 1px hsl(var(--accent-200) / 0.6);
+  color: hsl(var(--accent-700));
+  box-shadow: inset 0 0 0 1px hsl(var(--accent-200) / 0.7);
 }
-.pulse-panel {
+.dark .period-pill__btn--active {
+  background: hsl(var(--accent-50));
+  color: hsl(var(--accent-600));
+}
+
+/* Icon button */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid hsl(var(--neutral-100));
+  background: hsl(var(--bg-surface));
+  color: hsl(var(--neutral-500));
+  transition: all 150ms ease;
+}
+.icon-btn:hover:not(:disabled) {
+  background: hsl(var(--neutral-25));
+  color: hsl(var(--neutral-900));
+  border-color: hsl(var(--neutral-200));
+}
+.icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.icon-btn.spin svg {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────
+   SKELETON
+──────────────────────────────────────────────────────────────── */
+.dash-skeleton {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: auto auto auto;
+}
+.dash-skeleton__card,
+.dash-skeleton__wide,
+.dash-skeleton__side {
+  border-radius: 14px;
+  background: linear-gradient(
+    90deg,
+    hsl(var(--neutral-50)) 0%,
+    hsl(var(--neutral-100)) 50%,
+    hsl(var(--neutral-50)) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s linear infinite;
+}
+.dash-skeleton__card {
+  height: 130px;
+}
+.dash-skeleton__wide {
+  height: 320px;
+  grid-column: 1 / -1;
+}
+.dash-skeleton__side {
+  height: 200px;
+  grid-column: 1 / -1;
+}
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+@media (min-width: 640px) {
+  .dash-skeleton {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .dash-skeleton__wide {
+    grid-column: 1 / 3;
+    height: 340px;
+  }
+  .dash-skeleton__side {
+    grid-column: 3 / 5;
+    height: 340px;
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────
+   KPI STRIP — 4 headline tiles
+──────────────────────────────────────────────────────────────── */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.875rem;
+}
+@media (min-width: 768px) {
+  .kpi-strip {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.kpi-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 1.125rem;
+  border-radius: 14px;
+  border: 1px solid hsl(var(--neutral-100));
+  background: hsl(var(--bg-surface) / 0.96);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 1px 3px rgb(26 22 18 / 0.04);
+  transition:
+    transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 200ms ease,
+    box-shadow 200ms ease;
+  overflow: hidden;
+  text-decoration: none;
+}
+.kpi-tile::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle at 110% -10%,
+    currentColor,
+    transparent 65%
+  );
+  opacity: 0;
+  transition: opacity 200ms ease;
+  pointer-events: none;
+}
+.kpi-tile:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgb(26 22 18 / 0.09);
+}
+.kpi-tile--accent:hover {
+  border-color: hsl(var(--accent-200));
+}
+.kpi-tile--accent:hover::before {
+  opacity: 0.04;
+  color: hsl(var(--accent-500));
+}
+.kpi-tile--info:hover {
+  border-color: hsl(var(--info-border));
+}
+.kpi-tile--info:hover::before {
+  opacity: 0.05;
+  color: hsl(var(--info-text));
+}
+.kpi-tile--purple:hover {
+  border-color: hsl(var(--purple-border));
+}
+.kpi-tile--purple:hover::before {
+  opacity: 0.05;
+  color: hsl(var(--purple-text));
+}
+.kpi-tile--danger:hover {
+  border-color: hsl(var(--danger-border));
+}
+.kpi-tile--danger:hover::before {
+  opacity: 0.05;
+  color: hsl(var(--danger-text));
+}
+.kpi-tile--success:hover {
+  border-color: hsl(var(--success-border));
+}
+.kpi-tile--success:hover::before {
+  opacity: 0.05;
+  color: hsl(var(--success-text));
+}
+.kpi-tile--warning:hover {
+  border-color: hsl(var(--warning-border));
+}
+.kpi-tile--warning:hover::before {
+  opacity: 0.05;
+  color: hsl(var(--warning-text));
+}
+
+.kpi-tile__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  margin-bottom: 0.75rem;
+  flex-shrink: 0;
+}
+.kpi-tile__icon--accent {
+  background: hsl(var(--accent-100));
+  color: hsl(var(--accent-600));
+}
+.kpi-tile__icon--info {
+  background: hsl(var(--info-bg));
+  color: hsl(var(--info-text));
+}
+.kpi-tile__icon--purple {
+  background: hsl(var(--purple-bg));
+  color: hsl(var(--purple-text));
+}
+.kpi-tile__icon--danger {
+  background: hsl(var(--danger-bg));
+  color: hsl(var(--danger-text));
+}
+.kpi-tile__icon--success {
+  background: hsl(var(--success-bg));
+  color: hsl(var(--success-text));
+}
+.kpi-tile__icon--warning {
+  background: hsl(var(--warning-bg));
+  color: hsl(var(--warning-text));
+}
+
+.kpi-tile__value {
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: hsl(var(--neutral-900));
+  margin-top: auto;
+}
+.kpi-tile__label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: hsl(var(--neutral-500));
+  margin-top: 0.25rem;
+}
+.kpi-tile__detail {
+  font-size: 11px;
+  color: hsl(var(--neutral-400));
+  margin-top: 0.15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kpi-tile__arrow {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  opacity: 0;
+  transform: translateX(-4px);
+  color: hsl(var(--neutral-400));
+  transition: all 200ms ease;
+}
+.kpi-tile:hover .kpi-tile__arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ────────────────────────────────────────────────────────────────
+   BENTO ROW — Pulse card + Priority panel
+──────────────────────────────────────────────────────────────── */
+.bento-row {
+  display: grid;
+  gap: 1.125rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 1024px) {
+  .bento-row {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+/* Pulse card (dark, gradient background) */
+.pulse-card {
+  position: relative;
+  overflow: hidden;
   border-radius: 16px;
   color: white;
   background:
     radial-gradient(
       circle at 85% 5%,
-      hsl(var(--accent-500) / 0.3),
-      transparent 18rem
+      hsl(var(--accent-500) / 0.28),
+      transparent 20rem
     ),
     linear-gradient(135deg, hsl(18 20% 7%), hsl(166 22% 11%));
-  box-shadow: 0 20px 45px rgb(17 24 20 / 0.18);
+  box-shadow: 0 16px 40px rgb(17 24 20 / 0.18);
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
 }
-.pulse-panel::after {
-  content: "";
+.pulse-card__noise {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgb(255 255 255 / 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(255 255 255 / 0.04) 1px, transparent 1px);
+    linear-gradient(rgb(255 255 255 / 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.03) 1px, transparent 1px);
   background-size: 28px 28px;
-  mask-image: linear-gradient(to left, black, transparent 80%);
+  mask-image: linear-gradient(to left, black 20%, transparent 80%);
   pointer-events: none;
 }
-.pulse-icon {
+.pulse-card__body {
+  position: relative;
+  z-index: 1;
   display: flex;
-  height: 44px;
-  width: 44px;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  padding: 1.5rem;
+  gap: 1.5rem;
+}
+.pulse-card__eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: hsl(162 63% 68%);
+}
+.pulse-card__figure {
+  font-family: "Manrope", system-ui;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  color: white;
+  margin-top: 0.5rem;
+}
+.pulse-card__caption {
+  margin-top: 0.5rem;
+  font-size: 12px;
+  color: hsl(162 20% 60%);
+  line-height: 1.5;
+}
+.pulse-icon-wrap {
+  display: flex;
   align-items: center;
   justify-content: center;
+  width: 44px;
+  height: 44px;
   border-radius: 12px;
-  color: hsl(160 65% 70%);
   background: rgb(255 255 255 / 0.08);
-  border: 1px solid rgb(255 255 255 / 0.08);
+  border: 1px solid rgb(255 255 255 / 0.07);
+  color: hsl(162 50% 70%);
+  flex-shrink: 0;
 }
-.pipeline-signal {
+.pulse-chart-header {
   display: flex;
-  height: 70px;
-  align-items: flex-end;
-  gap: 5px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+  font-size: 10px;
+  font-weight: 600;
+  color: hsl(162 10% 50%);
 }
-.signal-bar {
+.pulse-chart-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: hsl(162 50% 60%);
+  transition: color 150ms;
+  text-decoration: none;
+}
+.pulse-chart-link:hover {
+  color: hsl(162 60% 72%);
+}
+
+/* Priority panel */
+.priority-panel {
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  border: 1px solid hsl(var(--neutral-100));
+  background: hsl(var(--bg-surface) / 0.95);
+  backdrop-filter: blur(8px);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgb(26 22 18 / 0.03);
+}
+.priority-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.125rem 1.25rem;
+  border-bottom: 1px solid hsl(var(--neutral-100));
+}
+.priority-panel__title {
+  font-family: "Manrope", system-ui;
+  font-size: 14px;
+  font-weight: 700;
+  color: hsl(var(--neutral-900));
+  margin-top: 2px;
+}
+.priority-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: hsl(var(--warning-bg));
+  color: hsl(var(--warning-text));
+}
+.priority-list {
+  display: flex;
+  flex-direction: column;
   flex: 1;
-  min-height: 10px;
-  border-radius: 3px 3px 1px 1px;
+}
+.priority-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0.8rem 1.25rem;
+  min-height: 60px;
+  border-bottom: 1px solid hsl(var(--neutral-100) / 0.7);
+  text-decoration: none;
+  transition: background 150ms ease;
+}
+.priority-row:last-child {
+  border-bottom: 0;
+}
+.priority-row:hover {
+  background: hsl(var(--neutral-25));
+}
+.priority-row__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  flex-shrink: 0;
+  transition: transform 150ms ease;
+}
+.priority-row:hover .priority-row__icon {
+  transform: scale(1.07);
+}
+.priority-row__icon--accent {
+  background: hsl(var(--accent-100));
+  color: hsl(var(--accent-600));
+}
+.priority-row__icon--info {
+  background: hsl(var(--info-bg));
+  color: hsl(var(--info-text));
+}
+.priority-row__icon--danger {
+  background: hsl(var(--danger-bg));
+  color: hsl(var(--danger-text));
+}
+.priority-row__icon--warning {
+  background: hsl(var(--warning-bg));
+  color: hsl(var(--warning-text));
+}
+.priority-row__body {
+  flex: 1;
+  min-width: 0;
+}
+.priority-row__label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: hsl(var(--neutral-900));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.priority-row__detail {
+  display: block;
+  font-size: 10px;
+  color: hsl(var(--neutral-400));
+  margin-top: 1px;
+}
+.priority-row__count {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 15px;
+  font-weight: 700;
+  color: hsl(var(--neutral-900));
+  flex-shrink: 0;
+}
+.priority-row__count--accent {
+  color: hsl(var(--accent-600));
+}
+.priority-row__count--info {
+  color: hsl(var(--info-text));
+}
+.priority-row__count--danger {
+  color: hsl(var(--danger-text));
+}
+.priority-row__count--warning {
+  color: hsl(var(--warning-text));
+}
+.priority-row__arrow {
+  color: hsl(var(--neutral-300));
+  opacity: 0;
+  transform: translateX(-3px);
+  transition: all 150ms ease;
+}
+.priority-row:hover .priority-row__arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ────────────────────────────────────────────────────────────────
+   FUNNEL — Pipeline stages
+──────────────────────────────────────────────────────────────── */
+.funnel-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 1.25rem 1.375rem;
+  border-bottom: 1px solid hsl(var(--neutral-100));
+}
+.funnel-title {
+  font-family: "Manrope", system-ui;
+  font-size: 14px;
+  font-weight: 700;
+  color: hsl(var(--neutral-900));
+  margin-top: 2px;
+}
+.funnel-subtitle {
+  font-size: 12px;
+  color: hsl(var(--neutral-400));
+  align-self: flex-end;
+}
+.funnel-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  overflow-x: auto;
+}
+@media (min-width: 768px) {
+  .funnel-grid {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+}
+@media (max-width: 639px) {
+  .funnel-grid {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+  }
+}
+.funnel-stage {
+  min-height: 160px;
+  padding: 1rem;
+  border-right: 1px solid hsl(var(--neutral-100));
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  transition: background 160ms ease;
+  scroll-snap-align: start;
+  min-width: 120px;
+}
+.funnel-stage:last-child {
+  border-right: 0;
+}
+.funnel-stage:hover {
+  background: hsl(var(--bg-elevated));
+}
+.funnel-stage__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.funnel-stage__index {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9px;
+  color: hsl(var(--neutral-300));
+}
+.funnel-stage__arrow {
+  color: hsl(var(--neutral-300));
+  opacity: 0;
+  transform: translateX(-3px);
+  transition: all 150ms ease;
+}
+.funnel-stage:hover .funnel-stage__arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+.funnel-stage__bar-wrap {
+  width: 100%;
+  height: 40px;
+  display: flex;
+  align-items: flex-end;
+  margin: 0.75rem 0 0.5rem;
+  background: hsl(var(--neutral-50));
+  border-radius: 4px;
+  overflow: hidden;
+}
+.funnel-stage__bar {
+  width: 100%;
+  min-height: 4px;
+  border-radius: 4px;
   background: linear-gradient(
     to top,
     hsl(var(--accent-600)),
     hsl(var(--accent-500))
   );
-  opacity: 0.42;
-  transition:
-    opacity 160ms ease,
-    transform 160ms ease;
-  transform-origin: bottom;
+  transition: height 500ms cubic-bezier(0.16, 1, 0.3, 1);
 }
-.signal-bar:hover {
-  opacity: 1;
-  transform: scaleY(1.04);
+.dark .funnel-stage__bar {
+  background: linear-gradient(to top, hsl(var(--accent-600)), hsl(162 63% 60%));
 }
-.priority-row {
+.funnel-stage__count {
+  font-family: "Manrope", system-ui;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: hsl(var(--neutral-900));
+}
+.funnel-stage__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: hsl(var(--neutral-700));
+  margin-top: 2px;
+}
+.funnel-stage__value {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  color: hsl(var(--accent-600));
+  margin-top: 2px;
+}
+
+/* ────────────────────────────────────────────────────────────────
+   BOTTOM ROW — Follow-ups + Commission + Loan
+──────────────────────────────────────────────────────────────── */
+.bottom-row {
+  display: grid;
+  gap: 1.125rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 1024px) {
+  .bottom-row {
+    grid-template-columns: 7fr 5fr;
+  }
+}
+
+.followup-panel {
+}
+.followup-header {
   display: flex;
-  min-height: 58px;
   align-items: center;
-  gap: 10px;
-  padding: 8px 2px;
+  justify-content: space-between;
+  padding: 1.125rem 1.25rem;
+  border-bottom: 1px solid hsl(var(--neutral-100));
 }
-.priority-row:hover .priority-icon {
-  transform: scale(1.06);
+.followup-title {
+  font-family: "Manrope", system-ui;
+  font-size: 14px;
+  font-weight: 700;
+  color: hsl(var(--neutral-900));
+  margin-top: 2px;
 }
-.priority-icon,
-.metric-icon {
-  display: inline-flex;
-  height: 32px;
-  width: 32px;
-  flex: none;
+
+.followup-row-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  min-height: 64px;
+  transition: background 150ms ease;
+}
+.followup-row-item:hover {
+  background: hsl(var(--bg-elevated));
+}
+.followup-row-item__icon {
+  display: flex;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  border-radius: 9px;
-  transition: transform 160ms ease;
-  color: hsl(var(--accent-600));
+  border-radius: 50%;
   background: hsl(var(--accent-100));
+  color: hsl(var(--accent-600));
 }
-.tone-info {
-  color: hsl(var(--info-text));
-  background: hsl(var(--info-bg));
+.followup-row-item__body {
+  flex: 1;
+  min-width: 0;
 }
-.tone-danger {
-  color: hsl(var(--danger-text));
-  background: hsl(var(--danger-bg));
-}
-.tone-warning {
-  color: hsl(var(--warning-text));
-  background: hsl(var(--warning-bg));
-}
-.metrics-strip {
-  display: grid;
+.followup-row-item__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: hsl(var(--neutral-900));
+  white-space: nowrap;
   overflow: hidden;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  text-overflow: ellipsis;
 }
-.metric-cell {
-  min-height: 150px;
-  padding: 18px;
-  border-right: 1px solid hsl(var(--neutral-100));
-  transition: background-color 160ms ease;
+.followup-row-item__sub {
+  font-size: 11px;
+  color: hsl(var(--neutral-400));
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.metric-cell:last-child {
-  border-right: 0;
-}
-.metric-cell:hover {
-  background: hsl(var(--accent-50) / 0.45);
-}
-.pipeline-grid {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-}
-.pipeline-stage {
-  min-height: 155px;
-  padding: 16px;
-  border-right: 1px solid hsl(var(--neutral-100));
-  transition: background-color 160ms ease;
-}
-.pipeline-stage:last-child {
-  border-right: 0;
-}
-.pipeline-stage:hover {
-  background: hsl(var(--bg-elevated));
-}
-.stage-index {
+.followup-row-item__time {
   font-family: "JetBrains Mono", monospace;
-  font-size: 9px;
-  color: hsl(var(--neutral-300));
+  font-size: 12px;
+  font-weight: 700;
+  color: hsl(var(--neutral-900));
 }
-.followup-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 68px;
-  padding: 10px 20px;
-  transition: background-color 150ms ease;
+.followup-row-item__type {
+  font-size: 10px;
+  color: hsl(var(--neutral-400));
+  margin-top: 1px;
 }
-.followup-row:hover {
-  background: hsl(var(--bg-elevated));
-}
-.status-hot {
-  padding: 2px 6px;
+
+.hot-badge {
+  padding: 1px 6px;
   border-radius: 4px;
   background: hsl(var(--danger-bg));
   color: hsl(var(--danger-text));
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
-.empty-state {
+.overdue-badge {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: hsl(var(--warning-bg));
+  color: hsl(var(--warning-text));
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.followup-empty {
   display: flex;
-  min-height: 260px;
+  min-height: 220px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 6px;
   text-align: center;
+  padding: 2rem;
 }
-.empty-icon {
+.followup-empty__icon {
   display: flex;
   width: 48px;
   height: 48px;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  color: hsl(var(--success-text));
   background: hsl(var(--success-bg));
+  color: hsl(var(--success-text));
   margin-bottom: 6px;
 }
-.metric-label {
+.followup-empty__title {
+  font-family: "Manrope", system-ui;
+  font-size: 14px;
+  font-weight: 700;
+  color: hsl(var(--neutral-900));
+}
+.followup-empty__sub {
+  font-size: 12px;
   color: hsl(var(--neutral-400));
+}
+
+/* Side stack */
+.side-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+}
+
+/* Commission card */
+.commission-card {
+  padding: 1.25rem;
+}
+.commission-card__title {
+  font-family: "Manrope", system-ui;
+  font-size: 14px;
+  font-weight: 700;
+  color: hsl(var(--neutral-900));
+  margin-top: 2px;
+}
+.commission-icon {
+  display: flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: hsl(var(--accent-100));
+  color: hsl(var(--accent-600));
+  flex-shrink: 0;
+}
+.commission-card__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1.125rem;
+}
+.commission-card__meta-label {
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.09em;
+  color: hsl(var(--neutral-400));
 }
-.metric-value {
+.commission-card__meta-value {
   margin-top: 4px;
-  color: hsl(var(--neutral-900));
-  font-family: "Manrope", sans-serif;
+  font-family: "Manrope", system-ui;
   font-size: 18px;
   font-weight: 800;
   letter-spacing: -0.03em;
+  color: hsl(var(--neutral-900));
 }
-.loan-panel {
+.commission-card__meta-value--green {
+  color: hsl(var(--success-text));
+}
+.commission-card__progress-wrap {
+  margin-top: 1.125rem;
+}
+.commission-card__track {
+  height: 6px;
+  border-radius: 999px;
+  background: hsl(var(--neutral-100));
+  overflow: hidden;
+}
+.commission-card__bar {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    hsl(var(--accent-500)),
+    hsl(var(--accent-600))
+  );
+  transition: width 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.commission-card__stats {
+  margin-top: 0.875rem;
+}
+.commission-card__stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.commission-card__stat--danger {
+  background: hsl(var(--danger-bg));
+  color: hsl(var(--danger-text));
+}
+.commission-card__stat--success {
+  background: hsl(var(--success-bg));
+  color: hsl(var(--success-text));
+}
+
+/* Loan card (dark) */
+.loan-card {
+  position: relative;
+  overflow: hidden;
   border-radius: 14px;
+  padding: 1.25rem;
+  text-decoration: none;
   background:
     radial-gradient(
       circle at 100% 0%,
@@ -852,19 +1668,62 @@ onMounted(loadDashboardData);
       transparent 16rem
     ),
     linear-gradient(135deg, hsl(204 35% 12%), hsl(188 28% 10%));
-  box-shadow: 0 16px 36px rgb(15 35 38 / 0.14);
-  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 12px 30px rgb(15 35 38 / 0.12);
+  transition:
+    transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 200ms ease;
 }
-.loan-panel:hover {
+.loan-card:hover {
   transform: translateY(-2px);
+  box-shadow: 0 18px 40px rgb(15 35 38 / 0.18);
 }
-.loan-value {
+.loan-card__noise {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgb(255 255 255 / 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.025) 1px, transparent 1px);
+  background-size: 22px 22px;
+  pointer-events: none;
+}
+.loan-card__eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: hsl(200 80% 68%);
+}
+.loan-card__title {
+  font-family: "Manrope", system-ui;
+  font-size: 15px;
+  font-weight: 700;
   color: white;
-  font-family: "Manrope", sans-serif;
+  margin-top: 4px;
+}
+.loan-card__icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgb(255 255 255 / 0.1);
+  color: hsl(200 80% 70%);
+}
+.loan-card__stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+.loan-card__stat-value {
+  color: white;
+  font-family: "Manrope", system-ui;
   font-size: 17px;
   font-weight: 800;
+  letter-spacing: -0.02em;
 }
-.loan-label {
+.loan-card__stat-label {
   margin-top: 2px;
   color: rgb(148 163 184);
   font-size: 9px;
@@ -872,41 +1731,17 @@ onMounted(loadDashboardData);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
-@media (max-width: 1023px) {
-  .pipeline-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-  .pipeline-stage {
-    border-bottom: 1px solid hsl(var(--neutral-100));
-  }
-  .metrics-strip {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .metric-cell:nth-child(2) {
-    border-right: 0;
-  }
-  .metric-cell:nth-child(-n + 2) {
-    border-bottom: 1px solid hsl(var(--neutral-100));
-  }
+.loan-card__footer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 1rem;
+  font-size: 11px;
+  font-weight: 600;
+  color: hsl(200 60% 65%);
+  transition: color 150ms ease;
 }
-@media (max-width: 639px) {
-  .pipeline-grid {
-    display: flex;
-    overflow-x: auto;
-  }
-  .pipeline-stage {
-    min-width: 145px;
-  }
-  .metrics-strip {
-    grid-template-columns: 1fr;
-  }
-  .metric-cell {
-    border-right: 0;
-    border-bottom: 1px solid hsl(var(--neutral-100));
-    min-height: 132px;
-  }
-  .metric-cell:last-child {
-    border-bottom: 0;
-  }
+.loan-card:hover .loan-card__footer {
+  color: hsl(200 80% 78%);
 }
 </style>

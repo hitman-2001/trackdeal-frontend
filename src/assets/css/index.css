@@ -814,6 +814,7 @@
 .app-data-table tbody tr.is-selected { background-color: hsl(var(--table-selected) / 0.78); }
 .app-data-table tbody tr.is-selected:hover { background-color: hsl(var(--table-selected)); }
 .app-data-table__select-cell { width: 3.25rem; padding-left: 1.25rem !important; padding-right: 0.5rem !important; text-align: center; }
+.app-data-table__actions-cell { width: 6.5rem; min-width: 6.5rem; padding-right: 1rem !important; white-space: nowrap; }
 .app-data-table__sort { color: hsl(var(--neutral-300)); }
 .app-data-table__sort-active { color: hsl(var(--accent-600)); }
 

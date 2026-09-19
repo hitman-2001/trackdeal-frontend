@@ -68,18 +68,35 @@ export function useInviteUserMutation() {
   });
 }
 
-export function useSuspendUserMutation() {
+export function useUpdateUserStatusMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: settingsApi.suspendUser,
-    onSuccess: () => {
-      // Delay invalidation slightly to prevent read-replica race conditions
-      // which immediately overwrite optimistic updates with stale data
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['settings', 'users'] });
-        queryClient.invalidateQueries({ queryKey: ['settings', 'audit'] });
-      }, 750);
+    mutationFn: settingsApi.updateUserStatus,
+    onSuccess: (updatedUser, { id }) => {
+      queryClient.setQueryData(['settings', 'users'], (users) => {
+        if (!users) return users;
+        return users.map((user) =>
+          (user._id || user.id) === id ? { ...user, ...updatedUser } : user
+        );
+      });
+      queryClient.invalidateQueries({ queryKey: ['settings', 'audit'] });
     }
+  });
+}
+
+export function useUpdateUserPermissionsMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: settingsApi.updateUserPermissions,
+    onSuccess: (updatedUser, { id }) => {
+      queryClient.setQueryData(['settings', 'users'], (users) => {
+        if (!users) return users;
+        return users.map((user) =>
+          (user._id || user.id) === id ? { ...user, ...updatedUser } : user
+        );
+      });
+      queryClient.invalidateQueries({ queryKey: ['settings', 'audit'] });
+    },
   });
 }
 

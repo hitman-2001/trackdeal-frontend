@@ -41,10 +41,10 @@ const route = useRoute();
 const isEducation = computed(() => store.getters['organization/isEducationTenant']);
 
 const settingsMenu = computed(() => [
-  { name: isEducation.value ? 'Institute Profile' : 'Organization', to: '/app/settings/org', icon: PhBuildings, permission: 'settings.org' },
-  { name: isEducation.value ? 'Campuses & Centres' : 'Branches', to: '/app/settings/branches', icon: PhMapPin, permission: 'settings.branch' },
-  { name: isEducation.value ? 'Staff Directory' : 'Users', to: '/app/settings/users', icon: PhUsersThree, permission: 'settings.users' },
-  { name: 'Roles & Permissions', to: '/app/settings/roles', icon: PhShieldCheck, permission: 'settings.roles' },
+  { name: isEducation.value ? 'Institute Profile' : 'Organization', to: '/app/settings/org', icon: PhBuildings, permission: 'organizations.read' },
+  { name: isEducation.value ? 'Campuses & Centres' : 'Branches', to: '/app/settings/branches', icon: PhMapPin, permission: 'branches.read' },
+  { name: isEducation.value ? 'Staff Directory' : 'Users', to: '/app/settings/users', icon: PhUsersThree, permission: 'users.read' },
+  { name: 'Roles & Permissions', to: '/app/settings/roles', icon: PhShieldCheck, permission: 'roles.read' },
 ]);
 
 const isActive = (to) => route.path === to || route.path.startsWith(`${to}/`);

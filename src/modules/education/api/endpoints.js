@@ -64,3 +64,25 @@ export async function enrollEducationLead(id, data = {}) {
   const res = await apiClient.post(`/education/leads/${id}/enroll`, data);
   return res.data;
 }
+
+/** Conversation history & activities (shared lead engine, education records). */
+export async function fetchEducationLeadActivityCenter(leadId) {
+  const res = await apiClient.get(`/leads/${leadId}/activity-center`);
+  return res.data;
+}
+
+export async function logEducationLeadActivity(leadId, data) {
+  const res = await apiClient.post(`/leads/${leadId}/activities`, data);
+  return res.data;
+}
+
+export async function addEducationLeadNote(leadId, data) {
+  const res = await apiClient.post(`/leads/${leadId}/notes`, data);
+  return res.data;
+}
+
+export async function addEducationLeadFollowUp(leadId, data) {
+  const res = await apiClient.post(`/leads/${leadId}/follow-up`, data);
+  return res.data;
+}
+

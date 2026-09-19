@@ -1,249 +1,281 @@
 <template>
-  <div class="max-w-7xl mx-auto space-y-6">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+  <div class="admin-dash">
+
+    <!-- ── Header ─────────────────────────────────────────────────── -->
+    <div class="admin-dash__header">
       <div>
-        <h1 class="font-heading text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Platform Administration Dashboard</h1>
-        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Real-time TrackDeal SaaS cluster analytics, tenant growth, and platform health.</p>
+        <p class="eyebrow">Platform Administration</p>
+        <h1 class="admin-dash__title">Dashboard</h1>
+        <p class="admin-dash__subtitle">
+          Real-time SaaS cluster analytics, tenant growth, and platform health.
+        </p>
       </div>
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2.5 shrink-0">
         <button
           @click="loadData"
-          class="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition flex items-center gap-2"
+          class="btn btn-secondary btn-sm gap-1.5"
         >
-          <AppIcon name="refresh" :size="14" :class="{ 'animate-spin': loading }" />
-          <span>Refresh Analytics</span>
+          <PhArrowsClockwise :size="14" :class="{ 'animate-spin': loading }" />
+          <span>Refresh</span>
         </button>
         <router-link
           to="/admin/organizations"
-          class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white shadow-lg shadow-indigo-600/30 transition flex items-center gap-1.5"
+          class="btn btn-primary btn-sm gap-1.5"
         >
-          <AppIcon name="add" :size="14" weight="bold" />
+          <PhPlus :size="14" weight="bold" />
           <span>Add Tenant</span>
         </router-link>
       </div>
     </div>
 
-    <!-- Loading State -->
-    <div v-if="loading && !stats" class="py-24 text-center">
-      <div class="w-10 h-10 border-3 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mx-auto mb-3"></div>
-      <p class="text-xs text-slate-500 dark:text-slate-400">Loading platform metrics...</p>
+    <!-- ── Loading State ─────────────────────────────────────────── -->
+    <div v-if="loading && !stats" class="admin-dash__loading">
+      <div class="admin-dash__spinner"></div>
+      <p class="admin-dash__loading-text">Loading platform metrics…</p>
     </div>
 
-    <div v-else class="space-y-6">
-      <!-- SUMMARY METRIC CARDS (4 Grid) -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- 1. Total Organizations -->
-        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-lg relative overflow-hidden group">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Organizations</span>
-            <div class="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center text-sm">
-              <AppIcon name="buildings" :size="20" weight="duotone" />
+    <div v-else class="admin-dash__body">
+
+      <!-- ── KPI Cards ─────────────────────────────────────────── -->
+      <div class="admin-kpi-grid">
+
+        <!-- Organizations -->
+        <div class="admin-kpi">
+          <div class="admin-kpi__top">
+            <span class="admin-kpi__label">Organizations</span>
+            <div class="admin-kpi__icon admin-kpi__icon--accent">
+              <PhBuildings :size="17" weight="duotone" />
             </div>
           </div>
-          <div class="mt-3">
-            <span class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">{{ stats?.totalOrganizations || 0 }}</span>
-            <div class="mt-1 flex items-center gap-2 text-[11px]">
-              <span class="text-emerald-400 font-semibold">+{{ stats?.newOrganizationsThisMonth || 0 }} this month</span>
-              <span class="text-slate-500">• {{ stats?.activeTenants || 0 }} active</span>
-            </div>
+          <p class="admin-kpi__value">{{ stats?.totalOrganizations ?? 0 }}</p>
+          <div class="admin-kpi__detail">
+            <span class="admin-kpi__detail--positive">+{{ stats?.newOrganizationsThisMonth ?? 0 }} this month</span>
+            <span class="admin-kpi__dot">·</span>
+            <span>{{ stats?.activeTenants ?? 0 }} active</span>
           </div>
         </div>
 
-        <!-- 2. Platform Users -->
-        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-lg relative overflow-hidden group">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Users</span>
-            <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-sm">
-              <AppIcon name="users" :size="20" weight="duotone" />
+        <!-- Platform Users -->
+        <div class="admin-kpi">
+          <div class="admin-kpi__top">
+            <span class="admin-kpi__label">Total Users</span>
+            <div class="admin-kpi__icon admin-kpi__icon--success">
+              <PhUsersThree :size="17" weight="duotone" />
             </div>
           </div>
-          <div class="mt-3">
-            <span class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">{{ stats?.totalUsers || 0 }}</span>
-            <div class="mt-1 flex items-center gap-2 text-[11px]">
-              <span class="text-emerald-400 font-semibold">+{{ stats?.newUsersThisMonth || 0 }} new</span>
-              <span class="text-slate-500">• Across all tenants</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 3. Active Tenants -->
-        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-lg relative overflow-hidden group">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active Tenants</span>
-            <div class="w-8 h-8 rounded-xl bg-violet-500/10 text-violet-400 border border-violet-500/20 flex items-center justify-center text-sm">
-              <AppIcon name="lightning" :size="20" weight="duotone" />
-            </div>
-          </div>
-          <div class="mt-3">
-            <span class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">{{ stats?.activeTenants || 0 }}</span>
-            <div class="mt-1 flex items-center gap-2 text-[11px]">
-              <span class="text-slate-400">{{ stats?.inactiveTenants || 0 }} inactive</span>
-              <span v-if="stats?.suspendedTenants > 0" class="text-rose-400 font-bold">• {{ stats?.suspendedTenants }} suspended</span>
-            </div>
+          <p class="admin-kpi__value">{{ stats?.totalUsers ?? 0 }}</p>
+          <div class="admin-kpi__detail">
+            <span class="admin-kpi__detail--positive">+{{ stats?.newUsersThisMonth ?? 0 }} new</span>
+            <span class="admin-kpi__dot">·</span>
+            <span>Across all tenants</span>
           </div>
         </div>
 
-        <!-- 4. Total Platform Leads -->
-        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-lg relative overflow-hidden group">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Platform Leads</span>
-            <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center text-sm">
-              <AppIcon name="target" :size="20" weight="duotone" />
+        <!-- Active Tenants -->
+        <div class="admin-kpi">
+          <div class="admin-kpi__top">
+            <span class="admin-kpi__label">Active Tenants</span>
+            <div class="admin-kpi__icon admin-kpi__icon--info">
+              <PhLightning :size="17" weight="duotone" />
             </div>
           </div>
-          <div class="mt-3">
-            <span class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">{{ stats?.totalLeads || 0 }}</span>
-            <div class="mt-1 flex items-center gap-2 text-[11px]">
-              <span class="text-slate-400">{{ stats?.totalDeals || 0 }} deals</span>
-              <span class="text-slate-500">• {{ stats?.totalProperties || 0 }} properties</span>
-            </div>
+          <p class="admin-kpi__value">{{ stats?.activeTenants ?? 0 }}</p>
+          <div class="admin-kpi__detail">
+            <span>{{ stats?.inactiveTenants ?? 0 }} inactive</span>
+            <template v-if="stats?.suspendedTenants > 0">
+              <span class="admin-kpi__dot">·</span>
+              <span class="admin-kpi__detail--danger">{{ stats?.suspendedTenants }} suspended</span>
+            </template>
           </div>
         </div>
+
+        <!-- Platform Leads -->
+        <div class="admin-kpi">
+          <div class="admin-kpi__top">
+            <span class="admin-kpi__label">Platform Leads</span>
+            <div class="admin-kpi__icon admin-kpi__icon--warning">
+              <PhTarget :size="17" weight="duotone" />
+            </div>
+          </div>
+          <p class="admin-kpi__value">{{ stats?.totalLeads ?? 0 }}</p>
+          <div class="admin-kpi__detail">
+            <span>{{ stats?.totalDeals ?? 0 }} deals</span>
+            <span class="admin-kpi__dot">·</span>
+            <span>{{ stats?.totalProperties ?? 0 }} properties</span>
+          </div>
+        </div>
+
       </div>
 
-      <!-- RECENT ACTIVE ORGANIZATIONS & PLATFORM SUMMARY -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Recent Organizations Table (2 Cols) -->
-        <div class="lg:col-span-2 p-5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-lg space-y-4">
-          <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+      <!-- ── Lower grid: Organizations table + Health panel ─────── -->
+      <div class="admin-lower">
+
+        <!-- Recent Organizations Table -->
+        <div class="workspace-panel admin-orgs-panel">
+          <div class="admin-section-header">
             <div>
-              <h2 class="text-sm font-bold text-slate-900 dark:text-white">Recent Tenant Organizations</h2>
-              <p class="text-xs text-slate-500 dark:text-slate-400">Newly onboarded real-estate agencies and brokerages</p>
+              <p class="eyebrow">Tenants</p>
+              <h2 class="admin-section-title">Recent Tenant Organizations</h2>
+              <p class="admin-section-sub">Newly onboarded organizations across all verticals</p>
             </div>
-            <router-link to="/admin/organizations" class="text-xs font-semibold text-indigo-400 hover:text-indigo-300">
-              View All ({{ stats?.totalOrganizations }}) →
+            <router-link
+              to="/admin/organizations"
+              class="admin-view-all"
+            >
+              <span>View All ({{ stats?.totalOrganizations ?? 0 }})</span>
+              <PhArrowRight :size="11" />
             </router-link>
           </div>
 
           <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-              <thead class="text-[10px] font-bold uppercase text-slate-500 border-b border-slate-200 dark:border-slate-800/80">
+            <table class="workspace-table">
+              <thead>
                 <tr>
-                  <th class="py-2.5 px-3">Organization</th>
-                  <th class="py-2.5 px-3">Owner</th>
-                  <th class="py-2.5 px-3">Plan</th>
-                  <th class="py-2.5 px-3">Users</th>
-                  <th class="py-2.5 px-3">Leads</th>
-                  <th class="py-2.5 px-3">Status</th>
-                  <th class="py-2.5 px-3 text-right">Action</th>
+                  <th>Organization</th>
+                  <th>Owner</th>
+                  <th>Vertical / Plan</th>
+                  <th class="text-center">Users</th>
+                  <th class="text-center">Leads</th>
+                  <th>Status</th>
+                  <th class="text-right">Action</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60">
-                <tr v-for="org in recentOrganizations" :key="org._id" class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-                  <td class="py-3 px-3">
-                    <div class="font-bold text-slate-800 dark:text-slate-200">{{ org.name }}</div>
-                    <div class="text-[10px] text-slate-500 font-mono">{{ org.code }}</div>
+              <tbody>
+                <tr
+                  v-for="org in recentOrganizations"
+                  :key="org._id"
+                >
+                  <td>
+                    <span class="workspace-table-primary">{{ org.name }}</span>
+                    <span class="workspace-table-muted font-mono">{{ org.code }}</span>
                   </td>
-                  <td class="py-3 px-3">
-                    <div class="text-slate-600 dark:text-slate-300">{{ org.ownerId?.firstName }} {{ org.ownerId?.lastName }}</div>
-                    <div class="text-[10px] text-slate-500">{{ org.ownerId?.email }}</div>
+                  <td>
+                    <span class="workspace-table-primary">
+                      {{ org.ownerId?.firstName }} {{ org.ownerId?.lastName }}
+                    </span>
+                    <span class="workspace-table-muted truncate max-w-[150px] block">{{ org.ownerId?.email }}</span>
                   </td>
-                  <td class="py-3 px-3">
-                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                      {{ org.organizationType || org.subscriptionPlan }}
+                  <td>
+                    <span class="workspace-status capitalize">
+                      {{ org.organizationType || org.subscriptionPlan || 'Agency' }}
                     </span>
                   </td>
-                  <td class="py-3 px-3 font-semibold text-slate-700 dark:text-slate-300">{{ org.usersCount || 0 }}</td>
-                  <td class="py-3 px-3 font-semibold text-slate-700 dark:text-slate-300">{{ org.leadsCount || 0 }}</td>
-                  <td class="py-3 px-3">
+                  <td class="text-center font-mono" style="color: hsl(var(--neutral-700)); font-weight: 600">
+                    {{ org.usersCount || 0 }}
+                  </td>
+                  <td class="text-center font-mono" style="color: hsl(var(--neutral-700)); font-weight: 600">
+                    {{ org.leadsCount || 0 }}
+                  </td>
+                  <td>
                     <span
-                      class="px-2 py-0.5 rounded-full text-[10px] font-bold capitalize"
+                      class="status-pill"
                       :class="{
-                        'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20': org.status === 'active',
-                        'bg-amber-500/10 text-amber-400 border border-amber-500/20': org.status === 'inactive',
-                        'bg-rose-500/10 text-rose-400 border border-rose-500/20': org.status === 'suspended',
+                        'status-pill--success': org.status === 'active',
+                        'status-pill--warning': org.status === 'inactive',
+                        'status-pill--danger': org.status === 'suspended',
                       }"
                     >
                       {{ org.status }}
                     </span>
                   </td>
-                  <td class="py-3 px-3 text-right">
+                  <td class="text-right">
                     <router-link
                       :to="`/admin/organizations/${org._id}`"
+                      class="admin-action-btn"
                       title="Manage organization"
-                      aria-label="Manage organization"
-                      class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-indigo-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white transition"
                     >
-                      <AppIcon name="settings" :size="15" />
+                      <PhGearSix :size="14" />
                     </router-link>
                   </td>
                 </tr>
                 <tr v-if="recentOrganizations.length === 0">
-                  <td colspan="7" class="py-8 text-center text-xs text-slate-500">No organizations found.</td>
+                  <td colspan="7" class="py-10 text-center" style="color: hsl(var(--neutral-400)); font-size: 12px">
+                    No organizations found.
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
 
-        <!-- Platform System Health & Quick Actions (1 Col) -->
-        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-lg space-y-4">
-          <div class="border-b border-slate-200 dark:border-slate-800 pb-3">
-            <h2 class="text-sm font-bold text-slate-900 dark:text-white">Platform Health & Quick Actions</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Cluster runtime services & controls</p>
-          </div>
-
-          <div class="space-y-3">
-            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-              <div class="flex items-center gap-2.5">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <div>
-                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200">MongoDB Multi-Tenant DB</div>
-                  <div class="text-[10px] text-slate-500">ReplicaSet Connected • Isolated Contexts</div>
-                </div>
-              </div>
-              <span class="text-xs font-bold text-emerald-400">Healthy</span>
-            </div>
-
-            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-              <div class="flex items-center gap-2.5">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <div>
-                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200">API Gateway & Fastify</div>
-                  <div class="text-[10px] text-slate-500">JWT Authentication & Rate Limiters</div>
-                </div>
-              </div>
-              <span class="text-xs font-bold text-emerald-400">Active</span>
-            </div>
-
-            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-              <div class="flex items-center gap-2.5">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <div>
-                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Tenant Isolation Policy</div>
-                  <div class="text-[10px] text-slate-500">Strict Org-ID Scoping & Masked PII</div>
-                </div>
-              </div>
-              <span class="text-xs font-bold text-emerald-400">Enforced</span>
+        <!-- Platform Health + Quick Actions -->
+        <div class="workspace-panel admin-health-panel">
+          <div class="admin-section-header admin-section-header--compact">
+            <div>
+              <p class="eyebrow">System</p>
+              <h2 class="admin-section-title">Platform Health</h2>
+              <p class="admin-section-sub">Cluster runtime services &amp; controls</p>
             </div>
           </div>
 
-          <div class="pt-2 space-y-2">
-            <router-link
-              to="/admin/users"
-              class="w-full py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center justify-center gap-2 transition"
-            >
-              <AppIcon name="users" :size="14" />
+          <!-- Health rows -->
+          <div class="health-list">
+            <div class="health-row">
+              <div class="flex items-center gap-2.5">
+                <span class="health-dot health-dot--ok"></span>
+                <div>
+                  <p class="health-service">MongoDB Multi-Tenant DB</p>
+                  <p class="health-meta">ReplicaSet Connected · Isolated Contexts</p>
+                </div>
+              </div>
+              <span class="health-badge health-badge--ok">Healthy</span>
+            </div>
+
+            <div class="health-row">
+              <div class="flex items-center gap-2.5">
+                <span class="health-dot health-dot--ok"></span>
+                <div>
+                  <p class="health-service">API Gateway &amp; Fastify</p>
+                  <p class="health-meta">JWT Authentication &amp; Rate Limiters</p>
+                </div>
+              </div>
+              <span class="health-badge health-badge--ok">Active</span>
+            </div>
+
+            <div class="health-row">
+              <div class="flex items-center gap-2.5">
+                <span class="health-dot health-dot--ok"></span>
+                <div>
+                  <p class="health-service">Tenant Isolation Policy</p>
+                  <p class="health-meta">Strict Org-ID Scoping &amp; Masked PII</p>
+                </div>
+              </div>
+              <span class="health-badge health-badge--ok">Enforced</span>
+            </div>
+          </div>
+
+          <!-- Quick actions -->
+          <div class="health-actions">
+            <router-link to="/admin/users" class="btn btn-secondary btn-sm w-full justify-center gap-2">
+              <PhUsersThree :size="14" />
               <span>Manage Platform Users</span>
             </router-link>
-            <router-link
-              to="/admin/audit-logs"
-              class="w-full py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center justify-center gap-2 transition"
-            >
-              <AppIcon name="agreements" :size="14" />
+            <router-link to="/admin/audit-logs" class="btn btn-secondary btn-sm w-full justify-center gap-2">
+              <PhScroll :size="14" />
               <span>View System Audit Logs</span>
             </router-link>
           </div>
         </div>
+
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { fetchAdminDashboard } from '../api/endpoints';
+import { ref, onMounted } from "vue";
+import {
+  PhArrowsClockwise,
+  PhPlus,
+  PhBuildings,
+  PhUsersThree,
+  PhLightning,
+  PhTarget,
+  PhGearSix,
+  PhScroll,
+  PhArrowRight,
+} from "@phosphor-icons/vue";
+import { fetchAdminDashboard } from "../api/endpoints";
 
 const loading = ref(false);
 const stats = ref(null);
@@ -257,7 +289,7 @@ async function loadData() {
     stats.value = payload.summary || null;
     recentOrganizations.value = payload.recentOrganizations || [];
   } catch (err) {
-    console.error('Failed to load admin dashboard:', err);
+    console.error("Failed to load admin dashboard:", err);
   } finally {
     loading.value = false;
   }
@@ -267,3 +299,277 @@ onMounted(() => {
   loadData();
 });
 </script>
+
+<style scoped>
+/* ── Page shell ─────────────────────────────────────────────────── */
+.admin-dash {
+  max-width: 82rem;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ── Header ─────────────────────────────────────────────────────── */
+.admin-dash__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1.125rem;
+  border-bottom: 1px solid hsl(var(--neutral-100));
+}
+.admin-dash__title {
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  color: hsl(var(--neutral-900));
+  margin-top: 0.25rem;
+  line-height: 1.1;
+}
+.admin-dash__subtitle {
+  font-size: 13px;
+  color: hsl(var(--neutral-400));
+  margin-top: 0.35rem;
+  line-height: 1.5;
+}
+
+/* ── Loading ─────────────────────────────────────────────────────── */
+.admin-dash__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  gap: 0.75rem;
+}
+.admin-dash__spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid hsl(var(--accent-100));
+  border-top-color: hsl(var(--accent-500));
+  border-radius: 50%;
+  animation: spin 0.85s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.admin-dash__loading-text { font-size: 12px; color: hsl(var(--neutral-400)); }
+
+/* ── Body ───────────────────────────────────────────────────────── */
+.admin-dash__body { display: flex; flex-direction: column; gap: 1.25rem; }
+
+/* ── KPI grid ───────────────────────────────────────────────────── */
+.admin-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.875rem;
+}
+@media (min-width: 768px) {
+  .admin-kpi-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+.admin-kpi {
+  padding: 1.125rem;
+  border-radius: 14px;
+  border: 1px solid hsl(var(--neutral-100));
+  background: hsl(var(--bg-surface));
+  box-shadow: 0 1px 3px rgb(26 22 18 / 0.03);
+  transition: box-shadow 150ms ease, border-color 150ms ease;
+}
+.admin-kpi:hover {
+  box-shadow: 0 4px 16px rgb(26 22 18 / 0.06);
+  border-color: hsl(var(--neutral-200));
+}
+.admin-kpi__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+.admin-kpi__label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: hsl(var(--neutral-400));
+}
+.admin-kpi__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+}
+.admin-kpi__icon--accent  { background: hsl(var(--accent-100));  color: hsl(var(--accent-600)); }
+.admin-kpi__icon--success { background: hsl(var(--success-bg));  color: hsl(var(--success-text)); }
+.admin-kpi__icon--info    { background: hsl(var(--info-bg));     color: hsl(var(--info-text)); }
+.admin-kpi__icon--warning { background: hsl(var(--warning-bg));  color: hsl(var(--warning-text)); }
+.admin-kpi__value {
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: hsl(var(--neutral-900));
+}
+.admin-kpi__detail {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: hsl(var(--neutral-400));
+  margin-top: 0.35rem;
+  flex-wrap: wrap;
+}
+.admin-kpi__dot { color: hsl(var(--neutral-300)); }
+.admin-kpi__detail--positive { color: hsl(var(--success-text)); font-weight: 600; }
+.admin-kpi__detail--danger   { color: hsl(var(--danger-text));  font-weight: 600; }
+
+/* ── Lower section ──────────────────────────────────────────────── */
+.admin-lower {
+  display: grid;
+  gap: 1.125rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 1024px) {
+  .admin-lower { grid-template-columns: 2fr 1fr; }
+}
+
+.admin-orgs-panel,
+.admin-health-panel { overflow: hidden; }
+
+.admin-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1.125rem 1.25rem;
+  border-bottom: 1px solid hsl(var(--neutral-100));
+}
+.admin-section-header--compact { border-bottom: 1px solid hsl(var(--neutral-100)); }
+.admin-section-title {
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: hsl(var(--neutral-900));
+  margin-top: 2px;
+}
+.admin-section-sub {
+  font-size: 11px;
+  color: hsl(var(--neutral-400));
+  margin-top: 2px;
+}
+.admin-view-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: hsl(var(--accent-600));
+  text-decoration: none;
+  white-space: nowrap;
+  margin-top: 4px;
+  transition: color 120ms;
+}
+.admin-view-all:hover { color: hsl(var(--accent-700)); text-decoration: underline; }
+
+/* Status pills */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: capitalize;
+  border: 1px solid;
+}
+.status-pill--success {
+  background: hsl(var(--success-bg));
+  color: hsl(var(--success-text));
+  border-color: hsl(var(--success-border));
+}
+.status-pill--warning {
+  background: hsl(var(--warning-bg));
+  color: hsl(var(--warning-text));
+  border-color: hsl(var(--warning-border));
+}
+.status-pill--danger {
+  background: hsl(var(--danger-bg));
+  color: hsl(var(--danger-text));
+  border-color: hsl(var(--danger-border));
+}
+
+/* Admin action button */
+.admin-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  border: 1px solid hsl(var(--neutral-100));
+  background: hsl(var(--bg-surface));
+  color: hsl(var(--neutral-500));
+  transition: all 120ms ease;
+}
+.admin-action-btn:hover {
+  border-color: hsl(var(--accent-200));
+  background: hsl(var(--accent-50));
+  color: hsl(var(--accent-600));
+}
+
+/* Health panel */
+.health-list { display: flex; flex-direction: column; }
+.health-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid hsl(var(--neutral-100));
+  gap: 0.75rem;
+}
+.health-row:last-child { border-bottom: 0; }
+.health-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: pulse-health 2s ease-in-out infinite;
+}
+.health-dot--ok { background: hsl(var(--success-dot)); }
+.health-dot--warn { background: hsl(var(--warning-dot)); }
+.health-dot--err { background: hsl(var(--danger-dot)); }
+@keyframes pulse-health {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.health-service {
+  font-size: 12px;
+  font-weight: 600;
+  color: hsl(var(--neutral-800, var(--neutral-700)));
+}
+.health-meta {
+  font-size: 10px;
+  color: hsl(var(--neutral-400));
+  margin-top: 1px;
+}
+.health-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.health-badge--ok {
+  background: hsl(var(--success-bg));
+  color: hsl(var(--success-text));
+}
+.health-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid hsl(var(--neutral-100));
+}
+</style>

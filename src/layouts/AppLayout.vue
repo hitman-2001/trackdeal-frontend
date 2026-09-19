@@ -8,9 +8,18 @@
       <!-- Left: Brand Logo -->
       <div class="navbar-left">
         <!-- Brand Logo & Workspace Tag -->
-        <router-link to="/app/dashboard" class="logo-container" title="TrackDeal Home">
+        <router-link
+          to="/app/dashboard"
+          class="logo-container"
+          title="TrackDeal Home"
+        >
           <div class="brand-mark-box shrink-0">
-            <PhGraduationCap v-if="isEducationWorkspace" weight="bold" :size="20" class="text-white" />
+            <PhGraduationCap
+              v-if="isEducationWorkspace"
+              weight="bold"
+              :size="20"
+              class="text-white"
+            />
             <PhBuildings v-else weight="bold" :size="20" class="text-white" />
           </div>
           <div class="brand-text flex flex-col min-w-0">
@@ -18,23 +27,26 @@
               Track<span class="brand-highlight">Deal</span>
             </span>
             <span class="brand-subline">
-              {{ isEducationWorkspace ? "Education workspace" : "Revenue workspace" }}
+              {{
+                isEducationWorkspace
+                  ? "Education workspace"
+                  : "Revenue workspace"
+              }}
             </span>
           </div>
         </router-link>
       </div>
 
       <!-- Center: Centered Global Search Input -->
-      <div class="navbar-center hidden md:flex">
+      <div class="navbar-center flex">
         <div class="search-box" role="search" @click="globalSearchOpen = true">
-          <PhMagnifyingGlass :size="18" class="search-icon" aria-hidden="true" />
           <input
             type="text"
-            placeholder="Search or press Ctrl+K..."
+            placeholder="Search or press Ctrl + K..."
             aria-label="Global search"
             readonly
           />
-          <span class="search-command-pill" aria-hidden="true">Ctrl K</span>
+          <span class="search-command-pill" aria-hidden="true">Ctrl + K</span>
         </div>
       </div>
 
@@ -50,32 +62,28 @@
           <span class="hidden sm:inline">Add</span>
         </button>
 
-        <!-- Mobile Search Button (on small screens) -->
-        <button
-          @click="globalSearchOpen = true"
-          class="action-btn md:hidden"
-          title="Search"
-          aria-label="Search"
-        >
-          <PhMagnifyingGlass :size="20" />
-        </button>
-
-        <!-- Theme Toggle Button -->
-        <button
+        <!-- Theme Toggle Button (Commented out per request) -->
+        <!-- <button
           @click="toggleTheme"
           class="action-btn"
           :title="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'"
-          :aria-label="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'"
+          :aria-label="
+            isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'
+          "
         >
           <PhSun v-if="isDarkMode" :size="20" weight="regular" />
           <PhMoon v-else :size="20" weight="regular" />
-        </button>
+        </button> -->
 
         <!-- Notifications Bell with Unread Badge -->
         <button
           @click="toggleNotifications"
           class="action-btn relative"
-          :title="unreadCount > 0 ? `${unreadCount} unread notifications` : 'Notifications'"
+          :title="
+            unreadCount > 0
+              ? `${unreadCount} unread notifications`
+              : 'Notifications'
+          "
           aria-label="Notifications"
         >
           <PhBell :size="20" weight="regular" />
@@ -88,7 +96,10 @@
         <button
           v-if="isOrgAdmin"
           @click="$router.push('/app/settings')"
-          :class="['action-btn hidden sm:flex', { 'action-btn-active': route.path.startsWith('/app/settings') }]"
+          :class="[
+            'action-btn hidden sm:flex',
+            { 'action-btn-active': route.path.startsWith('/app/settings') },
+          ]"
           title="System Settings"
           aria-label="System Settings"
         >
@@ -169,8 +180,13 @@
         aria-label="Main navigation"
       >
         <!-- Navigation List -->
-        <nav class="sidebar-nav flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-0.5">
-          <template v-for="(group, groupIndex) in filteredMenuGroups" :key="group.title">
+        <nav
+          class="sidebar-nav flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-0.5"
+        >
+          <template
+            v-for="(group, groupIndex) in filteredMenuGroups"
+            :key="group.title"
+          >
             <!-- Section Header -->
             <div
               v-if="!sidebarCollapsed"
@@ -203,7 +219,10 @@
                 :weight="isActiveRoute(item) ? 'bold' : 'regular'"
                 class="nav-icon shrink-0 transition-all"
               />
-              <span v-if="!sidebarCollapsed" class="truncate text-[13px] font-medium tracking-tight">
+              <span
+                v-if="!sidebarCollapsed"
+                class="truncate text-[13px] font-medium tracking-tight"
+              >
                 {{ item.name }}
               </span>
 
@@ -219,10 +238,17 @@
         </nav>
 
         <!-- Sidebar Footer: Red Sign Out Button + Round Collapse Toggle -->
-        <div class="sidebar-footer p-3 border-t border-slate-100 dark:border-neutral-800/80 flex items-center gap-2">
+        <div
+          class="sidebar-footer p-3 border-t border-slate-100 dark:border-neutral-800/80 flex items-center gap-2"
+        >
           <button
             @click="handleLogout"
-            :class="['logout-action-btn flex items-center justify-center gap-2 transition-all', sidebarCollapsed ? 'w-10 h-10 p-0 rounded-xl' : 'flex-1 h-9 px-3 rounded-xl text-xs font-semibold']"
+            :class="[
+              'logout-action-btn flex items-center justify-center gap-2 transition-all',
+              sidebarCollapsed
+                ? 'w-10 h-10 p-0 rounded-xl'
+                : 'flex-1 h-9 px-3 rounded-xl text-xs font-semibold',
+            ]"
             title="Sign Out"
             aria-label="Sign Out"
           >
@@ -245,7 +271,9 @@
       </aside>
 
       <!-- Main Layout Container (Scrollable Content Canvas + Docked Footer) -->
-      <div class="main-layout-container flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div
+        class="main-layout-container flex-1 flex flex-col min-w-0 overflow-hidden"
+      >
         <!-- Main Scrollable Content Area: ONLY THIS SCROLLS -->
         <main
           id="workspace-main"
@@ -258,25 +286,47 @@
             aria-label="Breadcrumb"
           >
             <span>Workspace</span>
-            <PhCaretRight :size="11" class="text-slate-300 dark:text-slate-600" />
-            <span class="font-semibold text-slate-700 dark:text-slate-200">{{ activePageName }}</span>
+            <PhCaretRight
+              :size="11"
+              class="text-slate-300 dark:text-slate-600"
+            />
+            <span class="font-semibold text-slate-700 dark:text-slate-200">{{
+              activePageName
+            }}</span>
           </nav>
 
           <!-- Nested Route View with Page Fade Transition -->
           <router-view v-slot="{ Component }">
             <Transition name="page-fade" mode="out-in">
-              <component :is="Component" :key="route?.fullPath || 'workspace'" />
+              <component
+                :is="Component"
+                :key="route?.fullPath || 'workspace'"
+              />
             </Transition>
           </router-view>
         </main>
 
-        <!-- Enterprise Docked Footer (Always visible, never scrolls) -->
-        <footer class="app-footer shrink-0 flex items-center justify-between px-6 select-none" role="contentinfo">
-          <div class="footer-left flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-            <span>&copy; {{ currentYear }} TrackDeal Technologies. All rights reserved.</span>
+        <!-- Enterprise Docked Footer (Desktop only) -->
+        <footer
+          class="app-footer shrink-0 hidden lg:flex items-center justify-between px-6 select-none"
+          role="contentinfo"
+        >
+          <div
+            class="footer-left flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400"
+          >
+            <span
+              >&copy; {{ currentYear }} TrackDeal Technologies. All rights
+              reserved.</span
+            >
           </div>
-          <div class="footer-right flex items-center gap-2 text-[11px] font-medium text-slate-400 dark:text-slate-500">
-            <span>{{ isEducationWorkspace ? "TrackDeal Education CRM" : "TrackDeal Enterprise CRM" }}</span>
+          <div
+            class="footer-right flex items-center gap-2 text-[11px] font-medium text-slate-400 dark:text-slate-500"
+          >
+            <span>{{
+              isEducationWorkspace
+                ? "TrackDeal Education CRM"
+                : "TrackDeal Enterprise CRM"
+            }}</span>
           </div>
         </footer>
       </div>
@@ -288,7 +338,10 @@
         <div
           v-if="mobileMenuOpen"
           class="fixed inset-0 z-[1000] lg:hidden"
-          style="background-color: rgba(9, 14, 26, 0.5); backdrop-filter: blur(4px);"
+          style="
+            background-color: rgba(9, 14, 26, 0.5);
+            backdrop-filter: blur(4px);
+          "
           @click="mobileMenuOpen = false"
         />
       </Transition>
@@ -297,12 +350,18 @@
           v-if="mobileMenuOpen"
           class="fixed left-0 top-0 z-[1010] h-full w-[260px] flex flex-col bg-white dark:bg-neutral-900 border-r border-slate-200 dark:border-neutral-800 shadow-2xl"
         >
-          <div class="h-16 flex items-center justify-between px-4 border-b border-slate-200 dark:border-neutral-800 shrink-0">
+          <div
+            class="h-16 flex items-center justify-between px-4 border-b border-slate-200 dark:border-neutral-800 shrink-0"
+          >
             <div class="flex items-center gap-3">
-              <div class="brand-mark-box w-8 h-8 rounded-xl flex items-center justify-center text-white">
+              <div
+                class="brand-mark-box w-8 h-8 rounded-xl flex items-center justify-center text-white"
+              >
                 <PhBuildings weight="bold" :size="18" />
               </div>
-              <span class="font-heading font-extrabold text-base text-neutral-900 dark:text-neutral-100">
+              <span
+                class="font-heading font-extrabold text-base text-neutral-900 dark:text-neutral-100"
+              >
                 Track<span class="brand-highlight">Deal</span>
               </span>
             </div>
@@ -316,7 +375,9 @@
 
           <nav class="flex-1 px-3 py-3 overflow-y-auto space-y-1">
             <template v-for="group in filteredMenuGroups" :key="group.title">
-              <div class="px-2 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <div
+                class="px-2 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400"
+              >
                 {{ group.title }}
               </div>
               <router-link
@@ -357,7 +418,10 @@
         <div
           v-if="notificationsOpen"
           class="fixed inset-0 z-[1000]"
-          style="background-color: rgba(9, 14, 26, 0.4); backdrop-filter: blur(2px);"
+          style="
+            background-color: rgba(9, 14, 26, 0.4);
+            backdrop-filter: blur(2px);
+          "
           @click="notificationsOpen = false"
         />
       </Transition>
@@ -366,7 +430,9 @@
           v-if="notificationsOpen"
           class="fixed right-0 top-0 h-full w-80 z-[1010] border-l border-slate-200 dark:border-neutral-800 flex flex-col shadow-2xl bg-white dark:bg-neutral-900"
         >
-          <header class="h-16 px-4 border-b border-slate-200 dark:border-neutral-800 flex items-center justify-between shrink-0">
+          <header
+            class="h-16 px-4 border-b border-slate-200 dark:border-neutral-800 flex items-center justify-between shrink-0"
+          >
             <div class="flex items-center gap-2">
               <PhBell :size="18" class="text-slate-500 dark:text-slate-400" />
               <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">
@@ -401,13 +467,22 @@
               v-for="item in mockNotifications"
               :key="item.id"
               class="p-3 rounded-xl border border-slate-200 dark:border-neutral-800 transition-all"
-              :class="item.read ? 'opacity-60 bg-transparent' : 'bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900'"
+              :class="
+                item.read
+                  ? 'opacity-60 bg-transparent'
+                  : 'bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900'
+              "
             >
               <div class="flex justify-between items-start gap-2 mb-1">
-                <span class="text-xs font-bold text-slate-800 dark:text-slate-200">{{ item.title }}</span>
+                <span
+                  class="text-xs font-bold text-slate-800 dark:text-slate-200"
+                  >{{ item.title }}</span
+                >
                 <span class="text-[10px] text-slate-400">{{ item.time }}</span>
               </div>
-              <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+              <p
+                class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed"
+              >
                 {{ item.message }}
               </p>
               <button
@@ -418,9 +493,17 @@
                 Mark as read
               </button>
             </div>
-            <div v-if="mockNotifications.length === 0" class="text-center py-16">
-              <PhBellSlash :size="32" class="mx-auto mb-2 text-slate-300 dark:text-slate-600" />
-              <p class="text-xs font-medium text-slate-400">You're all caught up</p>
+            <div
+              v-if="mockNotifications.length === 0"
+              class="text-center py-16"
+            >
+              <PhBellSlash
+                :size="32"
+                class="mx-auto mb-2 text-slate-300 dark:text-slate-600"
+              />
+              <p class="text-xs font-medium text-slate-400">
+                You're all caught up
+              </p>
             </div>
           </div>
         </aside>
@@ -428,7 +511,9 @@
     </Teleport>
 
     <!-- ── Toast Notifications Stack ───────────────────────────────── -->
-    <div class="fixed bottom-4 right-4 z-[9999] flex flex-col gap-2 max-w-[380px] w-full pointer-events-none">
+    <div
+      class="fixed bottom-4 right-4 z-[9999] flex flex-col gap-2 max-w-[380px] w-full pointer-events-none"
+    >
       <TransitionGroup name="toast">
         <div
           v-for="toast in toasts"
@@ -482,10 +567,32 @@
       :isOpen="globalSearchOpen"
       @close="globalSearchOpen = false"
     />
-    <QuickAddModal
-      :isOpen="quickAddOpen"
-      @close="quickAddOpen = false"
-    />
+    <QuickAddModal :isOpen="quickAddOpen" @close="quickAddOpen = false" />
+    <!-- Mobile Bottom Navigation (Only visible on small screens) -->
+    <nav class="mobile-bottom-nav lg:hidden">
+      <router-link to="/app/dashboard" class="mobile-nav-item" exact-active-class="active">
+        <PhChartBar :size="22" weight="regular" class="nav-icon" />
+        <span>Home</span>
+      </router-link>
+      <router-link to="/app/leads" class="mobile-nav-item" exact-active-class="active">
+        <PhUsersThree :size="22" weight="regular" class="nav-icon" />
+        <span>Leads</span>
+      </router-link>
+      
+      <!-- Quick Add Fab-style button in the center -->
+      <button @click="quickAddOpen = true" class="mobile-nav-fab" aria-label="Quick Add">
+        <PhPlus :size="24" weight="bold" />
+      </button>
+      
+      <router-link to="/app/tasks" class="mobile-nav-item" exact-active-class="active">
+        <PhCheckSquare :size="22" weight="regular" class="nav-icon" />
+        <span>Tasks</span>
+      </router-link>
+      <button @click="mobileMenuOpen = true" class="mobile-nav-item" aria-label="Menu">
+        <PhList :size="22" weight="regular" class="nav-icon" />
+        <span>Menu</span>
+      </button>
+    </nav>
   </div>
 </template>
 
@@ -504,7 +611,6 @@ import {
   PhCurrencyInr,
   PhTrendUp,
   PhGearSix,
-  PhMagnifyingGlass,
   PhBell,
   PhBellSlash,
   PhList,
@@ -548,7 +654,7 @@ const notificationsOpen = ref(false);
 
 // ── Workspace & Vertical Context ────────────────────────────────────────────
 const isEducationWorkspace = computed(
-  () => store.getters["organization/isEducationTenant"]
+  () => store.getters["organization/isEducationTenant"],
 );
 
 // ── User Information ────────────────────────────────────────────────────────
@@ -579,14 +685,16 @@ const userRoleName = computed(() => {
   const role = String(store.getters["auth/userRole"] || "").toLowerCase();
   if (role === "org_admin" || role === "organization_admin") return "ADMIN";
   if (role === "system_admin" || role === "super_admin") return "SUPER ADMIN";
-  if (role === "branch_manager") return isEducationWorkspace.value ? "CAMPUS MANAGER" : "BRANCH MANAGER";
-  if (role === "manager") return isEducationWorkspace.value ? "STAFF MANAGER" : "MANAGER";
+  if (role === "branch_manager")
+    return isEducationWorkspace.value ? "CAMPUS MANAGER" : "BRANCH MANAGER";
+  if (role === "manager")
+    return isEducationWorkspace.value ? "STAFF MANAGER" : "MANAGER";
   if (role === "agent") return isEducationWorkspace.value ? "STAFF" : "AGENT";
   if (role === "read_only") return "READ ONLY";
-  const formatted = role
-    ? role.replace(/_/g, " ").toUpperCase()
-    : "ADMIN";
-  return isEducationWorkspace.value ? formatted.replace(/AGENT/gi, "STAFF") : formatted;
+  const formatted = role ? role.replace(/_/g, " ").toUpperCase() : "ADMIN";
+  return isEducationWorkspace.value
+    ? formatted.replace(/AGENT/gi, "STAFF")
+    : formatted;
 });
 
 // ── Page / Route ────────────────────────────────────────────────────────────
@@ -594,14 +702,19 @@ const activePageName = computed(() => {
   if (route.path === "/app/leads" || route.path.startsWith("/app/leads/")) {
     return isEducationWorkspace.value ? "Student Leads" : "Leads";
   }
-  if (route.path === "/app/students" || route.path.startsWith("/app/students/")) {
+  if (
+    route.path === "/app/students" ||
+    route.path.startsWith("/app/students/")
+  ) {
     return "Students";
   }
   if (route.path === "/app/classes" || route.path.startsWith("/app/classes/")) {
     return isEducationWorkspace.value ? "Classes & Batches" : "Classes";
   }
   if (route.path === "/app/tasks" || route.path.startsWith("/app/tasks/")) {
-    return isEducationWorkspace.value ? "Tasks & Counseling" : "Tasks & Follow-ups";
+    return isEducationWorkspace.value
+      ? "Tasks & Counseling"
+      : "Tasks & Follow-ups";
   }
   if (route.path === "/app/agents" || route.path.startsWith("/app/agents/")) {
     return "Channel Partners";
@@ -609,22 +722,37 @@ const activePageName = computed(() => {
   if (route.path === "/app/deals" || route.path.startsWith("/app/deals/")) {
     return "Deals";
   }
-  if (route.path === "/app/properties" || route.path.startsWith("/app/properties/")) {
+  if (
+    route.path === "/app/properties" ||
+    route.path.startsWith("/app/properties/")
+  ) {
     return "Properties";
   }
-  if (route.path === "/app/projects" || route.path.startsWith("/app/projects/")) {
+  if (
+    route.path === "/app/projects" ||
+    route.path.startsWith("/app/projects/")
+  ) {
     return "Projects";
   }
-  if (route.path === "/app/builders" || route.path.startsWith("/app/builders/")) {
+  if (
+    route.path === "/app/builders" ||
+    route.path.startsWith("/app/builders/")
+  ) {
     return "Builders";
   }
   if (route.path === "/app/loans" || route.path.startsWith("/app/loans/")) {
     return "Loans";
   }
-  if (route.path === "/app/agreements" || route.path.startsWith("/app/agreements/")) {
+  if (
+    route.path === "/app/agreements" ||
+    route.path.startsWith("/app/agreements/")
+  ) {
     return "Agreements";
   }
-  if (route.path === "/app/commissions" || route.path.startsWith("/app/commissions/")) {
+  if (
+    route.path === "/app/commissions" ||
+    route.path.startsWith("/app/commissions/")
+  ) {
     return "Commissions";
   }
   if (route.path === "/app/reports" || route.path.startsWith("/app/reports/")) {
@@ -655,7 +783,8 @@ const isActiveRoute = (item) => {
   if (
     item?.activeExcludes?.some(
       (excludedPath) =>
-        route.path === excludedPath || route.path.startsWith(`${excludedPath}/`),
+        route.path === excludedPath ||
+        route.path.startsWith(`${excludedPath}/`),
     )
   ) {
     return false;
@@ -887,9 +1016,8 @@ const educationMenuGroups = [
   },
 ];
 
-
 const menuGroups = computed(() =>
-  isEducationWorkspace.value ? educationMenuGroups : realEstateMenuGroups
+  isEducationWorkspace.value ? educationMenuGroups : realEstateMenuGroups,
 );
 
 const isOrgAdmin = computed(() => {
@@ -909,7 +1037,8 @@ const filteredMenuGroups = computed(() => {
       items: group.items.filter((item) => {
         // 1. Settings & Admin modules restricted to org_admin
         if (
-          (item.to === "/app/settings" || item.to.startsWith("/app/settings")) &&
+          (item.to === "/app/settings" ||
+            item.to.startsWith("/app/settings")) &&
           !isOrgAdmin.value
         ) {
           return false;
@@ -917,6 +1046,10 @@ const filteredMenuGroups = computed(() => {
 
         // 2. Explicit access check for Tasks & Follow-ups
         if (item.to === "/app/tasks" || item.module === "tasks") {
+          if (isEducationWorkspace.value) {
+            return false;
+          }
+
           const hasTaskPermission =
             store.getters["permissions/hasCapability"]("tasks:read") ||
             store.getters["permissions/hasCapability"]("tasks.read");
@@ -1045,26 +1178,36 @@ const vClickOutside = {
 
 /* Ambient Orbs */
 .app-container::before {
-  content: '';
+  content: "";
   position: fixed;
   top: -180px;
   right: -100px;
   width: 520px;
   height: 520px;
-  background: radial-gradient(circle, rgba(0, 163, 255, 0.22) 0%, rgba(0, 133, 255, 0.08) 40%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(0, 163, 255, 0.22) 0%,
+    rgba(0, 133, 255, 0.08) 40%,
+    transparent 70%
+  );
   border-radius: 50%;
   pointer-events: none;
   z-index: 0;
 }
 
 .app-container::after {
-  content: '';
+  content: "";
   position: fixed;
   bottom: -140px;
   left: -80px;
   width: 480px;
   height: 480px;
-  background: radial-gradient(circle, rgba(0, 78, 146, 0.18) 0%, rgba(0, 133, 255, 0.06) 45%, transparent 72%);
+  background: radial-gradient(
+    circle,
+    rgba(0, 78, 146, 0.18) 0%,
+    rgba(0, 133, 255, 0.06) 45%,
+    transparent 72%
+  );
   border-radius: 50%;
   pointer-events: none;
   z-index: 0;
@@ -1164,16 +1307,9 @@ const vClickOutside = {
   cursor: pointer;
 }
 
-.search-icon {
-  position: absolute;
-  left: 14px;
-  color: #94a3b8;
-  pointer-events: none;
-}
-
 .search-box input {
   width: 100%;
-  padding: 10px 68px 10px 42px;
+  padding: 10px 76px 10px 16px;
   background: #f8fafc;
   border: 1px solid rgba(0, 78, 146, 0.1);
   border-radius: 12px;
@@ -1798,6 +1934,109 @@ const vClickOutside = {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+/* ==========================================================================
+   Mobile Bottom Navigation (Strictly hidden on desktop, active on mobile)
+   ========================================================================== */
+.mobile-bottom-nav {
+  display: none !important;
+}
+
+@media (max-width: 1023px) {
+  .mobile-bottom-nav {
+    display: flex !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background-color: hsl(var(--bg-surface));
+    border-top: 1px solid hsl(var(--border-default));
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 0.5rem;
+    z-index: 999;
+    padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.04);
+  }
+}
+
+.dark .mobile-bottom-nav {
+  border-top-color: hsl(var(--neutral-800));
+  background-color: hsl(var(--bg-surface));
+}
+
+.mobile-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: hsl(var(--neutral-400));
+  font-size: 10px;
+  font-weight: 600;
+  flex: 1;
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  padding: 6px 0;
+  transition: color 150ms ease;
+  cursor: pointer;
+}
+.mobile-nav-item:hover,
+.mobile-nav-item:active {
+  color: hsl(var(--neutral-700));
+}
+.dark .mobile-nav-item:hover,
+.dark .mobile-nav-item:active {
+  color: hsl(var(--neutral-200));
+}
+
+.mobile-nav-item.active {
+  color: hsl(var(--accent-600));
+}
+.mobile-nav-item.active .nav-icon {
+  color: hsl(var(--accent-600));
+}
+
+.mobile-nav-fab {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background-color: hsl(var(--accent-500));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  margin-top: -22px;
+  box-shadow: 0 4px 14px rgba(var(--accent-500), 0.35);
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 150ms ease;
+}
+.mobile-nav-fab:active {
+  transform: scale(0.92);
+}
+
+@media (max-width: 1023px) {
+  .layout-body {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom) + 12px) !important;
+  }
+  .navbar-left {
+    min-width: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .navbar-center {
+    display: none;
+  }
+  .app-navbar {
+    padding-left: 12px;
+    padding-right: 12px;
   }
 }
 </style>

@@ -28,6 +28,12 @@
                 </template>
               </div>
             </th>
+            <th
+              v-if="$slots.rowActions"
+              class="app-data-table__actions-cell text-right select-none"
+            >
+              {{ rowActionsLabel }}
+            </th>
           </tr>
         </thead>
 
@@ -36,12 +42,13 @@
             <tr v-for="i in skeletonRows" :key="`sk-${i}`">
               <td v-if="selectable" class="app-data-table__select-cell"><div class="skeleton w-4 h-4 rounded mx-auto" /></td>
               <td v-for="col in columns" :key="col.key"><div class="skeleton h-3.5 rounded" :style="{ width: `${50 + (i * 13) % 40}%` }" /></td>
+              <td v-if="$slots.rowActions" class="app-data-table__actions-cell"><div class="skeleton h-3.5 w-12 rounded ml-auto" /></td>
             </tr>
           </template>
 
           <template v-else-if="rows.length === 0">
             <tr>
-              <td :colspan="columns.length + (selectable ? 1 : 0)" class="text-center py-16">
+              <td :colspan="tableColSpan" class="text-center py-16">
                 <div class="flex flex-col items-center gap-3">
                   <span class="flex h-12 w-12 items-center justify-center rounded-xl" style="background: hsl(var(--neutral-50)); color: hsl(var(--neutral-300));"><PhEmpty :size="24" /></span>
                   <div>
@@ -73,7 +80,11 @@
                   <span v-else style="color: hsl(var(--neutral-300));">—</span>
                 </slot>
               </td>
-              <td v-if="$slots.rowActions" class="w-px" @click.stop><div class="flex items-center gap-1"><slot name="rowActions" :row="row" /></div></td>
+              <td v-if="$slots.rowActions" class="app-data-table__actions-cell" @click.stop>
+                <div class="flex items-center justify-end gap-1">
+                  <slot name="rowActions" :row="row" />
+                </div>
+              </td>
             </tr>
           </template>
         </tbody>
@@ -95,7 +106,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, ref, watch } from 'vue';
+import { computed, nextTick, ref, useSlots, watch } from 'vue';
 import { PhArrowUp, PhArrowDown, PhArrowsDownUp, PhEmpty } from '@phosphor-icons/vue';
 import AppPagination from './AppPagination.vue';
 
@@ -115,9 +126,12 @@ const props = defineProps({
   pageSize: { type: Number, default: 20 },
   pageSizeOptions: { type: Array, default: () => [10, 20, 50] },
   showPageSize: { type: Boolean, default: true },
+  rowActionsLabel: { type: String, default: 'Actions' },
 });
 
 const emit = defineEmits(['sort', 'selectionChange', 'rowClick', 'pageChange', 'pageSizeChange']);
+const slots = useSlots();
+const hasRowActions = computed(() => Boolean(slots.rowActions));
 const internalPage = ref(1);
 const internalPageSize = ref(props.pageSize);
 const selectAllCheckbox = ref(null);
@@ -127,6 +141,9 @@ const currentPageSize = computed(() => Number(props.pagination?.limit || props.p
 const paginationTotal = computed(() => Number(props.pagination?.total ?? props.rows.length));
 const paginationPages = computed(() => Number(props.pagination?.totalPages || props.pagination?.pages || Math.max(Math.ceil(paginationTotal.value / currentPageSize.value), 1)));
 const showPagination = computed(() => props.paginate && (paginationPages.value > 1 || paginationTotal.value > 0));
+const tableColSpan = computed(
+  () => props.columns.length + (props.selectable ? 1 : 0) + (hasRowActions.value ? 1 : 0),
+);
 const visibleRows = computed(() => {
   if (!props.paginate || isServerPaginated.value) return props.rows;
   const start = (internalPage.value - 1) * internalPageSize.value;
