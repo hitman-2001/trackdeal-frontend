@@ -1,46 +1,45 @@
 <template>
   <div class="max-w-7xl mx-auto space-y-6">
     <!-- Header -->
-    <div
-      class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-    >
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <h1
-          class="font-heading text-xl sm:text-2xl font-black text-slate-900 dark:text-white"
-        >
+        <p class="text-[10px] font-bold uppercase tracking-wider text-primary dark:text-accent-400">
+          User Directory
+        </p>
+        <h1 class="font-heading text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-0.5">
           Platform Users Directory
         </h1>
-        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-          Manage user accounts, roles, security status, and tenant organization
-          mapping across the platform.
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          Manage user accounts, roles, security status, and tenant organization mapping across the platform.
         </p>
       </div>
       <button
         @click="openCreateUserModal"
-        class="btn btn-primary px-4 py-2 rounded-xl text-xs font-semibold text-white flex items-center gap-1.5 self-start sm:self-auto"
+        class="btn btn-primary px-4 py-2 rounded-xl text-xs font-semibold text-white flex items-center gap-1.5 self-start sm:self-auto shadow-xs"
       >
-        <AppIcon name="add" :size="14" weight="bold" />
+        <PhPlus :size="14" weight="bold" />
         <span>Create User</span>
       </button>
     </div>
 
     <!-- Filters & Toolbar -->
-    <div
-      class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs"
-    >
-      <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-        <input
-          v-model="searchQuery"
-          @input="handleSearch"
-          type="text"
-          placeholder="Search name, email, mobile..."
-          class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 w-full sm:w-64"
-        />
+    <div class="p-4 rounded-xl bg-surface border border-default flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+      <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+        <div class="relative w-full sm:w-64">
+          <PhMagnifyingGlass :size="15" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <input
+            v-model="searchQuery"
+            @input="handleSearch"
+            type="text"
+            placeholder="Search name, email, mobile..."
+            class="w-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl pl-9 pr-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition"
+          />
+        </div>
 
         <select
           v-model="selectedOrgId"
           @change="loadUsers"
-          class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+          class="bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition"
         >
           <option value="">All Organizations</option>
           <option v-for="org in orgList" :key="org._id" :value="org._id">
@@ -51,7 +50,7 @@
         <select
           v-model="statusFilter"
           @change="loadUsers"
-          class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+          class="bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition"
         >
           <option value="">All Statuses</option>
           <option value="active">Active</option>
@@ -60,154 +59,139 @@
         </select>
       </div>
 
-      <div
-        class="text-xs text-slate-500 dark:text-slate-400 self-end sm:self-auto"
-      >
+      <div class="text-xs text-slate-500 dark:text-slate-400 self-end sm:self-auto font-medium">
         Total:
-        <span class="font-bold text-slate-900 dark:text-white">{{
-          pagination.total || 0
-        }}</span>
+        <span class="font-bold text-slate-900 dark:text-white font-tabular">{{ pagination.total || 0 }}</span>
         users
       </div>
     </div>
 
-    <!-- Users Table -->
-    <div
-      class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xs overflow-hidden"
-    >
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs">
-          <thead
-            class="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 bg-slate-50/70 dark:bg-slate-800/50 border-b border-slate-200/80 dark:border-slate-800"
-          >
-            <tr>
-              <th class="py-3 px-4">User</th>
-              <th class="py-3 px-4">Organization</th>
-              <th class="py-3 px-4">Role</th>
-              <th class="py-3 px-4">Status</th>
-              <th class="py-3 px-4">Created Date</th>
-              <th class="py-3 px-4 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
-            <tr
-              v-for="u in users"
-              :key="u._id"
-              class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition"
-            >
-              <td class="py-3.5 px-4">
-                <div class="font-bold text-slate-900 dark:text-slate-100">
-                  {{ u.firstName }} {{ u.lastName }}
-                </div>
-                <div
-                  class="text-[10px] font-mono text-slate-500 dark:text-slate-400"
-                >
-                  {{ u.email }} <span v-if="u.mobile">• {{ u.mobile }}</span>
-                </div>
-              </td>
-              <td class="py-3.5 px-4">
-                <div
-                  v-if="u.organizationId"
-                  class="font-semibold text-slate-800 dark:text-slate-200"
-                >
-                  {{ u.organizationId.name }}
-                </div>
-                <div v-else class="text-slate-500 italic">Platform Root</div>
-              </td>
-              <td class="py-3.5 px-4">
-                <span
-                  class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
-                >
-                  {{ u.roleId?.code || u.roleId?.name || "Agent" }}
-                </span>
-              </td>
-              <td class="py-3.5 px-4">
-                <span
-                  class="px-2.5 py-0.5 rounded-full text-[10px] font-bold capitalize"
-                  :class="
-                    u.status === 'active'
-                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20'
-                      : 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20'
-                  "
-                >
-                  {{ u.status }}
-                </span>
-              </td>
-              <td class="py-3.5 px-4 text-slate-500 dark:text-slate-400">
-                {{ formatDate(u.createdAt) }}
-              </td>
-              <td class="py-3.5 px-4 text-right">
-                <div class="flex items-center justify-end gap-1.5">
-                  <button
-                    type="button"
-                    title="Edit user"
-                    aria-label="Edit user"
-                    @click="openEditModal(u)"
-                    class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-accent-400 transition"
-                  >
-                    <AppIcon name="note" :size="15" />
-                  </button>
-                  <button
-                    type="button"
-                    title="Move organization"
-                    aria-label="Move organization"
-                    @click="openMoveModal(u)"
-                    class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-accent-400 transition"
-                  >
-                    <AppIcon name="move" :size="15" />
-                  </button>
-                </div>
-              </td>
-            </tr>
-            <tr v-if="users.length === 0">
-              <td colspan="6" class="py-12 text-center text-xs text-slate-500">
-                No users found.
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+    <!-- Users Table with AppTable -->
+    <div class="rounded-xl bg-surface border border-default overflow-hidden shadow-xs">
+      <AppTable
+        :rows="users"
+        :columns="columns"
+        :isLoading="loading"
+        :pagination="pagination"
+        row-actions-label="Actions"
+        empty-title="No users found"
+        empty-subtext="No users match your filter criteria."
+        @pageChange="changePage"
+        @pageSizeChange="handlePageSizeChange"
+      >
+        <!-- Cell: User Name, Avatar, Email -->
+        <template #cell(user)="{ row }">
+          <div class="flex items-center gap-2.5 py-0.5">
+            <div class="w-8 h-8 rounded-full bg-primary/10 text-primary dark:bg-primary/20 dark:text-accent-300 font-bold flex items-center justify-center text-xs shrink-0">
+              {{ (row.firstName?.[0] || 'U') + (row.lastName?.[0] || '') }}
+            </div>
+            <div class="space-y-0.5">
+              <div class="font-bold text-slate-900 dark:text-slate-100 text-xs">
+                {{ row.firstName }} {{ row.lastName }}
+              </div>
+              <div class="text-[10px] text-slate-400 flex items-center gap-1">
+                <span>{{ row.email }}</span>
+                <span v-if="row.mobile" class="text-slate-300 dark:text-slate-600">•</span>
+                <span v-if="row.mobile">{{ row.mobile }}</span>
+              </div>
+            </div>
+          </div>
+        </template>
 
-      <AppPagination
-        :page="pagination.page"
-        :page-size="pagination.limit"
-        :total="pagination.total"
-        :total-pages="pagination.pages"
-        :show-page-size="false"
-        @page-change="changePage"
-      />
+        <!-- Cell: Organization -->
+        <template #cell(organization)="{ row }">
+          <div v-if="row.organizationId" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">
+            {{ row.organizationId.name }}
+          </div>
+          <div v-else class="text-slate-400 italic text-[11px]">Platform Root</div>
+        </template>
+
+        <!-- Cell: Role -->
+        <template #cell(role)="{ row }">
+          <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80">
+            {{ row.roleId?.code || row.roleId?.name || "Agent" }}
+          </span>
+        </template>
+
+        <!-- Cell: Status -->
+        <template #cell(status)="{ row }">
+          <span
+            class="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border inline-flex items-center gap-1"
+            :class="{
+              'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800': row.status === 'active',
+              'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800': row.status === 'inactive',
+              'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800': row.status === 'suspended',
+            }"
+          >
+            <span
+              class="w-1.5 h-1.5 rounded-full"
+              :class="{
+                'bg-emerald-500': row.status === 'active',
+                'bg-amber-500': row.status === 'inactive',
+                'bg-rose-500': row.status === 'suspended',
+              }"
+            ></span>
+            {{ row.status }}
+          </span>
+        </template>
+
+        <!-- Cell: Created Date -->
+        <template #cell(createdAt)="{ row }">
+          <span class="text-xs font-tabular text-slate-500 dark:text-slate-400">
+            {{ formatDate(row.createdAt) }}
+          </span>
+        </template>
+
+        <!-- Row Actions -->
+        <template #rowActions="{ row }">
+          <div class="flex items-center justify-end gap-1">
+            <button
+              type="button"
+              title="Edit user"
+              aria-label="Edit user"
+              @click="openEditModal(row)"
+              class="inline-flex items-center justify-center w-7 h-7 rounded-lg text-slate-500 hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/20 transition-colors"
+            >
+              <PhPencilSimple :size="15" />
+            </button>
+            <button
+              type="button"
+              title="Move organization"
+              aria-label="Move organization"
+              @click="openMoveModal(row)"
+              class="inline-flex items-center justify-center w-7 h-7 rounded-lg text-slate-500 hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/20 transition-colors"
+            >
+              <PhArrowsLeftRight :size="15" />
+            </button>
+          </div>
+        </template>
+      </AppTable>
     </div>
 
     <!-- CREATE USER MODAL -->
     <Teleport to="body">
       <div
         v-if="showCreateModal"
-        class="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-xs p-4"
+        class="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4"
         @click.self="showCreateModal = false"
       >
-        <div
-          class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4"
-        >
-          <div
-            class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3"
-          >
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
             <h2 class="text-sm font-bold text-slate-900 dark:text-white">
               Create User Account
             </h2>
             <button
               @click="showCreateModal = false"
-              class="text-slate-400 hover:text-slate-900 dark:hover:text-white p-1"
+              class="text-slate-400 hover:text-slate-900 dark:hover:text-white p-1 rounded-lg transition-colors"
               aria-label="Close"
             >
-              <AppIcon name="close" :size="14" weight="bold" />
+              <PhX :size="16" weight="bold" />
             </button>
           </div>
 
           <form @submit.prevent="handleCreateUser" class="space-y-3 text-xs">
             <div class="space-y-1">
-              <label class="font-bold text-slate-600 dark:text-slate-300"
-                >Tenant Organization *</label
-              >
+              <label class="font-bold text-slate-700 dark:text-slate-300">Tenant Organization *</label>
               <select
                 v-model="createForm.organizationId"
                 required
@@ -222,23 +206,21 @@
 
             <div class="grid grid-cols-2 gap-3">
               <div class="space-y-1">
-                <label class="font-bold text-slate-600 dark:text-slate-300"
-                  >First Name *</label
-                >
+                <label class="font-bold text-slate-700 dark:text-slate-300">First Name *</label>
                 <input
                   v-model="createForm.firstName"
                   type="text"
                   required
+                  placeholder="e.g. Rahul"
                   class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
               <div class="space-y-1">
-                <label class="font-bold text-slate-600 dark:text-slate-300"
-                  >Last Name</label
-                >
+                <label class="font-bold text-slate-700 dark:text-slate-300">Last Name</label>
                 <input
                   v-model="createForm.lastName"
                   type="text"
+                  placeholder="e.g. Verma"
                   class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
@@ -246,23 +228,21 @@
 
             <div class="grid grid-cols-2 gap-3">
               <div class="space-y-1">
-                <label class="font-bold text-slate-600 dark:text-slate-300"
-                  >Email Address *</label
-                >
+                <label class="font-bold text-slate-700 dark:text-slate-300">Email Address *</label>
                 <input
                   v-model="createForm.email"
                   type="email"
                   required
+                  placeholder="user@example.com"
                   class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
               <div class="space-y-1">
-                <label class="font-bold text-slate-600 dark:text-slate-300"
-                  >Mobile</label
-                >
+                <label class="font-bold text-slate-700 dark:text-slate-300">Mobile Number</label>
                 <input
                   v-model="createForm.mobile"
                   type="text"
+                  placeholder="+91 9876543210"
                   class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
@@ -270,44 +250,33 @@
 
             <div class="grid grid-cols-2 gap-3">
               <div class="space-y-1">
-                <label class="font-bold text-slate-600 dark:text-slate-300"
-                  >Role *</label
-                >
+                <label class="font-bold text-slate-700 dark:text-slate-300">Role</label>
                 <select
                   v-model="createForm.role"
                   class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 >
-                  <option value="org_admin">
-                    Organization Admin (ORG_ADMIN)
-                  </option>
-                  <option value="branch_manager">
-                    Branch Manager (BRANCH_MANAGER)
-                  </option>
+                  <option value="org_admin">Organization Admin (ORG_ADMIN)</option>
+                  <option value="branch_manager">Branch Manager (BRANCH_MANAGER)</option>
                   <option value="manager">Manager (MANAGER)</option>
                   <option value="agent">Agent (AGENT)</option>
                   <option value="read_only">Read Only (READ_ONLY)</option>
                 </select>
               </div>
               <div class="space-y-1">
-                <label class="font-bold text-slate-600 dark:text-slate-300"
-                  >Initial Password</label
-                >
+                <label class="font-bold text-slate-700 dark:text-slate-300">Default Password</label>
                 <input
                   v-model="createForm.password"
                   type="text"
-                  placeholder="TrackDeal@123"
                   class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
             </div>
 
-            <div
-              class="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2"
-            >
+            <div class="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
               <button
                 type="button"
                 @click="showCreateModal = false"
-                class="btn btn-secondary px-4 py-2 rounded-xl text-xs"
+                class="btn btn-secondary px-4 py-2 rounded-xl text-xs font-semibold"
               >
                 Cancel
               </button>
@@ -316,7 +285,7 @@
                 :disabled="saving"
                 class="btn btn-primary px-5 py-2 rounded-xl font-bold text-white text-xs"
               >
-                Create User
+                Create Account
               </button>
             </div>
           </form>
@@ -328,32 +297,36 @@
     <Teleport to="body">
       <div
         v-if="showEditModal"
-        class="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-xs p-4"
+        class="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4"
         @click.self="showEditModal = false"
       >
-        <div
-          class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4"
-        >
-          <h2 class="text-sm font-bold text-slate-900 dark:text-white">
-            Edit User: {{ selectedUser?.email }}
-          </h2>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+            <h2 class="text-sm font-bold text-slate-900 dark:text-white">
+              Edit User: {{ selectedUser?.firstName }} {{ selectedUser?.lastName }}
+            </h2>
+            <button
+              @click="showEditModal = false"
+              class="text-slate-400 hover:text-slate-900 dark:hover:text-white p-1 rounded-lg transition-colors"
+              aria-label="Close"
+            >
+              <PhX :size="16" weight="bold" />
+            </button>
+          </div>
 
           <form @submit.prevent="handleUpdateUser" class="space-y-3 text-xs">
             <div class="grid grid-cols-2 gap-3">
               <div class="space-y-1">
-                <label class="font-bold text-slate-600 dark:text-slate-300"
-                  >First Name</label
-                >
+                <label class="font-bold text-slate-700 dark:text-slate-300">First Name</label>
                 <input
                   v-model="editForm.firstName"
                   type="text"
+                  required
                   class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-200"
                 />
               </div>
               <div class="space-y-1">
-                <label class="font-bold text-slate-600 dark:text-slate-300"
-                  >Last Name</label
-                >
+                <label class="font-bold text-slate-700 dark:text-slate-300">Last Name</label>
                 <input
                   v-model="editForm.lastName"
                   type="text"
@@ -364,42 +337,33 @@
 
             <div class="grid grid-cols-2 gap-3">
               <div class="space-y-1">
-                <label class="font-bold text-slate-600 dark:text-slate-300"
-                  >Role</label
-                >
+                <label class="font-bold text-slate-700 dark:text-slate-300">Role</label>
                 <select
                   v-model="editForm.role"
                   class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-200"
                 >
-                  <option value="org_admin">
-                    Organization Admin (ORG_ADMIN)
-                  </option>
-                  <option value="branch_manager">
-                    Branch Manager (BRANCH_MANAGER)
-                  </option>
+                  <option value="org_admin">Organization Admin (ORG_ADMIN)</option>
+                  <option value="branch_manager">Branch Manager (BRANCH_MANAGER)</option>
                   <option value="manager">Manager (MANAGER)</option>
                   <option value="agent">Agent (AGENT)</option>
                   <option value="read_only">Read Only (READ_ONLY)</option>
                 </select>
               </div>
               <div class="space-y-1">
-                <label class="font-bold text-slate-600 dark:text-slate-300"
-                  >Status</label
-                >
+                <label class="font-bold text-slate-700 dark:text-slate-300">Status</label>
                 <select
                   v-model="editForm.status"
                   class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-200"
                 >
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
+                  <option value="suspended">Suspended</option>
                 </select>
               </div>
             </div>
 
             <div class="space-y-1">
-              <label class="font-bold text-slate-600 dark:text-slate-300"
-                >Reset Password (Optional)</label
-              >
+              <label class="font-bold text-slate-700 dark:text-slate-300">Reset Password (Optional)</label>
               <input
                 v-model="editForm.password"
                 type="text"
@@ -408,9 +372,7 @@
               />
             </div>
 
-            <div
-              class="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2"
-            >
+            <div class="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
               <button
                 type="button"
                 @click="showEditModal = false"
@@ -435,43 +397,31 @@
     <Teleport to="body">
       <div
         v-if="showMoveModal"
-        class="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-xs p-4"
+        class="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4"
         @click.self="showMoveModal = false"
       >
-        <div
-          class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4"
-        >
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
           <h2 class="text-sm font-bold text-slate-900 dark:text-white">
             Move User Organization
           </h2>
           <p class="text-xs text-slate-500 dark:text-slate-400">
-            Transfer user
-            <strong class="text-slate-800 dark:text-slate-200">{{
-              selectedUser?.email
-            }}</strong>
-            to a different tenant organization.
+            Transfer user <strong class="text-slate-800 dark:text-slate-200">{{ selectedUser?.email }}</strong> to a different tenant organization.
           </p>
 
           <div class="space-y-2 text-xs">
-            <label class="font-bold text-slate-700 dark:text-slate-300"
-              >Target Organization *</label
-            >
+            <label class="font-bold text-slate-700 dark:text-slate-300">Target Organization *</label>
             <select
               v-model="targetMoveOrgId"
               class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
             >
-              <option value="" disabled>
-                -- Select Target Organization --
-              </option>
+              <option value="" disabled>-- Select Target Organization --</option>
               <option v-for="org in orgList" :key="org._id" :value="org._id">
                 {{ org.name }}
               </option>
             </select>
           </div>
 
-          <div
-            class="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2 text-xs"
-          >
+          <div class="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2 text-xs">
             <button
               @click="showMoveModal = false"
               class="btn btn-secondary px-4 py-2 rounded-xl text-xs"
@@ -494,7 +444,15 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
+import {
+  PhPlus,
+  PhMagnifyingGlass,
+  PhPencilSimple,
+  PhArrowsLeftRight,
+  PhX,
+} from "@phosphor-icons/vue";
 import Swal from "sweetalert2";
+import AppTable from "@/components/AppTable.vue";
 import {
   fetchAdminUsers,
   createAdminUser,
@@ -512,6 +470,14 @@ const pagination = ref({ page: 1, limit: 15, total: 0, pages: 1 });
 const searchQuery = ref("");
 const selectedOrgId = ref("");
 const statusFilter = ref("");
+
+const columns = [
+  { key: "user", label: "User Name & Contact" },
+  { key: "organization", label: "Organization" },
+  { key: "role", label: "Role" },
+  { key: "status", label: "Status" },
+  { key: "createdAt", label: "Created Date" },
+];
 
 const showCreateModal = ref(false);
 const createForm = ref({
@@ -578,6 +544,12 @@ async function loadUsers() {
 
 function changePage(p) {
   pagination.value.page = p;
+  loadUsers();
+}
+
+function handlePageSizeChange(size) {
+  pagination.value.limit = size;
+  pagination.value.page = 1;
   loadUsers();
 }
 

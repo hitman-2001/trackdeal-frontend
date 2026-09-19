@@ -1,262 +1,344 @@
 <template>
-  <div class="admin-dash">
-
+  <div class="space-y-6 max-w-7xl mx-auto">
     <!-- ── Header ─────────────────────────────────────────────────── -->
-    <div class="admin-dash__header">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <p class="eyebrow">Platform Administration</p>
-        <h1 class="admin-dash__title">Dashboard</h1>
-        <p class="admin-dash__subtitle">
-          Real-time SaaS cluster analytics, tenant growth, and platform health.
+        <p class="text-[10px] font-bold uppercase tracking-wider text-primary dark:text-accent-400">
+          Platform Administration
+        </p>
+        <h1 class="font-heading text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-0.5">
+          Super Admin Console
+        </h1>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          Real-time SaaS cluster analytics, tenant growth, and platform health telemetry.
         </p>
       </div>
-      <div class="flex items-center gap-2.5 shrink-0">
+      <div class="flex items-center gap-2.5 shrink-0 self-start sm:self-auto">
         <button
           @click="loadData"
-          class="btn btn-secondary btn-sm gap-1.5"
+          class="btn btn-secondary px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition"
         >
           <PhArrowsClockwise :size="14" :class="{ 'animate-spin': loading }" />
           <span>Refresh</span>
         </button>
         <router-link
           to="/admin/organizations"
-          class="btn btn-primary btn-sm gap-1.5"
+          class="btn btn-primary px-4 py-2 rounded-xl text-xs font-semibold text-white flex items-center gap-1.5 shadow-xs"
         >
           <PhPlus :size="14" weight="bold" />
-          <span>Add Tenant</span>
+          <span>Add Tenant Org</span>
         </router-link>
       </div>
     </div>
 
     <!-- ── Loading State ─────────────────────────────────────────── -->
-    <div v-if="loading && !stats" class="admin-dash__loading">
-      <div class="admin-dash__spinner"></div>
-      <p class="admin-dash__loading-text">Loading platform metrics…</p>
+    <div v-if="loading && !stats" class="py-24 text-center">
+      <div class="w-10 h-10 border-3 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-3"></div>
+      <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Loading platform metrics…</p>
     </div>
 
-    <div v-else class="admin-dash__body">
-
-      <!-- ── KPI Cards ─────────────────────────────────────────── -->
-      <div class="admin-kpi-grid">
-
+    <div v-else class="space-y-6">
+      <!-- ── KPI Bento Cards ─────────────────────────────────────── -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- Organizations -->
-        <div class="admin-kpi">
-          <div class="admin-kpi__top">
-            <span class="admin-kpi__label">Organizations</span>
-            <div class="admin-kpi__icon admin-kpi__icon--accent">
-              <PhBuildings :size="17" weight="duotone" />
+        <div class="bg-surface border border-default rounded-xl p-4 sm:p-5 shadow-xs relative overflow-hidden group hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-200">
+          <div class="flex items-center justify-between mb-2 sm:mb-3">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Total Organizations
+            </span>
+            <div class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+              <PhBuildings :size="18" weight="bold" />
             </div>
           </div>
-          <p class="admin-kpi__value">{{ stats?.totalOrganizations ?? 0 }}</p>
-          <div class="admin-kpi__detail">
-            <span class="admin-kpi__detail--positive">+{{ stats?.newOrganizationsThisMonth ?? 0 }} this month</span>
-            <span class="admin-kpi__dot">·</span>
+          <div class="text-2xl sm:text-3xl font-black font-heading text-slate-900 dark:text-slate-100 font-tabular tracking-tight mb-1">
+            {{ stats?.totalOrganizations ?? 0 }}
+          </div>
+          <div class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 flex-wrap">
+            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-500/20">
+              +{{ stats?.newOrganizationsThisMonth ?? 0 }} this month
+            </span>
+            <span>•</span>
             <span>{{ stats?.activeTenants ?? 0 }} active</span>
           </div>
         </div>
 
         <!-- Platform Users -->
-        <div class="admin-kpi">
-          <div class="admin-kpi__top">
-            <span class="admin-kpi__label">Total Users</span>
-            <div class="admin-kpi__icon admin-kpi__icon--success">
-              <PhUsersThree :size="17" weight="duotone" />
+        <div class="bg-surface border border-default rounded-xl p-4 sm:p-5 shadow-xs relative overflow-hidden group hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-200">
+          <div class="flex items-center justify-between mb-2 sm:mb-3">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Total Users
+            </span>
+            <div class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+              <PhUsersThree :size="18" weight="bold" />
             </div>
           </div>
-          <p class="admin-kpi__value">{{ stats?.totalUsers ?? 0 }}</p>
-          <div class="admin-kpi__detail">
-            <span class="admin-kpi__detail--positive">+{{ stats?.newUsersThisMonth ?? 0 }} new</span>
-            <span class="admin-kpi__dot">·</span>
+          <div class="text-2xl sm:text-3xl font-black font-heading text-slate-900 dark:text-slate-100 font-tabular tracking-tight mb-1">
+            {{ stats?.totalUsers ?? 0 }}
+          </div>
+          <div class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 flex-wrap">
+            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-500/20">
+              +{{ stats?.newUsersThisMonth ?? 0 }} new
+            </span>
+            <span>•</span>
             <span>Across all tenants</span>
           </div>
         </div>
 
         <!-- Active Tenants -->
-        <div class="admin-kpi">
-          <div class="admin-kpi__top">
-            <span class="admin-kpi__label">Active Tenants</span>
-            <div class="admin-kpi__icon admin-kpi__icon--info">
-              <PhLightning :size="17" weight="duotone" />
+        <div class="bg-surface border border-default rounded-xl p-4 sm:p-5 shadow-xs relative overflow-hidden group hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-200">
+          <div class="flex items-center justify-between mb-2 sm:mb-3">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Active Tenants
+            </span>
+            <div class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+              <PhLightning :size="18" weight="bold" />
             </div>
           </div>
-          <p class="admin-kpi__value">{{ stats?.activeTenants ?? 0 }}</p>
-          <div class="admin-kpi__detail">
+          <div class="text-2xl sm:text-3xl font-black font-heading text-slate-900 dark:text-slate-100 font-tabular tracking-tight mb-1">
+            {{ stats?.activeTenants ?? 0 }}
+          </div>
+          <div class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 flex-wrap">
             <span>{{ stats?.inactiveTenants ?? 0 }} inactive</span>
             <template v-if="stats?.suspendedTenants > 0">
-              <span class="admin-kpi__dot">·</span>
-              <span class="admin-kpi__detail--danger">{{ stats?.suspendedTenants }} suspended</span>
+              <span>•</span>
+              <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-500/20">
+                {{ stats?.suspendedTenants }} suspended
+              </span>
             </template>
           </div>
         </div>
 
         <!-- Platform Leads -->
-        <div class="admin-kpi">
-          <div class="admin-kpi__top">
-            <span class="admin-kpi__label">Platform Leads</span>
-            <div class="admin-kpi__icon admin-kpi__icon--warning">
-              <PhTarget :size="17" weight="duotone" />
+        <div class="bg-surface border border-default rounded-xl p-4 sm:p-5 shadow-xs relative overflow-hidden group hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-200">
+          <div class="flex items-center justify-between mb-2 sm:mb-3">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Platform Leads
+            </span>
+            <div class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+              <PhTarget :size="18" weight="bold" />
             </div>
           </div>
-          <p class="admin-kpi__value">{{ stats?.totalLeads ?? 0 }}</p>
-          <div class="admin-kpi__detail">
+          <div class="text-2xl sm:text-3xl font-black font-heading text-slate-900 dark:text-slate-100 font-tabular tracking-tight mb-1">
+            {{ stats?.totalLeads ?? 0 }}
+          </div>
+          <div class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 flex-wrap">
             <span>{{ stats?.totalDeals ?? 0 }} deals</span>
-            <span class="admin-kpi__dot">·</span>
+            <span>•</span>
             <span>{{ stats?.totalProperties ?? 0 }} properties</span>
           </div>
         </div>
-
       </div>
 
-      <!-- ── Lower grid: Organizations table + Health panel ─────── -->
-      <div class="admin-lower">
-
-        <!-- Recent Organizations Table -->
-        <div class="workspace-panel admin-orgs-panel">
-          <div class="admin-section-header">
+      <!-- ── Lower Grid: Organizations Table + Cluster Health ─────── -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Recent Organizations AppTable (2 Columns on Large Screens) -->
+        <div class="lg:col-span-2 space-y-3">
+          <div class="flex items-center justify-between">
             <div>
-              <p class="eyebrow">Tenants</p>
-              <h2 class="admin-section-title">Recent Tenant Organizations</h2>
-              <p class="admin-section-sub">Newly onboarded organizations across all verticals</p>
+              <h2 class="text-sm font-bold text-slate-900 dark:text-white">
+                Recent Tenant Organizations
+              </h2>
+              <p class="text-xs text-slate-500 dark:text-slate-400">
+                Newly onboarded organizations across all verticals
+              </p>
             </div>
             <router-link
               to="/admin/organizations"
-              class="admin-view-all"
+              class="inline-flex items-center gap-1 text-xs font-semibold text-primary dark:text-accent-400 hover:underline"
             >
               <span>View All ({{ stats?.totalOrganizations ?? 0 }})</span>
-              <PhArrowRight :size="11" />
+              <PhArrowRight :size="12" />
             </router-link>
           </div>
 
-          <div class="overflow-x-auto">
-            <table class="workspace-table">
-              <thead>
-                <tr>
-                  <th>Organization</th>
-                  <th>Owner</th>
-                  <th>Vertical / Plan</th>
-                  <th class="text-center">Users</th>
-                  <th class="text-center">Leads</th>
-                  <th>Status</th>
-                  <th class="text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="org in recentOrganizations"
-                  :key="org._id"
+          <div class="rounded-xl bg-surface border border-default overflow-hidden shadow-xs">
+            <AppTable
+              :rows="recentOrganizations"
+              :columns="tableColumns"
+              :isLoading="loading"
+              row-actions-label="Action"
+              empty-title="No organizations found"
+              empty-subtext="No organizations have been onboarded yet."
+            >
+              <!-- Cell: Organization Name & Code (Completely fixes the squished ManchClassesmanchcla bug) -->
+              <template #cell(name)="{ row }">
+                <div class="space-y-1 py-0.5">
+                  <router-link
+                    :to="`/admin/organizations/${row._id}`"
+                    class="font-bold text-slate-900 dark:text-slate-100 hover:text-primary dark:hover:text-accent-400 transition-colors block text-xs"
+                  >
+                    {{ row.name }}
+                  </router-link>
+                  <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded font-mono text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80">
+                      {{ row.code }}
+                    </span>
+                  </div>
+                </div>
+              </template>
+
+              <!-- Cell: Owner -->
+              <template #cell(owner)="{ row }">
+                <div class="space-y-0.5 text-xs">
+                  <div class="font-medium text-slate-800 dark:text-slate-200">
+                    {{ row.ownerId?.firstName }} {{ row.ownerId?.lastName }}
+                  </div>
+                  <div class="text-[10px] text-slate-400 truncate max-w-[150px]">
+                    {{ row.ownerId?.email }}
+                  </div>
+                </div>
+              </template>
+
+              <!-- Cell: Vertical & Plan -->
+              <template #cell(vertical)="{ row }">
+                <div class="flex flex-col gap-1 items-start">
+                  <span
+                    class="px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider border"
+                    :class="row.vertical === 'education' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800' : 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800'"
+                  >
+                    {{ row.vertical === 'education' ? 'Education' : 'Real Estate' }}
+                  </span>
+                  <span class="text-[10px] text-slate-400 capitalize">
+                    {{ row.organizationType || row.subscriptionPlan || 'Agency' }}
+                  </span>
+                </div>
+              </template>
+
+              <!-- Cell: Users -->
+              <template #cell(usersCount)="{ row }">
+                <span class="font-tabular font-bold text-slate-800 dark:text-slate-200 text-xs">
+                  {{ row.usersCount || 0 }}
+                </span>
+              </template>
+
+              <!-- Cell: Leads -->
+              <template #cell(leadsCount)="{ row }">
+                <span class="font-tabular font-bold text-slate-800 dark:text-slate-200 text-xs">
+                  {{ row.leadsCount || 0 }}
+                </span>
+              </template>
+
+              <!-- Cell: Status -->
+              <template #cell(status)="{ row }">
+                <span
+                  class="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border inline-flex items-center gap-1"
+                  :class="{
+                    'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800': row.status === 'active',
+                    'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800': row.status === 'inactive',
+                    'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800': row.status === 'suspended',
+                  }"
                 >
-                  <td>
-                    <span class="workspace-table-primary">{{ org.name }}</span>
-                    <span class="workspace-table-muted font-mono">{{ org.code }}</span>
-                  </td>
-                  <td>
-                    <span class="workspace-table-primary">
-                      {{ org.ownerId?.firstName }} {{ org.ownerId?.lastName }}
-                    </span>
-                    <span class="workspace-table-muted truncate max-w-[150px] block">{{ org.ownerId?.email }}</span>
-                  </td>
-                  <td>
-                    <span class="workspace-status capitalize">
-                      {{ org.organizationType || org.subscriptionPlan || 'Agency' }}
-                    </span>
-                  </td>
-                  <td class="text-center font-mono" style="color: hsl(var(--neutral-700)); font-weight: 600">
-                    {{ org.usersCount || 0 }}
-                  </td>
-                  <td class="text-center font-mono" style="color: hsl(var(--neutral-700)); font-weight: 600">
-                    {{ org.leadsCount || 0 }}
-                  </td>
-                  <td>
-                    <span
-                      class="status-pill"
-                      :class="{
-                        'status-pill--success': org.status === 'active',
-                        'status-pill--warning': org.status === 'inactive',
-                        'status-pill--danger': org.status === 'suspended',
-                      }"
-                    >
-                      {{ org.status }}
-                    </span>
-                  </td>
-                  <td class="text-right">
-                    <router-link
-                      :to="`/admin/organizations/${org._id}`"
-                      class="admin-action-btn"
-                      title="Manage organization"
-                    >
-                      <PhGearSix :size="14" />
-                    </router-link>
-                  </td>
-                </tr>
-                <tr v-if="recentOrganizations.length === 0">
-                  <td colspan="7" class="py-10 text-center" style="color: hsl(var(--neutral-400)); font-size: 12px">
-                    No organizations found.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                  <span
+                    class="w-1.5 h-1.5 rounded-full"
+                    :class="{
+                      'bg-emerald-500': row.status === 'active',
+                      'bg-amber-500': row.status === 'inactive',
+                      'bg-rose-500': row.status === 'suspended',
+                    }"
+                  ></span>
+                  {{ row.status }}
+                </span>
+              </template>
+
+              <!-- Row Action -->
+              <template #rowActions="{ row }">
+                <router-link
+                  :to="`/admin/organizations/${row._id}`"
+                  class="inline-flex items-center justify-center w-7 h-7 rounded-lg text-slate-500 hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/20 transition-colors"
+                  title="Manage organization"
+                >
+                  <PhGearSix :size="15" />
+                </router-link>
+              </template>
+            </AppTable>
           </div>
         </div>
 
-        <!-- Platform Health + Quick Actions -->
-        <div class="workspace-panel admin-health-panel">
-          <div class="admin-section-header admin-section-header--compact">
-            <div>
-              <p class="eyebrow">System</p>
-              <h2 class="admin-section-title">Platform Health</h2>
-              <p class="admin-section-sub">Cluster runtime services &amp; controls</p>
-            </div>
+        <!-- Platform Health & Controls (1 Column on Large Screens) -->
+        <div class="space-y-3">
+          <div>
+            <h2 class="text-sm font-bold text-slate-900 dark:text-white">
+              Platform Health
+            </h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+              Cluster runtime services &amp; operational status
+            </p>
           </div>
 
-          <!-- Health rows -->
-          <div class="health-list">
-            <div class="health-row">
-              <div class="flex items-center gap-2.5">
-                <span class="health-dot health-dot--ok"></span>
-                <div>
-                  <p class="health-service">MongoDB Multi-Tenant DB</p>
-                  <p class="health-meta">ReplicaSet Connected · Isolated Contexts</p>
+          <div class="bg-surface border border-default rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
+            <!-- Services status list -->
+            <div class="space-y-3">
+              <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+                  <div>
+                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">
+                      MongoDB Multi-Tenant DB
+                    </div>
+                    <div class="text-[10px] text-slate-400">
+                      ReplicaSet Connected • Isolated Scopes
+                    </div>
+                  </div>
                 </div>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-500/20">
+                  Healthy
+                </span>
               </div>
-              <span class="health-badge health-badge--ok">Healthy</span>
+
+              <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+                  <div>
+                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">
+                      API Gateway &amp; Fastify
+                    </div>
+                    <div class="text-[10px] text-slate-400">
+                      JWT Auth • Rate Limiters Active
+                    </div>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-500/20">
+                  Active
+                </span>
+              </div>
+
+              <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+                  <div>
+                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">
+                      Tenant Isolation Policy
+                    </div>
+                    <div class="text-[10px] text-slate-400">
+                      Strict AsyncLocalStorage • Masked PII
+                    </div>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-500/20">
+                  Enforced
+                </span>
+              </div>
             </div>
 
-            <div class="health-row">
-              <div class="flex items-center gap-2.5">
-                <span class="health-dot health-dot--ok"></span>
-                <div>
-                  <p class="health-service">API Gateway &amp; Fastify</p>
-                  <p class="health-meta">JWT Authentication &amp; Rate Limiters</p>
-                </div>
-              </div>
-              <span class="health-badge health-badge--ok">Active</span>
+            <!-- Quick navigation links -->
+            <div class="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
+              <router-link
+                to="/admin/users"
+                class="btn btn-secondary btn-sm w-full justify-center gap-2"
+              >
+                <PhUsersThree :size="14" />
+                <span>Manage Platform Users</span>
+              </router-link>
+              <router-link
+                to="/admin/audit-logs"
+                class="btn btn-secondary btn-sm w-full justify-center gap-2"
+              >
+                <PhScroll :size="14" />
+                <span>View System Audit Logs</span>
+              </router-link>
             </div>
-
-            <div class="health-row">
-              <div class="flex items-center gap-2.5">
-                <span class="health-dot health-dot--ok"></span>
-                <div>
-                  <p class="health-service">Tenant Isolation Policy</p>
-                  <p class="health-meta">Strict Org-ID Scoping &amp; Masked PII</p>
-                </div>
-              </div>
-              <span class="health-badge health-badge--ok">Enforced</span>
-            </div>
-          </div>
-
-          <!-- Quick actions -->
-          <div class="health-actions">
-            <router-link to="/admin/users" class="btn btn-secondary btn-sm w-full justify-center gap-2">
-              <PhUsersThree :size="14" />
-              <span>Manage Platform Users</span>
-            </router-link>
-            <router-link to="/admin/audit-logs" class="btn btn-secondary btn-sm w-full justify-center gap-2">
-              <PhScroll :size="14" />
-              <span>View System Audit Logs</span>
-            </router-link>
           </div>
         </div>
-
       </div>
     </div>
   </div>
@@ -275,11 +357,21 @@ import {
   PhScroll,
   PhArrowRight,
 } from "@phosphor-icons/vue";
+import AppTable from "@/components/AppTable.vue";
 import { fetchAdminDashboard } from "../api/endpoints";
 
 const loading = ref(false);
 const stats = ref(null);
 const recentOrganizations = ref([]);
+
+const tableColumns = [
+  { key: "name", label: "Organization" },
+  { key: "owner", label: "Owner" },
+  { key: "vertical", label: "Vertical / Plan" },
+  { key: "usersCount", label: "Users", align: "center" },
+  { key: "leadsCount", label: "Leads", align: "center" },
+  { key: "status", label: "Status" },
+];
 
 async function loadData() {
   loading.value = true;
@@ -299,277 +391,3 @@ onMounted(() => {
   loadData();
 });
 </script>
-
-<style scoped>
-/* ── Page shell ─────────────────────────────────────────────────── */
-.admin-dash {
-  max-width: 82rem;
-  margin-inline: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-/* ── Header ─────────────────────────────────────────────────────── */
-.admin-dash__header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  padding-bottom: 1.125rem;
-  border-bottom: 1px solid hsl(var(--neutral-100));
-}
-.admin-dash__title {
-  font-family: 'Manrope', system-ui, sans-serif;
-  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
-  font-weight: 800;
-  letter-spacing: -0.045em;
-  color: hsl(var(--neutral-900));
-  margin-top: 0.25rem;
-  line-height: 1.1;
-}
-.admin-dash__subtitle {
-  font-size: 13px;
-  color: hsl(var(--neutral-400));
-  margin-top: 0.35rem;
-  line-height: 1.5;
-}
-
-/* ── Loading ─────────────────────────────────────────────────────── */
-.admin-dash__loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 220px;
-  gap: 0.75rem;
-}
-.admin-dash__spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid hsl(var(--accent-100));
-  border-top-color: hsl(var(--accent-500));
-  border-radius: 50%;
-  animation: spin 0.85s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-.admin-dash__loading-text { font-size: 12px; color: hsl(var(--neutral-400)); }
-
-/* ── Body ───────────────────────────────────────────────────────── */
-.admin-dash__body { display: flex; flex-direction: column; gap: 1.25rem; }
-
-/* ── KPI grid ───────────────────────────────────────────────────── */
-.admin-kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.875rem;
-}
-@media (min-width: 768px) {
-  .admin-kpi-grid { grid-template-columns: repeat(4, 1fr); }
-}
-
-.admin-kpi {
-  padding: 1.125rem;
-  border-radius: 14px;
-  border: 1px solid hsl(var(--neutral-100));
-  background: hsl(var(--bg-surface));
-  box-shadow: 0 1px 3px rgb(26 22 18 / 0.03);
-  transition: box-shadow 150ms ease, border-color 150ms ease;
-}
-.admin-kpi:hover {
-  box-shadow: 0 4px 16px rgb(26 22 18 / 0.06);
-  border-color: hsl(var(--neutral-200));
-}
-.admin-kpi__top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.75rem;
-}
-.admin-kpi__label {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: hsl(var(--neutral-400));
-}
-.admin-kpi__icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-}
-.admin-kpi__icon--accent  { background: hsl(var(--accent-100));  color: hsl(var(--accent-600)); }
-.admin-kpi__icon--success { background: hsl(var(--success-bg));  color: hsl(var(--success-text)); }
-.admin-kpi__icon--info    { background: hsl(var(--info-bg));     color: hsl(var(--info-text)); }
-.admin-kpi__icon--warning { background: hsl(var(--warning-bg));  color: hsl(var(--warning-text)); }
-.admin-kpi__value {
-  font-family: 'Manrope', system-ui, sans-serif;
-  font-size: clamp(1.5rem, 3vw, 2rem);
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  color: hsl(var(--neutral-900));
-}
-.admin-kpi__detail {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  color: hsl(var(--neutral-400));
-  margin-top: 0.35rem;
-  flex-wrap: wrap;
-}
-.admin-kpi__dot { color: hsl(var(--neutral-300)); }
-.admin-kpi__detail--positive { color: hsl(var(--success-text)); font-weight: 600; }
-.admin-kpi__detail--danger   { color: hsl(var(--danger-text));  font-weight: 600; }
-
-/* ── Lower section ──────────────────────────────────────────────── */
-.admin-lower {
-  display: grid;
-  gap: 1.125rem;
-  grid-template-columns: 1fr;
-}
-@media (min-width: 1024px) {
-  .admin-lower { grid-template-columns: 2fr 1fr; }
-}
-
-.admin-orgs-panel,
-.admin-health-panel { overflow: hidden; }
-
-.admin-section-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding: 1.125rem 1.25rem;
-  border-bottom: 1px solid hsl(var(--neutral-100));
-}
-.admin-section-header--compact { border-bottom: 1px solid hsl(var(--neutral-100)); }
-.admin-section-title {
-  font-family: 'Manrope', system-ui, sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  color: hsl(var(--neutral-900));
-  margin-top: 2px;
-}
-.admin-section-sub {
-  font-size: 11px;
-  color: hsl(var(--neutral-400));
-  margin-top: 2px;
-}
-.admin-view-all {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  font-weight: 600;
-  color: hsl(var(--accent-600));
-  text-decoration: none;
-  white-space: nowrap;
-  margin-top: 4px;
-  transition: color 120ms;
-}
-.admin-view-all:hover { color: hsl(var(--accent-700)); text-decoration: underline; }
-
-/* Status pills */
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: capitalize;
-  border: 1px solid;
-}
-.status-pill--success {
-  background: hsl(var(--success-bg));
-  color: hsl(var(--success-text));
-  border-color: hsl(var(--success-border));
-}
-.status-pill--warning {
-  background: hsl(var(--warning-bg));
-  color: hsl(var(--warning-text));
-  border-color: hsl(var(--warning-border));
-}
-.status-pill--danger {
-  background: hsl(var(--danger-bg));
-  color: hsl(var(--danger-text));
-  border-color: hsl(var(--danger-border));
-}
-
-/* Admin action button */
-.admin-action-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 7px;
-  border: 1px solid hsl(var(--neutral-100));
-  background: hsl(var(--bg-surface));
-  color: hsl(var(--neutral-500));
-  transition: all 120ms ease;
-}
-.admin-action-btn:hover {
-  border-color: hsl(var(--accent-200));
-  background: hsl(var(--accent-50));
-  color: hsl(var(--accent-600));
-}
-
-/* Health panel */
-.health-list { display: flex; flex-direction: column; }
-.health-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.875rem 1.25rem;
-  border-bottom: 1px solid hsl(var(--neutral-100));
-  gap: 0.75rem;
-}
-.health-row:last-child { border-bottom: 0; }
-.health-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  animation: pulse-health 2s ease-in-out infinite;
-}
-.health-dot--ok { background: hsl(var(--success-dot)); }
-.health-dot--warn { background: hsl(var(--warning-dot)); }
-.health-dot--err { background: hsl(var(--danger-dot)); }
-@keyframes pulse-health {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-.health-service {
-  font-size: 12px;
-  font-weight: 600;
-  color: hsl(var(--neutral-800, var(--neutral-700)));
-}
-.health-meta {
-  font-size: 10px;
-  color: hsl(var(--neutral-400));
-  margin-top: 1px;
-}
-.health-badge {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 6px;
-  flex-shrink: 0;
-}
-.health-badge--ok {
-  background: hsl(var(--success-bg));
-  color: hsl(var(--success-text));
-}
-.health-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 1rem 1.25rem;
-  border-top: 1px solid hsl(var(--neutral-100));
-}
-</style>
