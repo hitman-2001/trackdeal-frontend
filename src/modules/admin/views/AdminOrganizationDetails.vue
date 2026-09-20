@@ -45,7 +45,7 @@
           class="btn btn-secondary px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition"
         >
           <PhKey :size="14" />
-          <span>Reset owner password</span>
+          <span>Reset admin password</span>
         </button>
         <button
           @click="toggleStatus"
@@ -265,7 +265,7 @@
             </div>
 
             <div>
-              <div class="text-[10px] uppercase font-bold text-slate-400">Owner Contact</div>
+              <div class="text-[10px] uppercase font-bold text-slate-400">Admin Contact</div>
               <div class="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
                 {{ org?.ownerId?.firstName }} {{ org?.ownerId?.lastName }}
               </div>
@@ -359,7 +359,7 @@
       >
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
           <h2 class="text-sm font-bold text-slate-900 dark:text-white">
-            Reset Owner Password
+            Reset Admin Password
           </h2>
           <p class="text-xs text-slate-500 dark:text-slate-400">
             Set a new password for {{ org?.ownerId?.email }}.
@@ -522,7 +522,7 @@ async function executeResetPassword() {
     await resetAdminOwnerPassword(org.value._id, resetPasswordInput.value);
     showResetModal.value = false;
     Swal.fire({
-      text: "Owner password successfully updated!",
+      text: "Admin password successfully updated!",
       icon: "success",
     });
   } catch (err) {

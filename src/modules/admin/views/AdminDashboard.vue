@@ -366,7 +366,7 @@ const recentOrganizations = ref([]);
 
 const tableColumns = [
   { key: "name", label: "Organization" },
-  { key: "owner", label: "Owner" },
+  { key: "owner", label: "Admin Contact" },
   { key: "vertical", label: "Vertical / Plan" },
   { key: "usersCount", label: "Users", align: "center" },
   { key: "leadsCount", label: "Leads", align: "center" },

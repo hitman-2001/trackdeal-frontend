@@ -182,6 +182,7 @@ const scopes = computed(() => {
       { key: "students", label: "Students Directory" },
       { key: "classes", label: "Classes & Batches" },
       { key: "tasks", label: "Tasks & Counseling Follow-ups" },
+      { key: "reports", label: "Admissions Analytics & Reports" },
       { key: "admissions", label: "Enrollment & Fees" },
       { key: "settings", label: "Workspace Settings" },
     ];
@@ -234,10 +235,40 @@ function loadRolePermissions() {
     return;
   }
 
+  const rolePermissions = Array.isArray(role.permissionKeys)
+    ? role.permissionKeys
+    : Array.isArray(role.permissions)
+    ? role.permissions
+    : [];
+  const rolePermObj = typeof role.permissions === 'object' && !Array.isArray(role.permissions)
+    ? role.permissions
+    : null;
+
   scopes.value.forEach((scope) => {
     actions.forEach((action) => {
-      tempMatrix[scope.key][action] =
-        isSuperAdmin.value || role.permissions?.[scope.key]?.[action] === true;
+      let isGranted = false;
+      if (isSuperAdmin.value) {
+        isGranted = true;
+      } else if (rolePermObj && rolePermObj[scope.key]?.[action] === true) {
+        isGranted = true;
+      } else if (
+        rolePermissions.includes('*') ||
+        rolePermissions.includes(`${scope.key}.${action}`) ||
+        rolePermissions.includes(`${scope.key}:${action}`)
+      ) {
+        isGranted = true;
+      } else if (action === 'read' && (
+        rolePermissions.includes(`${scope.key}.view`) ||
+        rolePermissions.includes(`${scope.key}:view`) ||
+        (scope.key === 'reports' && (
+          rolePermissions.includes('analytics.view') ||
+          rolePermissions.includes('analytics.read') ||
+          rolePermissions.includes('reports.view')
+        ))
+      )) {
+        isGranted = true;
+      }
+      tempMatrix[scope.key][action] = isGranted;
     });
   });
   matrix.value = tempMatrix;

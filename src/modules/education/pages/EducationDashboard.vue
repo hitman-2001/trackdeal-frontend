@@ -427,8 +427,8 @@
             </div>
 
             <!-- Card Actions -->
-            <div class="flex items-center justify-between gap-2 px-4 py-2 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50">
-              <div class="flex items-center gap-1.5">
+            <div class="flex items-center justify-between gap-2 px-4 py-2 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 flex-wrap">
+              <div class="flex items-center gap-1.5 flex-wrap">
                 <a
                   v-if="fu.contactNumber"
                   :href="'tel:' + fu.contactNumber"
@@ -460,15 +460,28 @@
                 </button>
               </div>
 
-              <button
-                type="button"
-                @click="openReminder(fu)"
-                class="action-btn action-btn--ghost"
-                title="Reschedule this reminder"
-              >
-                <PhCalendarCheck :size="12" />
-                <span>Reschedule</span>
-              </button>
+              <div class="flex items-center gap-1.5 ml-auto">
+                <button
+                  type="button"
+                  @click="markCompleted(fu)"
+                  class="action-btn action-btn--complete"
+                  title="Mark this reminder as completed"
+                  :disabled="completingId === fu._id"
+                >
+                  <PhCheckCircle :size="12" weight="fill" class="text-emerald-600 dark:text-emerald-400" />
+                  <span>{{ completingId === fu._id ? 'Completing...' : 'Mark Completed' }}</span>
+                </button>
+
+                <button
+                  type="button"
+                  @click="openReminder(fu)"
+                  class="action-btn action-btn--ghost"
+                  title="Reschedule this reminder"
+                >
+                  <PhCalendarCheck :size="12" />
+                  <span>Reschedule</span>
+                </button>
+              </div>
             </div>
           </div>
         </div><!-- /space-y-2 (reminders list) -->
@@ -723,6 +736,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useStore } from 'vuex';
+import Swal from 'sweetalert2';
 import {
   PhUsersThree,
   PhPlus,
@@ -747,6 +762,7 @@ import {
   PhCaretRight,
 } from '@phosphor-icons/vue';
 import { fetchEducationSummary } from '../api/endpoints';
+import { updateLeadFollowUp } from '@/modules/leads/api/endpoints';
 
 // Modals and Drawers
 import EducationLeadDrawer from '../components/EducationLeadDrawer.vue';
@@ -754,9 +770,11 @@ import EducationLeadLogDrawer from '../components/EducationLeadLogDrawer.vue';
 import EducationLeadReminderModal from '../components/EducationLeadReminderModal.vue';
 
 const router = useRouter();
+const store = useStore();
 
 const loading = ref(true);
 const refreshing = ref(false);
+const completingId = ref(null);
 const summary = ref({});
 
 // Reminder Filtering
@@ -1120,15 +1138,70 @@ function openLog(fu) {
 
 function openReminder(fu) {
   if (!fu) return;
-  activeReminderLead.value = fu.lead || {
+  activeReminderLead.value = {
+    ...(fu.lead || {}),
     _id: fu.leadId,
     id: fu.leadId,
     firstName: fu.studentName?.split(' ')[0] || 'Student',
     lastName: fu.studentName?.split(' ').slice(1).join(' ') || '',
     mobile: fu.studentMobile || fu.contactNumber,
     parentName: fu.parentName,
+    currentFollowUpId: fu._id,
+    currentFollowUpDate: fu.scheduledAt,
+    currentType: fu.type,
+    currentNotes: fu.notes,
   };
   isReminderOpen.value = true;
+}
+
+async function markCompleted(fu) {
+  if (!fu) return;
+
+  const result = await Swal.fire({
+    title: 'Mark Reminder as Completed?',
+    text: `Mark follow-up for "${fu.studentName || 'this student'}" as completed? It will be removed from your pending reminders.`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Yes, mark completed',
+    cancelButtonText: 'Cancel',
+    confirmButtonColor: '#059669',
+    cancelButtonColor: '#64748b',
+    customClass: {
+      popup: 'dark:bg-slate-900 dark:text-slate-100 rounded-2xl border border-slate-200 dark:border-slate-800',
+    },
+  });
+
+  if (!result.isConfirmed) return;
+
+  completingId.value = fu._id;
+  try {
+    // Optimistic UI update: remove immediately so interaction feels instant
+    if (summary.value && Array.isArray(summary.value.followUps)) {
+      summary.value.followUps = summary.value.followUps.filter((item) => item._id !== fu._id);
+    }
+
+    await updateLeadFollowUp({
+      leadId: fu.leadId,
+      followUpId: fu._id,
+      status: 'completed',
+    });
+
+    store.dispatch('notifications/triggerToast', {
+      message: `Follow-up for ${fu.studentName || 'student'} marked completed.`,
+      type: 'success',
+    });
+
+    await loadDashboard(true);
+  } catch (err) {
+    await loadDashboard(true);
+    Swal.fire({
+      icon: 'error',
+      title: 'Action Failed',
+      text: err.response?.data?.message || err.message || 'Could not mark reminder as completed.',
+    });
+  } finally {
+    completingId.value = null;
+  }
 }
 
 async function handleActionSuccess() {
@@ -1211,6 +1284,25 @@ onMounted(() => {
   border-color: hsl(152 40% 20%);
 }
 .action-btn--whatsapp:hover { filter: brightness(0.95); }
+
+.action-btn--complete {
+  background: hsl(152 63% 95%);
+  color: hsl(142 71% 27%);
+  border: 1px solid hsl(152 40% 82%);
+}
+.dark .action-btn--complete {
+  background: hsl(152 40% 12%);
+  color: hsl(152 62% 68%);
+  border-color: hsl(152 40% 24%);
+}
+.action-btn--complete:hover:not(:disabled) {
+  background: hsl(152 63% 90%);
+  border-color: hsl(152 40% 70%);
+}
+.action-btn--complete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
 .action-btn--neutral {
   background: hsl(var(--bg-elevated));

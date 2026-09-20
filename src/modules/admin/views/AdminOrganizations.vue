@@ -92,7 +92,7 @@
           </span>
         </template>
 
-        <!-- Cell: Owner Contact -->
+        <!-- Cell: Admin Contact -->
         <template #cell(owner)="{ row }">
           <div class="space-y-0.5 text-xs">
             <div class="font-medium text-slate-800 dark:text-slate-200">
@@ -121,10 +121,11 @@
           </span>
         </template>
 
-        <!-- Cell: Users -->
+        <!-- Cell: Users / Quota -->
         <template #cell(usersCount)="{ row }">
           <span class="font-tabular font-bold text-slate-800 dark:text-slate-200 text-xs">
             {{ row.usersCount || 0 }}
+            <span class="text-[10px] text-slate-400 font-normal">/ {{ row.maxUsers || row.subscription?.maxUsers || 10 }}</span>
           </span>
         </template>
 
@@ -264,7 +265,7 @@
 
             <div class="grid grid-cols-2 gap-3">
               <div class="space-y-1">
-                <label class="font-bold text-slate-700 dark:text-slate-300">Owner Full Name *</label>
+                <label class="font-bold text-slate-700 dark:text-slate-300">Admin Full Name *</label>
                 <input
                   v-model="createForm.ownerName"
                   type="text"
@@ -274,12 +275,12 @@
                 />
               </div>
               <div class="space-y-1">
-                <label class="font-bold text-slate-700 dark:text-slate-300">Owner Email Address *</label>
+                <label class="font-bold text-slate-700 dark:text-slate-300">Admin Email Address *</label>
                 <input
                   v-model="createForm.ownerEmail"
                   type="email"
                   required
-                  placeholder="owner@skyline.com"
+                  placeholder="admin@skyline.com"
                   class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
@@ -287,7 +288,7 @@
 
             <div class="grid grid-cols-2 gap-3">
               <div class="space-y-1">
-                <label class="font-bold text-slate-700 dark:text-slate-300">Owner Mobile Number</label>
+                <label class="font-bold text-slate-700 dark:text-slate-300">Admin Mobile Number</label>
                 <input
                   v-model="createForm.ownerMobile"
                   type="text"
@@ -300,7 +301,7 @@
                 <input
                   v-model="createForm.password"
                   type="text"
-                  placeholder="TrackDeal@123"
+                  placeholder="Enter initial password"
                   class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
@@ -429,10 +430,10 @@ const statusFilter = ref("");
 const columns = [
   { key: "name", label: "Organization Name" },
   { key: "code", label: "Tenant Code" },
-  { key: "owner", label: "Owner Contact" },
+  { key: "owner", label: "Admin Contact" },
   { key: "vertical", label: "Vertical" },
   { key: "plan", label: "Plan / Type" },
-  { key: "usersCount", label: "Users", align: "center" },
+  { key: "usersCount", label: "Users / Quota", align: "center" },
   { key: "leadsCount", label: "Leads", align: "center" },
   { key: "propertiesCount", label: "Properties", align: "center" },
   { key: "status", label: "Status" },
@@ -447,7 +448,7 @@ const createForm = ref({
   ownerName: "",
   ownerEmail: "",
   ownerMobile: "",
-  password: "TrackDeal@123",
+  password: "",
   vertical: "realEstate",
   plan: "AGENCY",
   maxUsers: 10,
@@ -519,7 +520,7 @@ function openCreateModal() {
     ownerName: "",
     ownerEmail: "",
     ownerMobile: "",
-    password: "TrackDeal@123",
+    password: "",
     vertical: "realEstate",
     plan: "AGENCY",
     maxUsers: 10,

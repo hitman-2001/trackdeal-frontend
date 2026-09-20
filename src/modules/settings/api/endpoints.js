@@ -145,13 +145,18 @@ function convertPermissionsArrayToObject(permissionsArr) {
   
   if (Array.isArray(permissionsArr)) {
     permissionsArr.forEach(perm => {
-      const parts = perm.split('.');
+      const normalized = String(perm || '').replace(/:/g, '.').toLowerCase().trim();
+      const parts = normalized.split('.');
       if (parts.length === 2) {
         const [scope, action] = parts;
-        if (!obj[scope]) {
-          obj[scope] = { create: false, read: false, update: false, delete: false };
+        const targetScope = (scope === 'analytics') ? 'reports' : scope;
+        const targetAction = (action === 'view') ? 'read' : (action === 'export') ? 'delete' : action;
+        if (!obj[targetScope]) {
+          obj[targetScope] = { create: false, read: false, update: false, delete: false };
         }
-        obj[scope][action] = true;
+        obj[targetScope][targetAction] = true;
+      } else if (normalized === 'reports' || normalized === 'analytics') {
+        obj.reports.read = true;
       }
     });
   }
@@ -166,12 +171,18 @@ function convertPermissionsObjectToArray(permissionsObj) {
         Object.entries(actions).forEach(([action, value]) => {
           if (value === true) {
             arr.push(`${scope}.${action}`);
+            if (scope === 'reports' && action === 'read') {
+              arr.push('reports.view');
+            }
+            if (scope === 'reports' && action === 'delete') {
+              arr.push('reports.export');
+            }
           }
         });
       }
     });
   }
-  return arr;
+  return [...new Set(arr)];
 }
 
 export async function fetchRoles() {

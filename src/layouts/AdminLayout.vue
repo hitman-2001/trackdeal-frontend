@@ -33,91 +33,28 @@
         </router-link>
       </div>
 
-      <!-- Center: Global Search Input -->
+      <!-- Center: Global Search Bar (Trigger for Ctrl + K modal) -->
       <div class="navbar-center flex relative">
-        <div class="search-box relative" role="search">
+        <div
+          class="search-box relative cursor-pointer select-none"
+          role="search"
+          @click="adminSearchOpen = true"
+          title="Search or press Ctrl + K"
+        >
           <PhMagnifyingGlass :size="15" class="search-icon text-slate-400 shrink-0" />
           <input
-            v-model="searchQuery"
-            @input="handleGlobalSearch"
             type="text"
             placeholder="Search organizations, tenants, users..."
             aria-label="Platform global search"
+            readonly
+            class="cursor-pointer select-none"
           />
           <span class="search-command-pill" aria-hidden="true">Ctrl + K</span>
         </div>
-
-        <!-- Global Search Results Dropdown -->
-        <Transition name="dropdown">
-          <div
-            v-if="
-              searchResults &&
-              (searchResults.organizations?.length || searchResults.users?.length)
-            "
-            class="search-dropdown-menu absolute left-0 right-0 top-11 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-3 z-50 space-y-3"
-          >
-            <div v-if="searchResults.organizations?.length">
-              <span
-                class="text-[10px] font-bold uppercase tracking-wider text-primary dark:text-accent-400 px-2"
-              >
-                Organizations
-              </span>
-              <div class="mt-1 space-y-1">
-                <router-link
-                  v-for="org in searchResults.organizations"
-                  :key="org._id"
-                  :to="`/admin/organizations/${org._id}`"
-                  @click="clearSearch"
-                  class="flex items-center justify-between p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs text-slate-800 dark:text-slate-200 transition"
-                >
-                  <span class="font-semibold">{{ org.name }}</span>
-                  <span class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
-                    {{ org.code }} • {{ org.organizationType || org.vertical || "Agency" }}
-                  </span>
-                </router-link>
-              </div>
-            </div>
-
-            <div v-if="searchResults.users?.length">
-              <span
-                class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 px-2"
-              >
-                Users
-              </span>
-              <div class="mt-1 space-y-1">
-                <router-link
-                  v-for="u in searchResults.users"
-                  :key="u._id"
-                  to="/admin/users"
-                  @click="clearSearch"
-                  class="flex items-center justify-between p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs text-slate-800 dark:text-slate-200 transition"
-                >
-                  <span class="font-semibold">
-                    {{ u.firstName }} {{ u.lastName }} ({{ u.email }})
-                  </span>
-                  <span class="text-[10px] text-slate-500 dark:text-slate-400">
-                    {{ u.organizationId?.name || "No Org" }}
-                  </span>
-                </router-link>
-              </div>
-            </div>
-          </div>
-        </Transition>
       </div>
 
-      <!-- Right: Actions & User Profile Pill -->
+      <!-- Right: User Profile Pill (Light/Dark theme toggle removed per request) -->
       <div class="navbar-right">
-        <!-- Theme Toggle Button -->
-        <button
-          @click="toggleTheme"
-          class="action-btn"
-          :title="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'"
-          :aria-label="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'"
-        >
-          <PhSun v-if="isDarkMode" :size="18" weight="regular" />
-          <PhMoon v-else :size="18" weight="regular" />
-        </button>
-
         <!-- User Profile Pill -->
         <div
           class="user-profile"
@@ -356,14 +293,14 @@
         <PhBuildings :size="20" weight="regular" />
         <span class="text-[10px] font-semibold">Orgs</span>
       </router-link>
-      <router-link
-        to="/admin/tenants"
+      <button
+        @click="adminSearchOpen = true"
         class="flex flex-col items-center justify-center gap-1 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-accent-300 transition-colors"
-        exact-active-class="!text-primary dark:!text-accent-400 font-bold"
+        aria-label="Search"
       >
-        <PhBriefcase :size="20" weight="regular" />
-        <span class="text-[10px] font-semibold">Tenants</span>
-      </router-link>
+        <PhMagnifyingGlass :size="20" weight="bold" />
+        <span class="text-[10px] font-semibold">Search</span>
+      </button>
       <router-link
         to="/admin/users"
         class="flex flex-col items-center justify-center gap-1 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-accent-300 transition-colors"
@@ -381,6 +318,12 @@
         <span class="text-[10px] font-semibold">Logs</span>
       </router-link>
     </nav>
+
+    <!-- Global Admin Search Modal (Ctrl + K / Cmd + K) -->
+    <AdminSearchModal
+      :isOpen="adminSearchOpen"
+      @close="adminSearchOpen = false"
+    />
   </div>
 </template>
 
@@ -389,8 +332,6 @@ import { computed, ref, onMounted, onUnmounted } from "vue";
 import { useStore } from "vuex";
 import { useRouter, useRoute } from "vue-router";
 import {
-  PhMoon,
-  PhSun,
   PhLightning,
   PhMagnifyingGlass,
   PhChartBar,
@@ -405,7 +346,7 @@ import {
   PhArrowSquareOut,
   PhSignOut,
 } from "@phosphor-icons/vue";
-import { searchAdminGlobal } from "../modules/admin/api/endpoints";
+import AdminSearchModal from "../modules/admin/components/AdminSearchModal.vue";
 
 const store = useStore();
 const router = useRouter();
@@ -428,13 +369,9 @@ const userInitials = computed(() => {
   return name.slice(0, 2).toUpperCase() || "SA";
 });
 
-const isDarkMode = computed(() => store.state.ui.activeThemeMode === "dark");
-
-const searchQuery = ref("");
-const searchResults = ref(null);
+const adminSearchOpen = ref(false);
 const userMenuOpen = ref(false);
 const profileMenuRef = ref(null);
-let searchTimeout = null;
 
 const sidebarCollapsed = ref(
   localStorage.getItem("trackdeal_admin_sidebar_collapsed") === "true",
@@ -499,30 +436,16 @@ function isActiveRoute(item) {
   return route.path.startsWith(item.to);
 }
 
-function toggleTheme() {
-  store.commit("ui/SET_THEME_MODE", isDarkMode.value ? "light" : "dark");
-}
-
-function handleGlobalSearch() {
-  clearTimeout(searchTimeout);
-  if (!searchQuery.value.trim()) {
-    searchResults.value = null;
-    return;
+// ── Keyboard Shortcuts (Ctrl + K / Cmd + K to open search) ───────────
+const handleKeyDown = (e) => {
+  if ((e.ctrlKey || e.metaKey) && (e.key === "k" || e.key === "K")) {
+    e.preventDefault();
+    adminSearchOpen.value = !adminSearchOpen.value;
   }
-  searchTimeout = setTimeout(async () => {
-    try {
-      const res = await searchAdminGlobal(searchQuery.value.trim());
-      searchResults.value = res?.data || res || null;
-    } catch (e) {
-      searchResults.value = null;
-    }
-  }, 250);
-}
-
-function clearSearch() {
-  searchQuery.value = "";
-  searchResults.value = null;
-}
+  if (e.key === "Escape") {
+    adminSearchOpen.value = false;
+  }
+};
 
 function handleLogout() {
   userMenuOpen.value = false;
@@ -538,10 +461,12 @@ function handleDocumentClick(e) {
 
 onMounted(() => {
   document.addEventListener("click", handleDocumentClick);
+  window.addEventListener("keydown", handleKeyDown);
 });
 
 onUnmounted(() => {
   document.removeEventListener("click", handleDocumentClick);
+  window.removeEventListener("keydown", handleKeyDown);
 });
 </script>
 
@@ -700,16 +625,14 @@ onUnmounted(() => {
   border-color: #334155;
 }
 
-.search-box:focus-within {
+.search-box:hover {
   border-color: #0284c7;
   background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
 }
 
-.dark .search-box:focus-within {
+.dark .search-box:hover {
   border-color: #38bdf8;
   background: #0f172a;
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
 }
 
 .search-box input {
@@ -751,38 +674,6 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.action-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  color: #475569;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.dark .action-btn {
-  background: #1e293b;
-  border-color: #334155;
-  color: #cbd5e1;
-}
-
-.action-btn:hover {
-  background: #f1f5f9;
-  color: #0284c7;
-  border-color: #cbd5e1;
-}
-
-.dark .action-btn:hover {
-  background: #334155;
-  color: #38bdf8;
-  border-color: #475569;
 }
 
 /* User Profile Pill */

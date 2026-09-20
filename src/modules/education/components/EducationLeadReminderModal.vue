@@ -1,7 +1,7 @@
 <template>
   <AppModal
     :isOpen="isOpen"
-    title="Set follow-up reminder"
+    :title="props.lead?.currentFollowUpId ? 'Reschedule follow-up reminder' : 'Set follow-up reminder'"
     maxSize="440px"
     @cancel="$emit('close')"
     @confirm="save"
@@ -49,7 +49,7 @@
     <template #footer>
       <button type="button" class="btn btn-secondary btn-sm" @click="$emit('close')">Cancel</button>
       <button type="button" class="btn btn-primary btn-sm" :disabled="saving" @click="save">
-        {{ saving ? 'Saving...' : 'Set reminder' }}
+        {{ saving ? 'Saving...' : (props.lead?.currentFollowUpId ? 'Update & Reschedule' : 'Set reminder') }}
       </button>
     </template>
   </AppModal>
@@ -59,7 +59,7 @@
 import { ref, watch, computed } from 'vue';
 import { useStore } from 'vuex';
 import AppModal from '@/components/AppModal.vue';
-import { addLeadFollowUp, logLeadActivity } from '@/modules/leads/api/endpoints';
+import { addLeadFollowUp, updateLeadFollowUp, logLeadActivity } from '@/modules/leads/api/endpoints';
 
 const props = defineProps({
   isOpen: { type: Boolean, default: false },
@@ -92,9 +92,19 @@ watch(
   () => props.isOpen,
   (open) => {
     if (open) {
-      scheduledAt.value = defaultDateTime();
-      type.value = 'call';
-      notes.value = '';
+      if (props.lead?.currentFollowUpDate) {
+        const d = new Date(props.lead.currentFollowUpDate);
+        if (!isNaN(d.getTime())) {
+          const z = (n) => (n < 10 ? '0' : '') + n;
+          scheduledAt.value = `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`;
+        } else {
+          scheduledAt.value = defaultDateTime();
+        }
+      } else {
+        scheduledAt.value = defaultDateTime();
+      }
+      type.value = props.lead?.currentType || 'call';
+      notes.value = props.lead?.currentNotes || '';
       error.value = '';
     }
   },
@@ -116,12 +126,24 @@ async function save() {
   error.value = '';
   try {
     const iso = new Date(scheduledAt.value).toISOString();
-    await addLeadFollowUp({
-      id: leadId,
-      scheduledAt: iso,
-      type: type.value,
-      notes: notes.value.trim(),
-    });
+    if (props.lead?.currentFollowUpId) {
+      await updateLeadFollowUp({
+        leadId,
+        followUpId: props.lead.currentFollowUpId,
+        scheduledAt: iso,
+        type: type.value,
+        notes: notes.value.trim(),
+        status: 'scheduled',
+      });
+    } else {
+      await addLeadFollowUp({
+        id: leadId,
+        scheduledAt: iso,
+        type: type.value,
+        notes: notes.value.trim(),
+      });
+    }
+
     await logLeadActivity({
       id: leadId,
       type: 'reminder',
@@ -130,8 +152,9 @@ async function save() {
       nextFollowUpAt: iso,
       status: 'scheduled',
     });
+
     store.dispatch('notifications/triggerToast', {
-      message: 'Follow-up reminder saved.',
+      message: props.lead?.currentFollowUpId ? 'Follow-up reminder rescheduled.' : 'Follow-up reminder saved.',
       type: 'success',
     });
     emit('success');

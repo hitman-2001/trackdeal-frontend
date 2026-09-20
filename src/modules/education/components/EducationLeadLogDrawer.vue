@@ -315,6 +315,9 @@ async function saveUpdate() {
 
     if (form.value.scheduleFollowUp && form.value.followUpAt) {
       payload.nextFollowUpAt = new Date(form.value.followUpAt).toISOString();
+    } else {
+      payload.clearFollowUp = true;
+      payload.nextFollowUpAt = null;
     }
 
     // 1. Log Activity Record with staff attribution
@@ -328,8 +331,10 @@ async function saveUpdate() {
     if (form.value.temperature && form.value.temperature !== lead.value.leadTemperature) {
       leadUpdates.leadTemperature = form.value.temperature;
     }
-    if (payload.nextFollowUpAt) {
+    if (form.value.scheduleFollowUp && payload.nextFollowUpAt) {
       leadUpdates.nextFollowUpAt = payload.nextFollowUpAt;
+    } else {
+      leadUpdates.nextFollowUpAt = null;
     }
     leadUpdates.notesRemarks = form.value.remarks.trim();
 
