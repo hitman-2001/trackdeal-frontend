@@ -252,10 +252,18 @@ const emit = defineEmits(['close']);
 const store = useStore();
 const isEducation = computed(() => store.getters['organization/isEducationTenant']);
 const hasTasksAccess = computed(() => {
+  if (isEducation.value) return false;
+  const isOrgAdmin = [
+    'super_admin',
+    'system_admin',
+    'org_admin',
+    'organization_admin',
+  ].includes(String(store.getters['auth/userRole'] || '').toLowerCase());
   return (
     store.getters['organization/isFeatureEnabled']('tasks') &&
-    (store.getters['permissions/hasCapability']('tasks:read') ||
-     store.getters['permissions/hasCapability']('tasks.read'))
+    (isOrgAdmin ||
+      store.getters['permissions/hasCapability']('tasks:read') ||
+      store.getters['permissions/hasCapability']('tasks.read'))
   );
 });
 

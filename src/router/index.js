@@ -171,7 +171,7 @@ const routes = [
         path: "tasks",
         name: "Tasks",
         component: () => import("@/modules/tasks/pages/TasksList.vue"),
-        meta: { module: "tasks", permission: "tasks:read" },
+        meta: { module: "tasks", permission: "tasks:read", vertical: "realEstate" },
       },
       {
         path: "projects",

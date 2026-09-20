@@ -1,38 +1,38 @@
 <template>
-  <div class="workspace-page space-y-6 pb-12">
+  <div class="workspace-page space-y-6 pb-12 max-w-full overflow-x-hidden">
     <!-- Page Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80 dark:border-slate-800/80">
-      <div>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-2 border-b border-slate-200/80 dark:border-slate-800/80">
+      <div class="min-w-0">
         <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-primary/10 text-primary border border-primary/20 mb-1.5">
           <PhSparkle :size="12" weight="fill" />
           <span>Education Workspace</span>
         </div>
-        <h1 class="font-heading text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
+        <h1 class="font-heading text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight break-words">
           Admissions & Counseling Overview
         </h1>
         <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
           Monitor your prospective inquiries, active counseling stages, and scheduled parent follow-ups in real time.
         </p>
       </div>
-      <div class="flex items-center gap-2.5 shrink-0 flex-wrap">
+      <div class="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
         <!-- Refresh Button -->
         <button
           type="button"
           @click="loadDashboard(true)"
           :disabled="refreshing"
-          class="btn btn-secondary btn-sm text-xs font-semibold gap-1.5"
+          class="btn btn-secondary btn-sm text-xs font-semibold gap-1.5 justify-center w-full sm:w-auto"
           title="Refresh dashboard data"
         >
           <PhArrowsClockwise :size="14" :class="{ 'animate-spin': refreshing }" />
           <span>Refresh</span>
         </button>
 
-        <router-link to="/app/leads" class="btn btn-secondary btn-sm text-xs font-semibold gap-1.5">
+        <router-link to="/app/leads" class="btn btn-secondary btn-sm text-xs font-semibold gap-1.5 justify-center w-full sm:w-auto">
           <PhUsersThree :size="14" />
           <span>All Leads</span>
         </router-link>
 
-        <router-link to="/app/leads?action=create" class="btn btn-primary btn-sm text-xs font-semibold gap-1.5 shadow-sm hover:shadow">
+        <router-link to="/app/leads?action=create" class="btn btn-primary btn-sm text-xs font-semibold gap-1.5 shadow-sm hover:shadow col-span-2 sm:col-span-1 justify-center w-full sm:w-auto whitespace-nowrap">
           <PhPlus :size="14" weight="bold" />
           <span>Add Student Lead</span>
         </router-link>
@@ -41,34 +41,34 @@
 
     <!-- Loading Skeleton -->
     <div v-if="loading" class="space-y-6">
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div v-for="i in 6" :key="i" class="bg-surface border border-default rounded-2xl p-5 animate-pulse h-28"></div>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
+        <div v-for="i in 6" :key="i" class="bg-surface border border-default rounded-xl sm:rounded-2xl p-4 sm:p-5 animate-pulse h-28"></div>
       </div>
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 bg-surface border border-default rounded-2xl p-6 animate-pulse h-80"></div>
-        <div class="bg-surface border border-default rounded-2xl p-6 animate-pulse h-80"></div>
+        <div class="lg:col-span-2 bg-surface border border-default rounded-xl sm:rounded-2xl p-5 sm:p-6 animate-pulse h-80"></div>
+        <div class="bg-surface border border-default rounded-xl sm:rounded-2xl p-5 sm:p-6 animate-pulse h-80"></div>
       </div>
     </div>
 
     <template v-else>
       <!-- Top Dynamic KPI Metrics (KokonutUI Glass Style) -->
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
         <!-- Total Leads -->
         <div
-          class="p-4 rounded-2xl bg-surface/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 hover:border-blue-400/60 dark:hover:border-blue-500/40 transition-all shadow-xs flex flex-col justify-between group cursor-pointer"
+          class="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-surface/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 hover:border-blue-400/60 dark:hover:border-blue-500/40 transition-all shadow-xs flex flex-col justify-between group cursor-pointer min-w-0"
           @click="navigateToLeads()"
         >
-          <div class="flex items-center justify-between">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Leads</span>
-            <div class="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <PhUsersThree :size="18" weight="duotone" />
+          <div class="flex items-center justify-between gap-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">Total Leads</span>
+            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <PhUsersThree :size="16" weight="duotone" />
             </div>
           </div>
-          <div class="mt-2">
-            <div class="text-2xl font-black text-slate-900 dark:text-slate-100 tabular-nums">
+          <div class="mt-2 min-w-0">
+            <div class="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tabular-nums">
               {{ summary.totalLeads ?? 0 }}
             </div>
-            <div class="text-[10px] text-blue-600 dark:text-blue-400 font-medium mt-0.5">
+            <div class="text-[10px] text-blue-600 dark:text-blue-400 font-medium mt-0.5 truncate">
               {{ summary.newLeadsToday ? `+${summary.newLeadsToday} new today` : 'In database' }}
             </div>
           </div>
@@ -76,20 +76,20 @@
 
         <!-- Follow-Ups Due Today -->
         <div
-          class="p-4 rounded-2xl bg-surface/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 hover:border-amber-400/60 dark:hover:border-amber-500/40 transition-all shadow-xs flex flex-col justify-between group cursor-pointer"
+          class="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-surface/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 hover:border-amber-400/60 dark:hover:border-amber-500/40 transition-all shadow-xs flex flex-col justify-between group cursor-pointer min-w-0"
           @click="setTab('today')"
         >
-          <div class="flex items-center justify-between">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Due Today</span>
-            <div class="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <PhCalendarCheck :size="18" weight="duotone" />
+          <div class="flex items-center justify-between gap-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">Due Today</span>
+            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <PhCalendarCheck :size="16" weight="duotone" />
             </div>
           </div>
-          <div class="mt-2">
-            <div class="text-2xl font-black text-amber-600 dark:text-amber-400 tabular-nums">
+          <div class="mt-2 min-w-0">
+            <div class="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400 tabular-nums">
               {{ todayCount }}
             </div>
-            <div class="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+            <div class="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate">
               Scheduled for today
             </div>
           </div>
@@ -97,29 +97,29 @@
 
         <!-- Overdue Follow-Ups (Pulsing if > 0) -->
         <div
-          class="p-4 rounded-2xl bg-surface/90 backdrop-blur-md border transition-all shadow-xs flex flex-col justify-between group cursor-pointer"
+          class="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-surface/90 backdrop-blur-md border transition-all shadow-xs flex flex-col justify-between group cursor-pointer min-w-0"
           :class="overdueCount > 0 ? 'border-rose-300 dark:border-rose-900/60 bg-rose-50/20 dark:bg-rose-950/10' : 'border-slate-200/80 dark:border-slate-800/80 hover:border-rose-400/60'"
           @click="setTab('overdue')"
         >
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-1.5">
-              <span class="text-[10px] font-bold uppercase tracking-wider" :class="overdueCount > 0 ? 'text-rose-600 dark:text-rose-400 font-extrabold' : 'text-slate-400'">
+          <div class="flex items-center justify-between gap-1">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="text-[10px] font-bold uppercase tracking-wider truncate" :class="overdueCount > 0 ? 'text-rose-600 dark:text-rose-400 font-extrabold' : 'text-slate-400'">
                 Overdue
               </span>
-              <span v-if="overdueCount > 0" class="relative flex h-2 w-2">
+              <span v-if="overdueCount > 0" class="relative flex h-2 w-2 shrink-0">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
                 <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
               </span>
             </div>
-            <div class="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <PhWarning :size="18" weight="duotone" />
+            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <PhWarning :size="16" weight="duotone" />
             </div>
           </div>
-          <div class="mt-2">
-            <div class="text-2xl font-black tabular-nums" :class="overdueCount > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-slate-100'">
+          <div class="mt-2 min-w-0">
+            <div class="text-xl sm:text-2xl font-black tabular-nums" :class="overdueCount > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-slate-100'">
               {{ overdueCount }}
             </div>
-            <div class="text-[10px] font-medium mt-0.5" :class="overdueCount > 0 ? 'text-rose-600 dark:text-rose-400 font-semibold' : 'text-slate-500 dark:text-slate-400'">
+            <div class="text-[10px] font-medium mt-0.5 truncate" :class="overdueCount > 0 ? 'text-rose-600 dark:text-rose-400 font-semibold' : 'text-slate-500 dark:text-slate-400'">
               {{ overdueCount > 0 ? 'Requires action' : 'All caught up' }}
             </div>
           </div>
@@ -127,20 +127,20 @@
 
         <!-- Active Pipeline Inquiries -->
         <div
-          class="p-4 rounded-2xl bg-surface/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-400/60 dark:hover:border-indigo-500/40 transition-all shadow-xs flex flex-col justify-between group cursor-pointer"
+          class="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-surface/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-400/60 dark:hover:border-indigo-500/40 transition-all shadow-xs flex flex-col justify-between group cursor-pointer min-w-0"
           @click="navigateToLeads('contacted')"
         >
-          <div class="flex items-center justify-between">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">In Pipeline</span>
-            <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <PhFunnel :size="18" weight="duotone" />
+          <div class="flex items-center justify-between gap-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">In Pipeline</span>
+            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <PhFunnel :size="16" weight="duotone" />
             </div>
           </div>
-          <div class="mt-2">
-            <div class="text-2xl font-black text-indigo-600 dark:text-indigo-400 tabular-nums">
+          <div class="mt-2 min-w-0">
+            <div class="text-xl sm:text-2xl font-black text-indigo-600 dark:text-indigo-400 tabular-nums">
               {{ activePipelineCount }}
             </div>
-            <div class="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+            <div class="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate">
               Contacted & Counseling
             </div>
           </div>
@@ -148,20 +148,20 @@
 
         <!-- Enrolled Students -->
         <div
-          class="p-4 rounded-2xl bg-surface/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 hover:border-emerald-400/60 dark:hover:border-emerald-500/40 transition-all shadow-xs flex flex-col justify-between group cursor-pointer"
+          class="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-surface/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 hover:border-emerald-400/60 dark:hover:border-emerald-500/40 transition-all shadow-xs flex flex-col justify-between group cursor-pointer min-w-0"
           @click="navigateToStudents()"
         >
-          <div class="flex items-center justify-between">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Enrolled</span>
-            <div class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <PhGraduationCap :size="18" weight="duotone" />
+          <div class="flex items-center justify-between gap-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">Enrolled</span>
+            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <PhGraduationCap :size="16" weight="duotone" />
             </div>
           </div>
-          <div class="mt-2">
-            <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
+          <div class="mt-2 min-w-0">
+            <div class="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
               {{ summary.totalStudents ?? summary.enrolledLeads ?? 0 }}
             </div>
-            <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">
+            <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5 truncate">
               {{ conversionRateText }}
             </div>
           </div>
@@ -169,20 +169,20 @@
 
         <!-- Active Classes -->
         <div
-          class="p-4 rounded-2xl bg-surface/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 hover:border-purple-400/60 dark:hover:border-purple-500/40 transition-all shadow-xs flex flex-col justify-between group cursor-pointer"
+          class="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-surface/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 hover:border-purple-400/60 dark:hover:border-purple-500/40 transition-all shadow-xs flex flex-col justify-between group cursor-pointer min-w-0"
           @click="navigateToClasses()"
         >
-          <div class="flex items-center justify-between">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Classes</span>
-            <div class="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <PhChalkboardTeacher :size="18" weight="duotone" />
+          <div class="flex items-center justify-between gap-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">Classes</span>
+            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <PhChalkboardTeacher :size="16" weight="duotone" />
             </div>
           </div>
-          <div class="mt-2">
-            <div class="text-2xl font-black text-slate-900 dark:text-slate-100 tabular-nums">
+          <div class="mt-2 min-w-0">
+            <div class="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tabular-nums">
               {{ summary.totalClasses ?? 0 }}
             </div>
-            <div class="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+            <div class="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate">
               Batches running
             </div>
           </div>
@@ -212,7 +212,7 @@
       </div>
 
       <!-- MAIN SECTION: Scheduled Reminders & Follow-Ups (KokonutUI Modern Card System) -->
-      <div class="bg-surface/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
+      <div class="bg-surface/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-xl sm:rounded-2xl p-3.5 sm:p-6 shadow-xs space-y-4 sm:space-y-5">
         <!-- Section Header & Controls -->
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
@@ -522,7 +522,7 @@
       <!-- Pipeline & Performance Row -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Stage Pipeline Funnel (Left 2 cols) -->
-        <div class="lg:col-span-2 bg-surface/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-5 sm:p-6 space-y-5 shadow-xs">
+        <div class="lg:col-span-2 bg-surface/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-xl sm:rounded-2xl p-4 sm:p-6 space-y-4 sm:space-y-5 shadow-xs">
           <!-- Funnel Header -->
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
@@ -584,7 +584,7 @@
               v-for="(stage, idx) in pipelineStages"
               :key="stage.key"
               @click="navigateToLeads(stage.key)"
-              class="group relative p-3 rounded-xl border transition-all duration-150 cursor-pointer flex flex-col justify-between min-h-[96px]"
+              class="group relative p-3 rounded-xl border transition-all duration-150 cursor-pointer flex flex-col justify-between min-h-[96px] min-w-0"
               :class="[
                 stage.count > 0
                   ? 'bg-surface border-slate-200 dark:border-slate-700 hover:border-primary/50 shadow-xs'
@@ -597,27 +597,27 @@
                   {{ String(idx + 1).padStart(2, '0') }}
                 </span>
                 <span
-                  class="w-2 h-2 rounded-full transition-transform group-hover:scale-125"
+                  class="w-2 h-2 rounded-full transition-transform group-hover:scale-125 shrink-0"
                   :class="stage.count > 0 ? stage.barBg : 'bg-slate-300 dark:bg-slate-700'"
                 ></span>
               </div>
 
               <!-- Card Middle: Stage Label -->
-              <div class="my-1">
-                <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-primary transition-colors line-clamp-1">
+              <div class="my-1 min-w-0">
+                <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-primary transition-colors line-clamp-1 truncate">
                   {{ stage.label }}
                 </p>
               </div>
 
               <!-- Card Bottom: Count & Percentage -->
-              <div class="flex items-baseline justify-between pt-1 border-t border-slate-100 dark:border-slate-800/60">
+              <div class="flex items-baseline justify-between pt-1 border-t border-slate-100 dark:border-slate-800/60 gap-1 min-w-0">
                 <span
-                  class="text-lg font-bold font-heading tabular-nums"
+                  class="text-lg font-bold font-heading tabular-nums shrink-0"
                   :class="stage.count > 0 ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-600'"
                 >
                   {{ stage.count }}
                 </span>
-                <span class="text-[10px] font-mono text-slate-400">
+                <span class="text-[10px] font-mono text-slate-400 shrink-0">
                   {{ getStagePercent(stage.count) }}
                 </span>
               </div>
@@ -626,17 +626,17 @@
         </div>
 
         <!-- Right Column: Conversion & Quick Counts -->
-        <div class="space-y-4">
+        <div class="space-y-4 min-w-0">
           <!-- Conversion Performance Card -->
-          <div class="p-5 rounded-2xl bg-surface/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-4">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Conversion Snapshot</span>
-              <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
+          <div class="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-surface/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-4">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">Conversion Snapshot</span>
+              <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap">
                 Active Cycle
               </span>
             </div>
 
-            <div class="p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent border border-emerald-500/20 space-y-1">
+            <div class="p-3.5 sm:p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent border border-emerald-500/20 space-y-1">
               <span class="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 tracking-wider">
                 Overall Lead-to-Student Rate
               </span>
@@ -650,23 +650,23 @@
 
             <!-- Mini Indicators -->
             <div class="space-y-2 text-xs">
-              <div class="flex items-center justify-between py-1.5 border-b border-slate-100 dark:border-slate-800/60">
-                <span class="text-slate-500 dark:text-slate-400">Calls Scheduled Today</span>
-                <span class="font-bold text-slate-800 dark:text-slate-200 tabular-nums">{{ summary.callsScheduled || 0 }}</span>
+              <div class="flex items-center justify-between gap-2 py-1.5 border-b border-slate-100 dark:border-slate-800/60">
+                <span class="text-slate-500 dark:text-slate-400 truncate">Calls Scheduled Today</span>
+                <span class="font-bold text-slate-800 dark:text-slate-200 tabular-nums shrink-0">{{ summary.callsScheduled || 0 }}</span>
               </div>
-              <div class="flex items-center justify-between py-1.5 border-b border-slate-100 dark:border-slate-800/60">
-                <span class="text-slate-500 dark:text-slate-400">Demo / Counseling Sessions</span>
-                <span class="font-bold text-slate-800 dark:text-slate-200 tabular-nums">{{ summary.meetingsToday || 0 }}</span>
+              <div class="flex items-center justify-between gap-2 py-1.5 border-b border-slate-100 dark:border-slate-800/60">
+                <span class="text-slate-500 dark:text-slate-400 truncate">Demo / Counseling Sessions</span>
+                <span class="font-bold text-slate-800 dark:text-slate-200 tabular-nums shrink-0">{{ summary.meetingsToday || 0 }}</span>
               </div>
-              <div class="flex items-center justify-between py-1.5">
-                <span class="text-slate-500 dark:text-slate-400">Pending Reminders</span>
-                <span class="font-bold text-amber-600 dark:text-amber-400 tabular-nums">{{ summary.pendingFollowUps || allFollowUps.length }}</span>
+              <div class="flex items-center justify-between gap-2 py-1.5">
+                <span class="text-slate-500 dark:text-slate-400 truncate">Pending Reminders</span>
+                <span class="font-bold text-amber-600 dark:text-amber-400 tabular-nums shrink-0">{{ summary.pendingFollowUps || allFollowUps.length }}</span>
               </div>
             </div>
           </div>
 
           <!-- Quick Navigation Card -->
-          <div class="p-5 rounded-2xl bg-surface/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-3">
+          <div class="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-surface/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-3">
             <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Workspace Actions</span>
             <div class="grid grid-cols-1 gap-2">
               <router-link

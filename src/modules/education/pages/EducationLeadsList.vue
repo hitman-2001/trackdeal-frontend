@@ -1,5 +1,5 @@
 <template>
-  <div class="workspace-page education-list">
+  <div class="workspace-page education-list pb-16">
     <div
       class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
     >
@@ -147,12 +147,16 @@
     <Teleport to="body">
       <div
         v-if="activeMenuRowId"
-        class="fixed inset-0 z-[100]"
+        class="fixed inset-0 z-[1000]"
         @click="closeActionMenu"
       >
         <div
-          class="fixed w-52 rounded-xl bg-surface border border-default shadow-xl py-1.5 z-[101] text-xs space-y-0.5"
-          :style="{ top: menuPosition.top, right: menuPosition.right }"
+          class="fixed w-52 rounded-xl bg-surface border border-default shadow-xl py-1.5 z-[1001] text-xs space-y-0.5"
+          :style="{
+            top: menuPosition.top,
+            bottom: menuPosition.bottom,
+            right: menuPosition.right,
+          }"
           @click.stop
         >
           <!-- 1. View Details (Read-only dossier & history) -->
@@ -575,7 +579,7 @@ const handleDetailsSuccess = () => {
 // 3-Dots Action Dropdown Menu
 const activeMenuRowId = ref("");
 const activeMenuRow = ref(null);
-const menuPosition = ref({ top: "0px", right: "0px" });
+const menuPosition = ref({ top: "auto", bottom: "auto", right: "0px" });
 
 const toggleActionMenu = (row, event) => {
   const rowId = row._id || row.id;
@@ -584,10 +588,25 @@ const toggleActionMenu = (row, event) => {
     return;
   }
   const rect = event.currentTarget.getBoundingClientRect();
-  menuPosition.value = {
-    top: `${rect.bottom + 4}px`,
-    right: `${window.innerWidth - rect.right}px`,
-  };
+  const estimatedMenuHeight = 250;
+  const bottomNavHeight = 72;
+  const spaceBelow = window.innerHeight - rect.bottom - bottomNavHeight;
+
+  if (spaceBelow < estimatedMenuHeight && rect.top > estimatedMenuHeight) {
+    // Open UPWARDS above the trigger button to prevent bottom nav collision
+    menuPosition.value = {
+      top: "auto",
+      bottom: `${window.innerHeight - rect.top + 4}px`,
+      right: `${Math.max(8, window.innerWidth - rect.right)}px`,
+    };
+  } else {
+    // Open DOWNWARDS below the trigger button
+    menuPosition.value = {
+      top: `${rect.bottom + 4}px`,
+      bottom: "auto",
+      right: `${Math.max(8, window.innerWidth - rect.right)}px`,
+    };
+  }
   activeMenuRow.value = row;
   activeMenuRowId.value = rowId;
 };

@@ -53,15 +53,22 @@ const educationActions = [
   { title: 'New student lead', description: 'Capture student inquiry, subject and parent details.', to: '/app/leads', icon: 'user', tone: 'tone-accent' },
   { title: 'Add student', description: 'Directly enroll student into a batch or course.', to: '/app/students', icon: 'user', tone: 'tone-success' },
   { title: 'Add class', description: 'Configure batch, course, fees, schedule & capacity.', to: '/app/classes', icon: 'buildings', tone: 'tone-highlight' },
-  { title: 'Create task', description: 'Schedule counseling call, follow-up or student visit.', to: '/app/tasks', icon: 'clipboard', tone: 'tone-warning' },
 ];
 
 const actions = computed(() => {
   const base = isEducation.value ? educationActions : realEstateActions;
+  const isOrgAdmin = [
+    'super_admin',
+    'system_admin',
+    'org_admin',
+    'organization_admin',
+  ].includes(String(store.getters['auth/userRole'] || '').toLowerCase());
   const hasTaskAccess =
+    !isEducation.value &&
     store.getters['organization/isFeatureEnabled']('tasks') &&
-    (store.getters['permissions/hasCapability']('tasks:read') ||
-     store.getters['permissions/hasCapability']('tasks:create'));
+    (isOrgAdmin ||
+      store.getters['permissions/hasCapability']('tasks:read') ||
+      store.getters['permissions/hasCapability']('tasks:create'));
   return base.filter(action => {
     if (action.to === '/app/tasks' && !hasTaskAccess) {
       return false;

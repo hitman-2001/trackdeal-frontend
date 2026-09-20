@@ -569,12 +569,28 @@ const kpiMetrics = computed(() => [
   },
 ]);
 
+const canAccessTasks = computed(() => {
+  const isEnabled = store.getters["organization/isFeatureEnabled"]("tasks");
+  const role = String(store.getters["auth/userRole"] || "").toLowerCase();
+  const isOrgAdmin = [
+    "super_admin",
+    "system_admin",
+    "org_admin",
+    "organization_admin",
+  ].includes(role);
+  const hasPerm =
+    isOrgAdmin ||
+    store.getters["permissions/hasCapability"]("tasks:read") ||
+    store.getters["permissions/hasCapability"]("tasks.read");
+  return Boolean(isEnabled && hasPerm);
+});
+
 const priorityItems = computed(() => [
   {
     label: "Follow-ups due",
     detail: "Client calls & commitments",
     value: kpis.value.followupsDueTodayCount || 0,
-    to: "/app/tasks",
+    to: canAccessTasks.value ? "/app/tasks" : "/app/leads",
     icon: "phone",
     tone: "accent",
   },
@@ -582,7 +598,7 @@ const priorityItems = computed(() => [
     label: "Site visits",
     detail: "Scheduled property visits",
     value: kpis.value.siteVisitsScheduledCount || 0,
-    to: "/app/tasks",
+    to: canAccessTasks.value ? "/app/tasks" : "/app/leads",
     icon: "house",
     tone: "info",
   },
@@ -598,7 +614,7 @@ const priorityItems = computed(() => [
     label: "Overdue actions",
     detail: "Past service commitments",
     value: kpis.value.overdueFollowupsCount || 0,
-    to: "/app/tasks",
+    to: canAccessTasks.value ? "/app/tasks" : "/app/leads",
     icon: "warning",
     tone: "warning",
   },

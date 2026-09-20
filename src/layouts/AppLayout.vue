@@ -26,7 +26,7 @@
             <span class="brand-name font-heading">
               Track<span class="brand-highlight">Deal</span>
             </span>
-            <span class="brand-subline">
+            <span class="brand-subline hidden sm:block">
               {{
                 isEducationWorkspace
                   ? "Education workspace"
@@ -52,10 +52,10 @@
 
       <!-- Right: Actions & User Profile Pill -->
       <div class="navbar-right">
-        <!-- Quick Add Action Button -->
+        <!-- Quick Add Action Button (Hidden on small mobile where bottom nav FAB is present) -->
         <button
           @click="quickAddOpen = true"
-          class="quick-add-btn"
+          class="quick-add-btn hidden sm:flex"
           title="Quick Add Record"
         >
           <PhPlus :size="14" weight="bold" />
@@ -290,7 +290,7 @@
               :size="11"
               class="text-slate-300 dark:text-slate-600"
             />
-            <span class="font-semibold text-slate-700 dark:text-slate-200">{{
+            <span class="font-semibold text-slate-700 dark:text-slate-200 truncate">{{
               activePageName
             }}</span>
           </nav>
@@ -584,9 +584,19 @@
         <PhPlus :size="24" weight="bold" />
       </button>
       
-      <router-link to="/app/tasks" class="mobile-nav-item" exact-active-class="active">
-        <PhCheckSquare :size="22" weight="regular" class="nav-icon" />
-        <span>Tasks</span>
+      <router-link
+        v-if="mobileNavFourthItem"
+        :to="mobileNavFourthItem.to"
+        class="mobile-nav-item"
+        exact-active-class="active"
+      >
+        <component
+          :is="mobileNavFourthItem.icon"
+          :size="22"
+          weight="regular"
+          class="nav-icon"
+        />
+        <span>{{ mobileNavFourthItem.label }}</span>
       </router-link>
       <button @click="mobileMenuOpen = true" class="mobile-nav-item" aria-label="Menu">
         <PhList :size="22" weight="regular" class="nav-icon" />
@@ -978,18 +988,6 @@ const educationMenuGroups = [
     ],
   },
   {
-    title: "Operations",
-    items: [
-      {
-        name: "Tasks & Follow-ups",
-        to: "/app/tasks",
-        icon: PhCheckSquare,
-        permission: "tasks:read",
-        module: "tasks",
-      },
-    ],
-  },
-  {
     title: "Admin",
     items: [
       {
@@ -1025,6 +1023,39 @@ const isOrgAdmin = computed(() => {
   ].includes(role);
 });
 
+const canAccessTasks = computed(() => {
+  if (isEducationWorkspace.value) return false;
+  const isEnabled = store.getters["organization/isFeatureEnabled"]("tasks");
+  const hasPerm =
+    isOrgAdmin.value ||
+    store.getters["permissions/hasCapability"]("tasks:read") ||
+    store.getters["permissions/hasCapability"]("tasks.read") ||
+    store.getters["permissions/hasCapability"]("tasks.view");
+  return Boolean(isEnabled && hasPerm);
+});
+
+const mobileNavFourthItem = computed(() => {
+  if (isEducationWorkspace.value) {
+    return {
+      to: "/app/students",
+      label: "Students",
+      icon: PhGraduationCap,
+    };
+  }
+  if (canAccessTasks.value) {
+    return {
+      to: "/app/tasks",
+      label: "Tasks",
+      icon: PhCheckSquare,
+    };
+  }
+  return {
+    to: "/app/properties",
+    label: "Inventory",
+    icon: PhHouseLine,
+  };
+});
+
 const filteredMenuGroups = computed(() => {
   return menuGroups.value
     .map((group) => ({
@@ -1041,16 +1072,7 @@ const filteredMenuGroups = computed(() => {
 
         // 2. Explicit access check for Tasks & Follow-ups
         if (item.to === "/app/tasks" || item.module === "tasks") {
-          if (isEducationWorkspace.value) {
-            return false;
-          }
-
-          const hasTaskPermission =
-            store.getters["permissions/hasCapability"]("tasks:read") ||
-            store.getters["permissions/hasCapability"]("tasks.read");
-          const isTaskEnabled =
-            store.getters["organization/isFeatureEnabled"]("tasks");
-          if (!hasTaskPermission || !isTaskEnabled) {
+          if (!canAccessTasks.value) {
             return false;
           }
         }
@@ -1156,7 +1178,8 @@ const vClickOutside = {
   flex-direction: column;
   height: 100vh;
   height: 100dvh;
-  width: 100vw;
+  width: 100%;
+  max-width: 100%;
   background: #f0f6fc;
   background-image:
     radial-gradient(at 100% 0%, rgba(0, 163, 255, 0.12) 0px, transparent 50%),
@@ -1468,8 +1491,14 @@ const vClickOutside = {
 }
 
 .user-info-brief {
-  display: flex;
+  display: none;
   flex-direction: column;
+}
+
+@media (min-width: 640px) {
+  .user-info-brief {
+    display: flex;
+  }
 }
 
 .user-name {
@@ -1497,9 +1526,16 @@ const vClickOutside = {
 }
 
 .dropdown-arrow {
+  display: none;
   color: #94a3b8;
   transition: transform 0.2s ease;
   flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  .dropdown-arrow {
+    display: block;
+  }
 }
 
 .dropdown-arrow.arrow-open {
@@ -1808,6 +1844,7 @@ const vClickOutside = {
   flex: 1;
   padding: 24px;
   overflow-y: auto;
+  overflow-x: hidden;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
@@ -1837,17 +1874,23 @@ const vClickOutside = {
 }
 
 .app-footer {
-  width: 100%;
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(0, 78, 146, 0.08);
-  border-top: 1px solid rgba(0, 78, 146, 0.06);
-  height: 38px;
-  display: flex;
-  align-items: center;
-  z-index: 10;
-  border-radius: 0 0 16px 16px;
+  display: none !important;
+}
+
+@media (min-width: 1024px) {
+  .app-footer {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 78, 146, 0.08);
+    border-top: 1px solid rgba(0, 78, 146, 0.06);
+    height: 38px;
+    display: flex !important;
+    align-items: center;
+    z-index: 10;
+    border-radius: 0 0 16px 16px;
+  }
 }
 
 .dark .app-footer {
@@ -2019,7 +2062,20 @@ const vClickOutside = {
 
 @media (max-width: 1023px) {
   .layout-body {
-    padding-bottom: calc(64px + env(safe-area-inset-bottom) + 12px) !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    padding-bottom: calc(84px + env(safe-area-inset-bottom)) !important;
+  }
+  .main-layout-container {
+    width: 100% !important;
+    border-radius: 0 !important;
+  }
+  .content {
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 16px 12px calc(28px + env(safe-area-inset-bottom)) 12px !important;
+    overflow-x: hidden;
   }
   .navbar-left {
     min-width: auto;
@@ -2033,6 +2089,45 @@ const vClickOutside = {
   .app-navbar {
     padding-left: 12px;
     padding-right: 12px;
+    height: 56px;
+  }
+  .navbar-left {
+    gap: 8px;
+  }
+  .navbar-right {
+    gap: 6px;
+  }
+  .quick-add-btn {
+    display: none !important;
+  }
+  .logo-container {
+    gap: 8px;
+  }
+  .brand-mark-box {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+  }
+  .brand-name {
+    font-size: 1rem;
+  }
+  .user-profile {
+    padding: 0;
+    gap: 0;
+  }
+  .user-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+  }
+  .action-btn {
+    width: 34px;
+    height: 34px;
+  }
+  .content {
+    padding: 12px 10px calc(28px + env(safe-area-inset-bottom)) 10px !important;
+    overflow-x: hidden;
   }
 }
 </style>
