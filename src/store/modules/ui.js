@@ -37,15 +37,15 @@ export const applyThemeTokensToDOM = (tokens) => {
     return [Math.round(h * 360), Math.round(s * 100), Math.round(l * 100)];
   };
 
-  let h = 150, s = 34, l = 23;
-  let secH = 210, secS = 25, secL = 35;
+  let h = 142, s = 71, l = 29;
+  let secH = 201, secS = 96, secL = 32;
 
   if (tokens.primaryHex) {
     [h, s, l] = hexToHsl(tokens.primaryHex);
   } else {
-    h = Number(tokens.primaryH) || 150;
-    s = Number(tokens.primaryS) || 34;
-    l = Number(tokens.primaryL) || 23;
+    h = Number(tokens.primaryH) || 142;
+    s = Number(tokens.primaryS) || 71;
+    l = Number(tokens.primaryL) || 29;
   }
 
   if (tokens.secondaryHex) {

@@ -1180,56 +1180,13 @@ const vClickOutside = {
   height: 100dvh;
   width: 100%;
   max-width: 100%;
-  background: #f0f6fc;
-  background-image:
-    radial-gradient(at 100% 0%, rgba(0, 163, 255, 0.12) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, rgba(0, 78, 146, 0.08) 0px, transparent 50%);
+  background: #f8fafc;
   position: relative;
   overflow: hidden;
 }
 
 .dark .app-container {
   background: #090e17;
-  background-image:
-    radial-gradient(at 100% 0%, rgba(0, 163, 255, 0.06) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, rgba(0, 78, 146, 0.08) 0px, transparent 50%);
-}
-
-/* Ambient Orbs */
-.app-container::before {
-  content: "";
-  position: fixed;
-  top: -180px;
-  right: -100px;
-  width: 520px;
-  height: 520px;
-  background: radial-gradient(
-    circle,
-    rgba(0, 163, 255, 0.22) 0%,
-    rgba(0, 133, 255, 0.08) 40%,
-    transparent 70%
-  );
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.app-container::after {
-  content: "";
-  position: fixed;
-  bottom: -140px;
-  left: -80px;
-  width: 480px;
-  height: 480px;
-  background: radial-gradient(
-    circle,
-    rgba(0, 78, 146, 0.18) 0%,
-    rgba(0, 133, 255, 0.06) 45%,
-    transparent 72%
-  );
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 0;
 }
 
 /* ==========================================================================
@@ -1387,20 +1344,22 @@ const vClickOutside = {
   display: flex;
   align-items: center;
   gap: 6px;
-  height: 36px;
+  height: 38px;
+  min-height: 38px;
   padding: 0 14px;
-  border-radius: 10px;
-  background: #004e92;
+  border-radius: 9px;
+  background: hsl(var(--primary, var(--accent-600, 142 71% 29%)));
   color: white;
   font-size: 0.8125rem;
   font-weight: 600;
   transition: all 0.15s ease;
-  box-shadow: 0 2px 8px rgba(0, 78, 146, 0.2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid transparent;
+  cursor: pointer;
 }
 
 .quick-add-btn:hover {
-  background: #003d73;
-  box-shadow: 0 4px 12px rgba(0, 78, 146, 0.3);
+  filter: brightness(0.92);
   transform: translateY(-1px);
 }
 

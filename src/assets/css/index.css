@@ -10,13 +10,17 @@
 
 /* ── CSS Custom Properties ─────────────────────────────────────────────────── */
 :root {
-  /* Shared with the public landing page: quiet paper surfaces and forest green actions. */
-  --accent-50:  105 30% 95%;
-  --accent-100: 112 27% 88%;
-  --accent-200: 120 23% 75%;
-  --accent-500: 145 34% 37%;
-  --accent-600: 150 34% 23%;
-  --accent-700: 151 42% 17%;
+  /* TrackDeal System Colors */
+  --brand-blue: 201 96% 32%; /* TrackDeal Blue #0284c7 */
+  --brand-blue-50: 204 100% 97%;
+  --brand-blue-100: 204 94% 94%;
+
+  --accent-50:  138 76% 97%;
+  --accent-100: 141 73% 92%;
+  --accent-200: 141 68% 82%;
+  --accent-500: 142 71% 38%;
+  --accent-600: 142 71% 29%; /* Dark Green #15803d */
+  --accent-700: 142 72% 21%;
   --accent-foreground: 0 0% 100%;
 
   --highlight-100: 39 74% 91%;

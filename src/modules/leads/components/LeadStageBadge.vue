@@ -1,9 +1,9 @@
 <template>
   <span 
-    class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border capitalize transition-all duration-200"
+    class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold border capitalize transition-colors"
     :class="stageClasses"
   >
-    <span class="w-1.5 h-1.5 rounded-full mr-1 animate-pulse" :class="dotClasses"></span>
+    <span class="w-1.5 h-1.5 rounded-full mr-1.5 shrink-0" :class="dotClasses"></span>
     {{ formatStage(stage) }}
   </span>
 </template>

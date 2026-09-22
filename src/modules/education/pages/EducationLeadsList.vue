@@ -1,19 +1,22 @@
 <template>
   <div class="workspace-page education-list pb-16">
+    <!-- Page Header (Section 6 Standard) -->
     <div
       class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
     >
       <div>
-        <h1 class="font-heading text-xl font-extrabold">Student leads</h1>
-        <p class="text-xs text-slate-500 mt-0.5">
+        <h1 class="text-2xl sm:text-[28px] font-bold text-slate-900 dark:text-slate-100 tracking-tight leading-tight">
+          Student Leads
+        </h1>
+        <p class="text-xs sm:text-[13px] text-slate-500 mt-1">
           Admission inquiries. Convert a lead into an enrolled student.
         </p>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2.5 flex-wrap">
         <button
           v-if="isOrgAdmin && selectedRows.length > 0"
           @click="openBulkAssign"
-          class="btn-sm btn-secondary h-9 text-xs font-bold gap-1.5 flex items-center hover:border-blue-500 hover:text-blue-600 transition-colors"
+          class="btn btn-secondary btn-sm flex items-center gap-1.5"
           title="Assign selected leads to staff"
         >
           <PhUserPlus :size="15" weight="bold" />
@@ -23,34 +26,39 @@
         <button
           v-if="canBulkUpload"
           @click="showBulkUpload = true"
-          class="btn-sm btn-secondary h-9 text-xs font-bold gap-1.5 flex items-center hover:border-emerald-500 hover:text-emerald-600 transition-colors"
+          class="btn btn-secondary btn-sm flex items-center gap-1.5"
           title="Bulk Upload Student Leads from Excel (.xlsx, .csv)"
         >
           <PhFileArrowUp :size="15" weight="bold" />
           <span>Import Excel</span>
         </button>
         <button
-          class="btn btn-primary btn-sm h-9 text-xs font-semibold"
+          class="btn btn-primary btn-sm flex items-center gap-1.5"
           @click="openCreate"
         >
-          Add student lead
+          <PhPlus :size="15" weight="bold" />
+          <span>Add Student Lead</span>
         </button>
       </div>
     </div>
 
+    <!-- Filters Bar (42px Equal Heights & Consistent Radii per Spec) -->
     <div
-      class="p-4 rounded-xl bg-surface border border-default flex flex-wrap gap-2"
+      class="p-3 sm:p-4 rounded-xl bg-surface border border-default grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 shadow-xs"
     >
-      <input
-        v-model="search"
-        type="text"
-        placeholder="Search student lead..."
-        class="w-full sm:w-72 bg-slate-50 dark:bg-slate-800 border border-default rounded-xl px-3 py-2 text-xs"
-        @input="handleSearch"
-      />
+      <div class="relative">
+        <PhMagnifyingGlass :size="16" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        <input
+          v-model="search"
+          type="text"
+          placeholder="Search student lead..."
+          class="filter-control pl-9 w-full"
+          @input="handleSearch"
+        />
+      </div>
       <select
         v-model="statusFilter"
-        class="bg-slate-50 dark:bg-slate-800 border border-default rounded-xl px-3 py-2 text-xs"
+        class="filter-control w-full"
         @change="onFilterChange"
       >
         <option value="">All stages</option>
@@ -65,9 +73,33 @@
         <option value="lost">Lost</option>
         <option value="on_hold">On Hold</option>
       </select>
+      <select
+        v-model="staffFilter"
+        class="filter-control w-full"
+        @change="onFilterChange"
+      >
+        <option value="">All staff</option>
+        <option v-for="s in staffList" :key="s._id || s.id" :value="s._id || s.id">
+          {{ s.firstName }} {{ s.lastName || '' }}
+        </option>
+      </select>
+      <select
+        v-model="sourceFilter"
+        class="filter-control w-full"
+        @change="onFilterChange"
+      >
+        <option value="">All sources</option>
+        <option value="walk_in">Walk-in</option>
+        <option value="website">Website</option>
+        <option value="referral">Referral</option>
+        <option value="whatsapp">WhatsApp</option>
+        <option value="campus">Campus</option>
+        <option value="manual_entry">Manual</option>
+      </select>
     </div>
 
-    <div class="rounded-xl bg-surface border border-default overflow-hidden">
+    <!-- Data Table Card -->
+    <div class="rounded-xl bg-surface border border-default overflow-hidden shadow-xs">
       <AppTable
         :rows="rows"
         :columns="columns"
@@ -87,18 +119,18 @@
           <div class="font-bold text-slate-800 dark:text-slate-200">
             {{ row.firstName }} {{ row.lastName }}
           </div>
-          <div class="text-slate-500 text-[10px]">{{ row.mobile }}</div>
+          <div class="text-slate-500 text-[11px] font-mono">{{ row.mobile }}</div>
         </template>
 
         <template #cell(parent)="{ row }">
-          <div class="text-slate-700 dark:text-slate-300">
+          <div class="text-slate-700 dark:text-slate-300 text-xs">
             {{ row.parentName || "—" }}
           </div>
         </template>
 
         <template #cell(class)="{ row }">
           <span
-            class="inline-flex max-w-[10rem] truncate px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
+            class="inline-flex max-w-[10rem] truncate px-2 py-0.5 rounded-md text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50"
             :title="row.classInterestId?.name || ''"
           >
             {{ row.classInterestId?.name || "—" }}
@@ -108,24 +140,19 @@
         <template #cell(staff)="{ row }">
           <div v-if="row.assignedTo" class="flex items-center gap-1.5 min-w-0">
             <span
-              class="shrink-0 w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[9px] font-bold text-slate-600 uppercase"
+              class="shrink-0 w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[9px] font-bold text-slate-600 dark:text-slate-300 uppercase"
             >
               {{ (row.assignedTo.firstName || "?").charAt(0) }}
             </span>
-            <span class="truncate text-slate-700 dark:text-slate-300">
+            <span class="truncate text-slate-700 dark:text-slate-300 text-xs">
               {{ row.assignedTo.firstName }} {{ row.assignedTo.lastName || "" }}
             </span>
           </div>
-          <span v-else class="text-[10px] text-slate-400 italic">Unassigned</span>
+          <span v-else class="text-[11px] text-slate-400 italic">Unassigned</span>
         </template>
 
         <template #cell(status)="{ row }">
-          <span
-            class="px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize"
-            :class="statusClass(row.status)"
-          >
-            {{ formatStatus(row.status) }}
-          </span>
+          <StatusBadge :status="row.status" />
         </template>
 
         <template #rowActions="{ row }">
@@ -151,7 +178,7 @@
         @click="closeActionMenu"
       >
         <div
-          class="fixed w-52 rounded-xl bg-surface border border-default shadow-xl py-1.5 z-[1001] text-xs space-y-0.5"
+          class="fixed w-52 rounded-xl bg-surface border border-default shadow-xl p-1.5 z-[1001] text-xs space-y-0.5"
           :style="{
             top: menuPosition.top,
             bottom: menuPosition.bottom,
@@ -159,66 +186,67 @@
           }"
           @click.stop
         >
-          <!-- 1. View Details (Read-only dossier & history) -->
+          <!-- 1. View Details -->
           <button
             type="button"
             @click="handleView(activeMenuRow)"
-            class="w-full px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 text-slate-700 dark:text-slate-200 transition-colors font-medium"
+            class="w-full px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2.5 text-slate-700 dark:text-slate-200 transition-colors font-medium rounded-lg"
           >
             <PhEye :size="15" weight="bold" class="text-indigo-600" />
             <span>View Details</span>
           </button>
 
-          <!-- 2. Edit Lead (Strictly edit details) -->
-          <button
-            type="button"
-            @click="handleEdit(activeMenuRow)"
-            class="w-full px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 text-slate-700 dark:text-slate-200 transition-colors font-medium"
-          >
-            <PhPencilSimple :size="15" weight="bold" class="text-blue-600" />
-            <span>Edit Details</span>
-          </button>
-
-          <!-- 3. Log Updates / Remarks -->
+          <!-- 2. Log Interaction -->
           <button
             type="button"
             @click="handleLog(activeMenuRow)"
-            class="w-full px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 text-slate-700 dark:text-slate-200 transition-colors font-medium"
+            class="w-full px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2.5 text-slate-700 dark:text-slate-200 transition-colors font-medium rounded-lg"
           >
             <PhNotePencil :size="15" weight="bold" class="text-emerald-600" />
-            <span>Log Updates</span>
+            <span>Log Interaction</span>
           </button>
 
-          <!-- 4. Set Reminder -->
+          <!-- 3. Edit Lead -->
           <button
             type="button"
-            @click="handleReminder(activeMenuRow)"
-            class="w-full px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 text-slate-700 dark:text-slate-200 transition-colors font-medium"
+            @click="handleEdit(activeMenuRow)"
+            class="w-full px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2.5 text-slate-700 dark:text-slate-200 transition-colors font-medium rounded-lg"
           >
-            <PhBell :size="15" weight="bold" class="text-amber-600" />
-            <span>Set Reminder</span>
+            <PhPencilSimple :size="15" weight="bold" class="text-blue-600" />
+            <span>Edit Lead</span>
           </button>
 
-          <!-- 5. Enroll Student -->
-          <button
-            v-if="activeMenuRow?.status !== 'enrolled' && activeMenuRow?.status !== 'converted'"
-            type="button"
-            @click="handleEnroll(activeMenuRow)"
-            class="w-full px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 text-slate-700 dark:text-slate-200 transition-colors font-medium"
-          >
-            <PhCheckCircle :size="15" weight="bold" class="text-teal-600" />
-            <span>Enroll Student</span>
-          </button>
-
-          <!-- 6. Assign Staff (Admin only) -->
+          <!-- 4. Assign Staff -->
           <button
             v-if="isOrgAdmin"
             type="button"
             @click="handleAssign(activeMenuRow)"
-            class="w-full px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 text-slate-700 dark:text-slate-200 transition-colors font-medium border-t border-slate-100 dark:border-slate-800/80"
+            class="w-full px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2.5 text-slate-700 dark:text-slate-200 transition-colors font-medium rounded-lg"
           >
             <PhUserPlus :size="15" weight="bold" class="text-purple-600" />
             <span>Assign Staff</span>
+          </button>
+
+          <!-- 5. Convert to Student -->
+          <button
+            v-if="activeMenuRow?.status !== 'enrolled' && activeMenuRow?.status !== 'converted'"
+            type="button"
+            @click="handleEnroll(activeMenuRow)"
+            class="w-full px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2.5 text-slate-700 dark:text-slate-200 transition-colors font-medium rounded-lg"
+          >
+            <PhCheckCircle :size="15" weight="bold" class="text-teal-600" />
+            <span>Convert to Student</span>
+          </button>
+
+          <!-- 6. Delete Lead (Destructive) -->
+          <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
+          <button
+            type="button"
+            @click="handleDelete(activeMenuRow)"
+            class="w-full px-3 py-2 text-left hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center gap-2.5 text-rose-600 dark:text-rose-400 transition-colors font-medium rounded-lg"
+          >
+            <PhTrash :size="15" weight="bold" />
+            <span>Delete</span>
           </button>
         </div>
       </div>
@@ -229,6 +257,7 @@
       :isOpen="isDetailsOpen"
       :leadId="activeLeadId"
       @close="isDetailsOpen = false"
+      @log-interaction="handleLogFromDrawer"
     />
 
     <!-- Edit Student Lead Drawer (Strictly Editing) -->
@@ -431,6 +460,17 @@
       @close="showBulkUpload = false"
       @success="load"
     />
+
+    <!-- Delete Confirmation Modal (Section 19) -->
+    <DeleteConfirmModal
+      :isOpen="isDeleteOpen"
+      title="Delete Student Lead?"
+      message="This action cannot be undone."
+      :itemName="leadToDeleteName"
+      :loading="isDeleting"
+      @cancel="isDeleteOpen = false"
+      @confirm="confirmDeleteLead"
+    />
   </div>
 </template>
 
@@ -446,17 +486,24 @@ import {
   PhBell,
   PhDotsThreeVertical,
   PhNotePencil,
+  PhPlus,
+  PhTrash,
+  PhMagnifyingGlass,
 } from "@phosphor-icons/vue";
 import AppTable from "@/components/AppTable.vue";
 import AppDrawer from "@/components/AppDrawer.vue";
+import StatusBadge from "@/components/StatusBadge.vue";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal.vue";
 import EducationLeadDrawer from "../components/EducationLeadDrawer.vue";
 import EducationLeadEditDrawer from "../components/EducationLeadEditDrawer.vue";
 import EducationLeadLogDrawer from "../components/EducationLeadLogDrawer.vue";
 import EducationLeadReminderModal from "../components/EducationLeadReminderModal.vue";
 import LeadAssignModal from "@/modules/leads/components/LeadAssignModal.vue";
 import LeadBulkUploadModal from "@/modules/leads/components/LeadBulkUploadModal.vue";
+import apiClient from "@/api/client";
 import {
   createEducationLead,
+  deleteEducationLead,
   enrollEducationLead,
   fetchEducationClasses,
   fetchEducationLeads,
@@ -541,6 +588,9 @@ const classes = ref([]);
 const loading = ref(false);
 const search = ref("");
 const statusFilter = ref("");
+const staffFilter = ref("");
+const sourceFilter = ref("");
+const staffList = ref([]);
 const showModal = ref(false);
 const saving = ref(false);
 const error = ref("");
@@ -548,6 +598,44 @@ const form = ref({});
 const enrollLead = ref(null);
 const enrollClassId = ref("");
 let timer = null;
+
+// Delete confirmation state (Section 19)
+const isDeleteOpen = ref(false);
+const leadToDelete = ref(null);
+const isDeleting = ref(false);
+const leadToDeleteName = computed(() => {
+  if (!leadToDelete.value) return "";
+  return `${leadToDelete.value.firstName} ${leadToDelete.value.lastName || ""}`.trim();
+});
+
+const handleDelete = (row) => {
+  closeActionMenu();
+  leadToDelete.value = row;
+  isDeleteOpen.value = true;
+};
+
+const confirmDeleteLead = async () => {
+  if (!leadToDelete.value) return;
+  isDeleting.value = true;
+  try {
+    const targetId = leadToDelete.value._id || leadToDelete.value.id;
+    await deleteEducationLead(targetId);
+    isDeleteOpen.value = false;
+    leadToDelete.value = null;
+    store.dispatch("notifications/triggerToast", {
+      message: "Student lead deleted successfully.",
+      type: "success",
+    });
+    await load();
+  } catch (err) {
+    store.dispatch("notifications/triggerToast", {
+      message: err.data?.message || err.message || "Failed to delete student lead.",
+      type: "error",
+    });
+  } finally {
+    isDeleting.value = false;
+  }
+};
 
 // Assignment
 const isAssignOpen = ref(false);
@@ -593,14 +681,12 @@ const toggleActionMenu = (row, event) => {
   const spaceBelow = window.innerHeight - rect.bottom - bottomNavHeight;
 
   if (spaceBelow < estimatedMenuHeight && rect.top > estimatedMenuHeight) {
-    // Open UPWARDS above the trigger button to prevent bottom nav collision
     menuPosition.value = {
       top: "auto",
       bottom: `${window.innerHeight - rect.top + 4}px`,
       right: `${Math.max(8, window.innerWidth - rect.right)}px`,
     };
   } else {
-    // Open DOWNWARDS below the trigger button
     menuPosition.value = {
       top: `${rect.bottom + 4}px`,
       bottom: "auto",
@@ -654,6 +740,13 @@ const handleLog = (row) => {
   isLogOpen.value = true;
 };
 
+const handleLogFromDrawer = (lead) => {
+  isDetailsOpen.value = false;
+  if (lead) {
+    handleLog(lead);
+  }
+};
+
 const handleLogSuccess = () => {
   load();
 };
@@ -686,6 +779,8 @@ async function load() {
     const res = await fetchEducationLeads({
       search: search.value.trim() || undefined,
       status: statusFilter.value || undefined,
+      assignedTo: staffFilter.value || undefined,
+      source: sourceFilter.value || undefined,
       page: pagination.value.page,
       limit: pagination.value.limit,
     });
@@ -781,8 +876,16 @@ async function enroll() {
 }
 
 onMounted(async () => {
-  const res = await fetchEducationClasses({ limit: 100 });
-  classes.value = res.data || [];
+  try {
+    const [classesRes, staffRes] = await Promise.all([
+      fetchEducationClasses({ limit: 100 }),
+      apiClient.get('/users', { params: { limit: 200, status: 'active' } }).catch(() => ({ data: { data: [] } })),
+    ]);
+    classes.value = classesRes.data || [];
+    staffList.value = staffRes.data?.data || [];
+  } catch (e) {
+    // fallback gracefully
+  }
   await load();
 });
 </script>

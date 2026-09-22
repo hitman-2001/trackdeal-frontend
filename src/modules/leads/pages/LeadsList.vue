@@ -1,34 +1,41 @@
 <template>
   <div class="space-y-6">
-    <!-- Header Block -->
-    <div class="bg-surface border border-default rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shrink-0">
+    <!-- Section 6: Standardized Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-1">
       <div>
-        <h2 class="font-heading text-lg font-bold text-slate-800 dark:text-slate-100">Leads Directory</h2>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+        <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
+          Workspace &gt; Property Leads
+        </div>
+        <h1 class="text-2xl sm:text-[28px] font-bold text-slate-900 dark:text-slate-100 leading-tight">
+          Property Leads
+        </h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
           Manage, allocate, and transition property sales prospects.
         </p>
       </div>
 
       <!-- Action buttons & Views toggle -->
-      <div class="flex items-center gap-3 self-end sm:self-auto shrink-0 flex-wrap">
+      <div class="flex items-center gap-2.5 self-start sm:self-auto shrink-0 flex-wrap">
         <!-- View Toggle buttons -->
-        <div class="border border-subtle rounded-lg p-0.5 bg-neutral-25 dark:bg-neutral-900 flex space-x-0.5">
+        <div class="inline-flex rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-0.5">
           <button 
+            type="button"
             @click="viewMode = 'table'"
-            class="flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-semibold uppercase transition-all duration-80"
-            :class="viewMode === 'table' ? 'bg-surface text-neutral-900 dark:text-neutral-50 shadow-sm' : 'text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200'"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
+            :class="viewMode === 'table' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-2xs' : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-100'"
             title="Table View"
           >
-            <PhTable class="w-3.5 h-3.5" />
+            <PhTable :size="14" weight="bold" />
             <span>Table</span>
           </button>
           <button 
+            type="button"
             @click="viewMode = 'kanban'"
-            class="flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-semibold uppercase transition-all duration-80"
-            :class="viewMode === 'kanban' ? 'bg-surface text-neutral-900 dark:text-neutral-50 shadow-sm' : 'text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200'"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
+            :class="viewMode === 'kanban' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-2xs' : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-100'"
             title="Kanban View"
           >
-            <PhColumns class="w-3.5 h-3.5" />
+            <PhColumns :size="14" weight="bold" />
             <span>Kanban</span>
           </button>
         </div>
@@ -36,8 +43,9 @@
         <!-- Bulk Assign Action (Shows when items are checked) -->
         <button 
           v-if="selectedRows.length > 0"
+          type="button"
           @click="openBulkAssign"
-          class="btn btn-secondary btn-sm h-8 text-xs font-semibold text-accent-600 border-accent-200 bg-accent-50"
+          class="btn btn-secondary h-[42px] px-3.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40"
         >
           Assign ({{ selectedRows.length }})
         </button>
@@ -45,20 +53,22 @@
         <!-- Bulk Import Leads (Excel/CSV) for Org Admin -->
         <button
           v-if="isOrgAdmin"
+          type="button"
           @click="isBulkUploadOpen = true"
-          class="btn btn-secondary btn-sm h-8 text-xs font-semibold px-3 gap-1.5 hover:border-emerald-500 hover:text-emerald-600 transition-colors"
+          class="btn btn-secondary h-[42px] px-3.5 text-xs font-semibold gap-2 hover:border-emerald-500 hover:text-emerald-600 transition-colors"
           title="Bulk Upload Leads from Excel (.xlsx, .csv)"
         >
-          <PhFileArrowUp class="w-3.5 h-3.5" />
+          <PhFileArrowUp :size="16" weight="bold" />
           <span>Import Excel</span>
         </button>
 
         <!-- Create Lead button -->
         <button 
+          type="button"
           @click="isCreateOpen = true"
-          class="btn btn-primary btn-sm h-8 text-xs font-semibold px-3"
+          class="btn btn-primary h-[42px] px-4 text-xs font-medium gap-2 shadow-xs"
         >
-          <PhPlus class="w-3.5 h-3.5" />
+          <PhPlus :size="16" weight="bold" />
           <span>Add Lead</span>
         </button>
       </div>

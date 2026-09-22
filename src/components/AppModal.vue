@@ -4,16 +4,16 @@
     <Transition name="backdrop">
       <div
         v-if="isOpen"
-        class="fixed inset-0 z-[1000] flex justify-end overflow-hidden premium-backdrop"
+        class="fixed inset-0 z-[1000] flex items-center justify-center p-4 overflow-y-auto premium-backdrop"
         @click.self="$emit('cancel')"
       >
-        <!-- Modal Drawer (Right Side) -->
-        <Transition name="modal-drawer-slide">
+        <!-- Modal Dialog (Centered) -->
+        <Transition name="modal-scale">
           <div
             v-if="isOpen"
             ref="panel"
-            class="relative z-[1010] border-l premium-drawer flex flex-col h-full w-full max-w-[calc(100vw-12px)] overflow-hidden"
-            :style="{ width: maxSize, maxWidth: maxSize, backgroundColor: 'hsl(var(--bg-surface))', borderColor: 'hsl(var(--neutral-100))' }"
+            class="relative z-[1010] border premium-modal flex flex-col w-full my-auto rounded-2xl shadow-2xl overflow-hidden"
+            :style="{ maxWidth: maxSize, backgroundColor: 'hsl(var(--bg-surface))', borderColor: 'hsl(var(--neutral-100))' }"
             role="dialog"
             aria-modal="true"
             :aria-label="title"
@@ -25,12 +25,12 @@
               style="border-color: hsl(var(--neutral-100));"
             >
               <div class="flex-1 min-w-0 pr-4">
-                <h3 class="text-h3 font-semibold" style="color: hsl(var(--neutral-900));">{{ title }}</h3>
-                <p v-if="subtitle" class="text-body-sm mt-0.5" style="color: hsl(var(--neutral-400));">{{ subtitle }}</p>
+                <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">{{ title }}</h3>
+                <p v-if="subtitle" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ subtitle }}</p>
               </div>
               <button
                 @click="$emit('cancel')"
-                class="w-8 h-8 flex items-center justify-center rounded-[8px] transition-colors duration-80 mt-0.5 shrink-0 btn-icon"
+                class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
                 aria-label="Close"
               >
                 <PhX :size="16" weight="bold" />
@@ -38,26 +38,28 @@
             </div>
 
             <!-- Content -->
-            <div class="px-6 py-5 text-body flex-1 overflow-y-auto" style="color: hsl(var(--neutral-700));">
+            <div class="px-6 py-5 text-sm flex-1 overflow-y-auto leading-relaxed text-slate-600 dark:text-slate-300">
               <slot />
             </div>
 
             <!-- Footer -->
             <div
-              class="px-6 py-4 border-t flex items-center justify-end gap-2.5 shrink-0"
+              class="px-6 py-4 border-t flex items-center justify-end gap-3 shrink-0 bg-slate-50/50 dark:bg-slate-850/50"
               style="border-color: hsl(var(--neutral-100));"
             >
               <slot name="footer">
                 <button
+                  type="button"
                   @click="$emit('cancel')"
-                  class="btn-md btn-secondary"
+                  class="btn btn-secondary btn-sm"
                 >
                   Cancel
                 </button>
                 <button
+                  type="button"
                   @click="$emit('confirm')"
-                  class="btn-md"
-                  :class="isDestructive ? 'bg-red-600 hover:bg-red-700 text-white rounded-input shadow-sm' : 'btn-primary'"
+                  class="btn btn-sm"
+                  :class="isDestructive ? 'btn-danger' : 'btn-primary'"
                 >
                   {{ confirmLabel }}
                 </button>
@@ -124,8 +126,8 @@ onUnmounted(() => {
 .backdrop-enter-from,
 .backdrop-leave-to     { opacity: 0; }
 
-.modal-drawer-slide-enter-active { transition: transform 250ms cubic-bezier(0.16, 1, 0.3, 1); }
-.modal-drawer-slide-leave-active { transition: transform 180ms cubic-bezier(0.4, 0, 1, 1); }
-.modal-drawer-slide-enter-from   { transform: translateX(100%); }
-.modal-drawer-slide-leave-to     { transform: translateX(100%); }
+.modal-scale-enter-active { transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1); }
+.modal-scale-leave-active { transition: all 150ms cubic-bezier(0.4, 0, 1, 1); }
+.modal-scale-enter-from   { opacity: 0; transform: scale(0.96); }
+.modal-scale-leave-to     { opacity: 0; transform: scale(0.96); }
 </style>

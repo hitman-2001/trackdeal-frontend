@@ -36,6 +36,16 @@ export default {
           DEFAULT: 'hsl(var(--accent-600) / <alpha-value>)',
           foreground: 'hsl(var(--accent-foreground) / <alpha-value>)',
         },
+        // Brand Blue (TrackDeal Blue)
+        brand: {
+          50:  '#f0f9ff',
+          100: '#e0f2fe',
+          200: '#bae6fd',
+          500: '#0ea5e9',
+          600: '#0284c7',
+          700: '#0369a1',
+          DEFAULT: '#0284c7',
+        },
         // Surfaces & backgrounds
         app:      'hsl(var(--bg-app) / <alpha-value>)',
         surface:  'hsl(var(--bg-surface) / <alpha-value>)',
@@ -106,9 +116,10 @@ export default {
 
       // ── Border Radius ─────────────────────────────────────────────────────
       borderRadius: {
-        'chip':  '4px',
-        'input': '6px',
-        'card':  '10px',
+        'chip':  '6px',
+        'input': '8px',
+        'btn':   '8px',
+        'card':  '12px',
         'panel': '12px',
       },
 

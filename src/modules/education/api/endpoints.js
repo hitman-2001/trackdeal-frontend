@@ -75,6 +75,11 @@ export async function enrollEducationLead(id, data = {}) {
   return res.data;
 }
 
+export async function deleteEducationLead(id) {
+  const res = await apiClient.delete(`/leads/${id}`);
+  return res.data;
+}
+
 /** Conversation history & activities (shared lead engine, education records). */
 export async function fetchEducationLeadActivityCenter(leadId) {
   const res = await apiClient.get(`/leads/${leadId}/activity-center`);

@@ -1,9 +1,9 @@
 <template>
   <AppDrawer
     :isOpen="isOpen"
-    title="Student Lead Details"
-    :subtitle="drawerSubtitle"
-    width="580px"
+    title="Student Lead"
+    :subtitle="lead ? `${lead.firstName} ${lead.lastName || ''}`.trim() : 'Inquiry details'"
+    width="620px"
     @close="$emit('close')"
   >
     <div v-if="loading" class="py-16 text-center text-slate-500 text-xs flex flex-col items-center gap-2">
@@ -11,46 +11,40 @@
       <span>Loading student lead details...</span>
     </div>
 
-    <div v-else-if="lead" class="space-y-4 text-xs pb-4">
-      <!-- Read-Only Student Dossier Card -->
-      <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-default space-y-3">
-        <div class="flex items-start justify-between gap-3 flex-wrap">
-          <div>
+    <div v-else-if="lead" class="space-y-5 text-xs pb-4">
+      <!-- 1. Lead Identity Card with Quick Actions (Section 11) -->
+      <div class="p-4 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 space-y-3.5">
+        <div class="flex items-start justify-between gap-3">
+          <div class="space-y-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Student Lead</span>
             <div class="flex items-center gap-2 flex-wrap">
-              <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100">
+              <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 leading-tight">
                 {{ lead.firstName }} {{ lead.lastName || '' }}
-              </h3>
-              <!-- Stage Badge -->
-              <span
-                class="px-2 py-0.5 rounded-full text-[10px] font-bold capitalize"
-                :class="statusBadgeClass(lead.status)"
-              >
-                {{ formatStatus(lead.status) }}
-              </span>
-              <!-- Temperature Badge -->
+              </h2>
+              <StatusBadge :status="lead.status" />
               <span
                 v-if="lead.leadTemperature"
-                class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border"
                 :class="tempBadgeClass(lead.leadTemperature)"
               >
                 {{ tempLabel(lead.leadTemperature) }}
               </span>
             </div>
 
-            <!-- Contacts line -->
-            <div class="flex items-center gap-3 text-slate-500 text-xs mt-1 flex-wrap">
+            <!-- Phone & Class -->
+            <div class="flex items-center gap-2.5 text-slate-600 dark:text-slate-300 text-xs pt-0.5 flex-wrap">
               <a
                 v-if="lead.mobile"
                 :href="'tel:' + lead.mobile"
-                class="font-mono text-emerald-600 hover:underline font-semibold flex items-center gap-1"
+                class="font-mono text-emerald-600 hover:text-emerald-700 font-semibold flex items-center gap-1 hover:underline"
                 title="Click to call"
               >
-                <PhPhone :size="12" /> {{ lead.mobile }}
+                <PhPhone :size="13" weight="bold" />
+                <span>{{ lead.mobile }}</span>
               </a>
-              <span v-if="lead.email" class="text-slate-400">· {{ lead.email }}</span>
               <span
                 v-if="lead.classInterestId?.name"
-                class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 font-semibold text-[10px]"
+                class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 font-semibold text-[11px] border border-blue-200/60 dark:border-blue-800/60"
               >
                 {{ lead.classInterestId.name }}
               </span>
@@ -58,93 +52,229 @@
           </div>
         </div>
 
-        <!-- Secondary Details: Parent, Staff, Source -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2 border-t border-slate-200/60 dark:border-slate-700/60 text-[11px] text-slate-600 dark:text-slate-400">
+        <!-- Mini Key Meta Summary -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2.5 border-t border-slate-200/70 dark:border-slate-700/70 text-[11px]">
           <div>
             <span class="text-[10px] uppercase font-bold text-slate-400 block">Parent / Guardian</span>
+            <span class="font-medium text-slate-800 dark:text-slate-200 truncate block">
+              {{ lead.parentName || '—' }}
+            </span>
+          </div>
+
+          <div>
+            <span class="text-[10px] uppercase font-bold text-slate-400 block">Assigned Staff</span>
+            <span class="font-medium text-slate-800 dark:text-slate-200 truncate flex items-center gap-1">
+              <PhUser :size="12" class="text-slate-400 shrink-0" />
+              <span class="truncate">{{ staffName }}</span>
+            </span>
+          </div>
+
+          <div>
+            <span class="text-[10px] uppercase font-bold text-slate-400 block">Inquiry Source</span>
+            <span class="font-medium capitalize text-slate-800 dark:text-slate-200 truncate block">
+              {{ lead.source ? lead.source.replace(/_/g, ' ') : '—' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Quick Action Buttons (Section 11: [ Call ] [ WhatsApp ] [ Log Update ]) -->
+        <div class="pt-2 border-t border-slate-200/70 dark:border-slate-700/70 flex items-center gap-2 flex-wrap">
+          <a
+            v-if="lead.mobile"
+            :href="'tel:' + lead.mobile"
+            class="h-9 px-3 text-xs font-semibold rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors inline-flex items-center gap-1.5 shadow-xs"
+            title="Initiate phone call"
+          >
+            <PhPhoneCall :size="14" weight="bold" class="text-emerald-600" />
+            <span>Call</span>
+          </a>
+
+          <a
+            v-if="lead.mobile"
+            :href="whatsappUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="h-9 px-3 text-xs font-semibold rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors inline-flex items-center gap-1.5 shadow-xs"
+            title="Chat via WhatsApp"
+          >
+            <PhWhatsappLogo :size="15" weight="fill" class="text-emerald-600" />
+            <span>WhatsApp</span>
+          </a>
+
+          <button
+            type="button"
+            @click="triggerLogUpdate"
+            class="btn btn-primary h-9 px-3 text-xs font-medium inline-flex items-center gap-1.5 ml-auto"
+          >
+            <PhNotePencil :size="14" weight="bold" />
+            <span>Log Update</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. Follow-up Attention Alert (Section 13) -->
+      <div
+        v-if="upcomingFollowUp"
+        class="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/90 dark:border-amber-800/80 flex items-start gap-3 text-amber-900 dark:text-amber-100"
+      >
+        <div class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
+          <PhCalendarCheck :size="17" weight="bold" />
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <span class="text-xs font-bold text-amber-950 dark:text-amber-200">Follow-up Required</span>
+            <span class="text-[11px] font-semibold text-amber-800 dark:text-amber-300">
+              {{ formatDateTime(upcomingFollowUp.scheduledAt) }}
+            </span>
+          </div>
+          <p v-if="upcomingFollowUp.notes" class="text-xs text-amber-900/90 dark:text-amber-200/90 mt-1 leading-relaxed">
+            {{ upcomingFollowUp.notes }}
+          </p>
+          <div class="text-[11px] text-amber-800/80 dark:text-amber-400 mt-1.5 flex items-center gap-1">
+            <PhUser :size="11" />
+            <span>Assigned to: <strong class="text-amber-950 dark:text-amber-200">{{ upcomingFollowUp.assignedTo?.firstName ? `${upcomingFollowUp.assignedTo.firstName} ${upcomingFollowUp.assignedTo.lastName || ''}`.trim() : staffName }}</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Lead Information Card (Section 11: 2 columns on desktop, 1 on mobile) -->
+      <div class="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-surface p-4 space-y-3">
+        <h4 class="font-semibold text-sm text-slate-900 dark:text-slate-100">Lead Information</h4>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-xs">
+          <!-- Stage -->
+          <div class="flex flex-col gap-0.5">
+            <span class="text-[11px] text-slate-400 font-medium">Stage</span>
+            <div class="font-medium text-slate-800 dark:text-slate-200 capitalize">
+              <StatusBadge :status="lead.status" />
+            </div>
+          </div>
+
+          <!-- Interest Level -->
+          <div class="flex flex-col gap-0.5">
+            <span class="text-[11px] text-slate-400 font-medium">Interest Level</span>
+            <span class="font-medium text-slate-800 dark:text-slate-200 capitalize">
+              {{ lead.leadTemperature ? tempLabel(lead.leadTemperature) : '—' }}
+            </span>
+          </div>
+
+          <!-- Interested Class -->
+          <div class="flex flex-col gap-0.5">
+            <span class="text-[11px] text-slate-400 font-medium">Interested Class</span>
+            <span class="font-medium text-slate-800 dark:text-slate-200">
+              {{ lead.classInterestId?.name || '—' }}
+            </span>
+          </div>
+
+          <!-- Inquiry Source -->
+          <div class="flex flex-col gap-0.5">
+            <span class="text-[11px] text-slate-400 font-medium">Inquiry Source</span>
+            <span class="font-medium text-slate-800 dark:text-slate-200 capitalize">
+              {{ lead.source ? lead.source.replace(/_/g, ' ') : '—' }}
+            </span>
+          </div>
+
+          <!-- Parent / Guardian -->
+          <div class="flex flex-col gap-0.5">
+            <span class="text-[11px] text-slate-400 font-medium">Parent / Guardian</span>
             <span class="font-medium text-slate-800 dark:text-slate-200">
               {{ lead.parentName || '—' }}
               <a
                 v-if="lead.parentMobile"
                 :href="'tel:' + lead.parentMobile"
-                class="text-emerald-600 ml-1 hover:underline font-mono"
+                class="text-emerald-600 hover:underline font-mono text-[11px] ml-1"
               >
                 ({{ lead.parentMobile }})
               </a>
             </span>
           </div>
 
-          <div>
-            <span class="text-[10px] uppercase font-bold text-slate-400 block">Assigned Staff</span>
-            <span class="font-medium text-slate-800 dark:text-slate-200 flex items-center gap-1">
-              <PhUser :size="11" class="text-slate-400" />
+          <!-- Assigned Staff -->
+          <div class="flex flex-col gap-0.5">
+            <span class="text-[11px] text-slate-400 font-medium">Assigned Staff</span>
+            <span class="font-medium text-slate-800 dark:text-slate-200">
               {{ staffName }}
             </span>
           </div>
 
-          <div>
-            <span class="text-[10px] uppercase font-bold text-slate-400 block">Inquiry Source</span>
-            <span class="font-medium capitalize text-slate-800 dark:text-slate-200">
-              {{ lead.source ? lead.source.replace(/_/g, ' ') : '—' }}
+          <!-- Email if present -->
+          <div v-if="lead.email" class="flex flex-col gap-0.5">
+            <span class="text-[11px] text-slate-400 font-medium">Email Address</span>
+            <span class="font-medium text-slate-800 dark:text-slate-200 break-all">
+              {{ lead.email }}
             </span>
           </div>
-        </div>
 
-        <!-- Next Follow-up Alert (if scheduled) -->
-        <div
-          v-if="upcomingFollowUp"
-          class="flex items-center gap-2 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200"
-        >
-          <PhCalendarCheck :size="15" weight="bold" class="text-amber-600 shrink-0" />
-          <div class="text-[11px]">
-            <strong>Scheduled Follow-up:</strong> {{ formatDateTime(upcomingFollowUp.scheduledAt) }}
-            <span v-if="upcomingFollowUp.notes" class="text-amber-700 dark:text-amber-300 ml-1">
-              — {{ upcomingFollowUp.notes }}
+          <!-- City / Address if present -->
+          <div v-if="lead.city || lead.address" class="flex flex-col gap-0.5">
+            <span class="text-[11px] text-slate-400 font-medium">Location</span>
+            <span class="font-medium text-slate-800 dark:text-slate-200">
+              {{ [lead.city, lead.address].filter(Boolean).join(', ') }}
             </span>
           </div>
         </div>
       </div>
 
-      <!-- Chronological Conversation History & Touchpoints (Strictly View-Only) -->
+      <!-- 4. Conversation History (Section 12) -->
       <div class="space-y-3 pt-1">
         <div class="flex items-center justify-between gap-2 flex-wrap">
           <div class="flex items-center gap-2">
-            <h4 class="font-heading font-bold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
-              <PhClockCounterClockwise :size="14" weight="bold" class="text-primary" />
-              <span>Conversation & Touchpoint History</span>
+            <h4 class="font-semibold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+              <PhClockCounterClockwise :size="15" weight="bold" class="text-brand-blue-600 dark:text-brand-blue-400" />
+              <span>Conversation History</span>
             </h4>
             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
               {{ filteredTimeline.length }}
             </span>
           </div>
 
-          <!-- Channel Filter Tabs -->
-          <div class="flex items-center gap-1 overflow-x-auto scrollbar-hide">
+          <!-- Compact Channel Filter Tabs (Section 12) -->
+          <div class="flex items-center gap-1 overflow-x-auto scrollbar-hide py-0.5">
             <button
               v-for="tab in filterTabs"
               :key="tab.key"
+              type="button"
               @click="activeFilter = tab.key"
-              class="px-2 py-0.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-colors"
-              :class="activeFilter === tab.key ? 'bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-900' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'"
+              class="px-2.5 py-1 rounded-md text-[11px] font-semibold whitespace-nowrap transition-colors flex items-center gap-1"
+              :class="activeFilter === tab.key
+                ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs'
+                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'"
             >
-              {{ tab.label }} ({{ tab.count }})
+              <span>{{ tab.label }}</span>
+              <span
+                class="text-[9px] px-1 py-0.2 rounded"
+                :class="activeFilter === tab.key ? 'bg-white/20 dark:bg-slate-900/20' : 'bg-slate-200/60 dark:bg-slate-700/60'"
+              >
+                {{ tab.count }}
+              </span>
             </button>
           </div>
         </div>
 
-        <!-- Empty State -->
-        <div v-if="filteredTimeline.length === 0" class="text-center py-12 px-4 bg-surface rounded-xl border border-default">
+        <!-- Empty State (Section 12) -->
+        <div
+          v-if="filteredTimeline.length === 0"
+          class="text-center py-10 px-4 bg-slate-50/50 dark:bg-slate-800/30 rounded-xl border border-dashed border-slate-200 dark:border-slate-700"
+        >
           <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto mb-2">
-            <PhNotePencil :size="18" />
+            <PhChatCircleDots :size="20" />
           </div>
-          <p class="font-bold text-xs text-slate-700 dark:text-slate-300">No conversation records yet</p>
-          <p class="text-[11px] text-slate-400 mt-0.5">
-            Past calls, WhatsApp messages, counselling sessions, and remarks will appear here.
+          <p class="font-semibold text-xs text-slate-800 dark:text-slate-200">No conversation records yet</p>
+          <p class="text-[11px] text-slate-500 max-w-xs mx-auto mt-1 mb-3">
+            Calls, WhatsApp messages, counselling sessions and remarks will appear here.
           </p>
+          <button
+            type="button"
+            @click="triggerLogUpdate"
+            class="btn btn-primary btn-sm inline-flex items-center gap-1.5"
+          >
+            <PhPlus :size="13" weight="bold" />
+            <span>Log First Interaction</span>
+          </button>
         </div>
 
-        <!-- Grouped Activity Cards -->
-        <div v-else class="space-y-4">
+        <!-- Clean CRM-style Activity Timeline (Section 12) -->
+        <div v-else class="space-y-4 pt-1">
           <div
             v-for="(group, dateLabel) in groupedTimeline"
             :key="dateLabel"
@@ -155,22 +285,27 @@
               <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800">
                 {{ dateLabel }}
               </span>
-              <div class="flex-1 border-t border-default"></div>
+              <div class="flex-1 border-t border-slate-200/80 dark:border-slate-700/80"></div>
             </div>
 
-            <!-- Interaction Cards -->
-            <div class="space-y-2 pl-1">
+            <!-- Interaction Items Timeline -->
+            <div class="relative pl-5 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-[1.5px] before:bg-slate-200 dark:before:bg-slate-700/60 space-y-2.5">
               <div
                 v-for="item in group"
                 :key="item._id || item.id"
-                class="bg-surface rounded-xl border border-default p-3.5 shadow-2xs relative border-l-4"
-                :class="getCardBorderColor(item)"
+                class="bg-surface rounded-xl border border-slate-200/80 dark:border-slate-700/80 p-3.5 shadow-2xs relative"
               >
-                <!-- Card Header -->
+                <!-- Timeline Dot Indicator -->
+                <div
+                  class="absolute -left-5 top-3.5 w-2 h-2 rounded-full ring-4 ring-white dark:ring-slate-900"
+                  :class="getTimelineDotColor(item)"
+                ></div>
+
+                <!-- Item Header -->
                 <div class="flex items-start justify-between gap-2 mb-1.5">
                   <div class="flex items-center gap-2 flex-wrap">
                     <span
-                      class="w-6 h-6 rounded-md flex items-center justify-center text-xs"
+                      class="w-6 h-6 rounded-md flex items-center justify-center text-xs shrink-0"
                       :class="getChannelIconBg(item)"
                     >
                       <component :is="getChannelIcon(item)" :size="13" weight="bold" />
@@ -181,7 +316,7 @@
 
                     <span
                       v-if="item.customerResponse || item.summary !== item.description"
-                      class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                      class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50"
                     >
                       {{ item.customerResponse || item.summary }}
                     </span>
@@ -199,25 +334,28 @@
                   </span>
                 </div>
 
-                <!-- Card Remarks -->
-                <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed pl-8 mt-1 whitespace-pre-line font-normal">
-                  {{ item.description || item.summary || item.content || item.notes }}
+                <!-- Remarks / Notes Body -->
+                <p
+                  v-if="item.description || item.notes || item.content"
+                  class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed pl-8 mt-1 whitespace-pre-line font-normal"
+                >
+                  {{ item.description || item.notes || item.content }}
                 </p>
 
-                <!-- Next touchpoint pill if scheduled -->
+                <!-- Follow-up Information if Scheduled -->
                 <div
                   v-if="item.nextFollowUpAt"
-                  class="mt-2 ml-8 flex items-center gap-1.5 text-[10px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/30 px-2 py-0.5 rounded-md border border-amber-200/60 dark:border-amber-800/60 w-fit"
+                  class="mt-2 ml-8 flex items-center gap-1.5 text-[10px] font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-1 rounded-md border border-amber-200/60 dark:border-amber-800/60 w-fit"
                 >
-                  <PhCalendarCheck :size="12" weight="bold" />
-                  <span>Next touchpoint: {{ formatDateTime(item.nextFollowUpAt) }}</span>
+                  <PhCalendarCheck :size="12" weight="bold" class="text-amber-600" />
+                  <span>Follow-up: {{ formatDateTime(item.nextFollowUpAt) }}</span>
                 </div>
 
                 <!-- Footer: Staff Attribution -->
                 <div class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 pl-8 flex items-center justify-between text-[10px] text-slate-400">
-                  <span class="flex items-center gap-1 font-medium">
+                  <span class="flex items-center gap-1 font-medium text-slate-500 dark:text-slate-400">
                     <PhUser :size="11" />
-                    <span>Logged by: {{ getAuthorName(item) }}</span>
+                    <span>By: {{ getAuthorName(item) }}</span>
                   </span>
                   <span class="text-[10px] text-slate-400">
                     {{ formatRelativeTime(item.activityDate || item.createdAt || item.scheduledAt) }}
@@ -258,8 +396,11 @@ import {
   PhCalendarCheck,
   PhUser,
   PhClockCounterClockwise,
+  PhChatCircleDots,
+  PhPlus,
 } from '@phosphor-icons/vue';
 import AppDrawer from '@/components/AppDrawer.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import { fetchEducationLead, fetchEducationLeadActivityCenter } from '../api/endpoints';
 
 const props = defineProps({
@@ -267,23 +408,25 @@ const props = defineProps({
   leadId: { type: String, default: '' },
 });
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close', 'log-interaction']);
 
 const loading = ref(false);
 const lead = ref(null);
 const activityData = ref({ activities: [], notes: [], followUps: [] });
 const activeFilter = ref('all');
 
-const drawerSubtitle = computed(() => {
-  if (!lead.value) return 'Inquiry dossier and conversation history';
-  return `Inquiry profile and conversation history for ${lead.value.firstName} ${lead.value.lastName || ''}`.trim();
-});
-
 const staffName = computed(() => {
   if (lead.value?.assignedTo) {
     return `${lead.value.assignedTo.firstName || ''} ${lead.value.assignedTo.lastName || ''}`.trim() || 'Assigned Staff';
   }
   return 'Unassigned';
+});
+
+const whatsappUrl = computed(() => {
+  if (!lead.value?.mobile) return '#';
+  const cleanPhone = String(lead.value.mobile).replace(/\D/g, '');
+  const phone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+  return `https://wa.me/${phone}`;
 });
 
 const upcomingFollowUp = computed(() => {
@@ -376,6 +519,10 @@ async function loadData() {
   }
 }
 
+function triggerLogUpdate() {
+  emit('log-interaction', lead.value);
+}
+
 watch(
   () => props.isOpen,
   (val) => {
@@ -388,36 +535,24 @@ watch(
   { immediate: true },
 );
 
-function formatStatus(st) {
-  return String(st || 'new').replace(/_/g, ' ');
-}
-
-function statusBadgeClass(status) {
-  const s = String(status || '').toLowerCase();
-  if (s === 'enrolled' || s === 'converted') return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300';
-  if (s === 'new' || s === 'assigned') return 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300';
-  if (s === 'lost') return 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300';
-  return 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300';
-}
-
 function tempLabel(t) {
-  if (t === 'hot') return '🔥 Hot';
-  if (t === 'cold') return '❄ Cold';
-  return '⚡ Warm';
+  if (t === 'hot') return 'Hot';
+  if (t === 'cold') return 'Cold';
+  return 'Warm';
 }
 
 function tempBadgeClass(t) {
-  if (t === 'hot') return 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300';
-  if (t === 'cold') return 'bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-950/40 dark:text-sky-300';
-  return 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300';
+  if (t === 'hot') return 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800';
+  if (t === 'cold') return 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800';
+  return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800';
 }
 
 function getChannelTitle(item) {
   if (item.type === 'call' || item.type === 'phone_call') return 'Phone Call';
-  if (item.type === 'whatsapp') return 'WhatsApp Message';
-  if (item.type === 'meeting') return 'Counselling / Demo Class';
-  if (item.type === 'reminder' || item.type === 'follow_up') return 'Follow-up Reminder';
-  if (item.type === 'note') return 'Staff Remark';
+  if (item.type === 'whatsapp') return 'WhatsApp';
+  if (item.type === 'meeting') return 'Counselling';
+  if (item.type === 'reminder' || item.type === 'follow_up') return 'Follow-up';
+  if (item.type === 'note') return 'Remark';
   return item.type ? item.type.replace(/_/g, ' ') : 'Touchpoint';
 }
 
@@ -437,12 +572,12 @@ function getChannelIconBg(item) {
   return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
 }
 
-function getCardBorderColor(item) {
-  if (item.type === 'call' || item.type === 'phone_call') return 'border-l-blue-500';
-  if (item.type === 'whatsapp') return 'border-l-emerald-500';
-  if (item.type === 'meeting') return 'border-l-purple-500';
-  if (item.type === 'reminder' || item.type === 'follow_up') return 'border-l-amber-500';
-  return 'border-l-slate-400';
+function getTimelineDotColor(item) {
+  if (item.type === 'call' || item.type === 'phone_call') return 'bg-blue-500';
+  if (item.type === 'whatsapp') return 'bg-emerald-500';
+  if (item.type === 'meeting') return 'bg-purple-500';
+  if (item.type === 'reminder' || item.type === 'follow_up') return 'bg-amber-500';
+  return 'bg-slate-400';
 }
 
 function getAuthorName(item) {
