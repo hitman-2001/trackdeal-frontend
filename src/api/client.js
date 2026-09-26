@@ -148,7 +148,7 @@ apiClient.interceptors.response.use(
       }
     }
 
-    if (storeInstance) {
+    if (storeInstance && !originalRequest?.silent && !originalRequest?.skipErrorToast) {
       switch (status) {
         case 403:
           storeInstance.dispatch('notifications/triggerToast', {

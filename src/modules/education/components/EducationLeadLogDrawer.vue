@@ -524,10 +524,23 @@ async function loadSupportData() {
   try {
     const [classesRes, staffRes] = await Promise.all([
       fetchEducationClasses({ limit: 100 }).catch(() => ({ data: [] })),
-      apiClient.get('/users', { params: { limit: 200, status: 'active' } }).catch(() => ({ data: { data: [] } })),
+      apiClient.get('/users', { params: { limit: 200, status: 'active' }, silent: true, skipErrorToast: true }).catch(() => ({ data: { data: [] } })),
     ]);
     classesList.value = classesRes.data || [];
-    staffList.value = staffRes.data?.data || [];
+    const fetchedStaff = staffRes.data?.data || [];
+    if (fetchedStaff.length > 0) {
+      staffList.value = fetchedStaff;
+    } else {
+      const user = store.state.auth?.currentUser;
+      if (user) {
+        staffList.value = [{
+          _id: user._id || user.id,
+          id: user._id || user.id,
+          firstName: user.firstName || 'Current',
+          lastName: user.lastName || 'Staff',
+        }];
+      }
+    }
   } catch (err) {
     // fallback
   }

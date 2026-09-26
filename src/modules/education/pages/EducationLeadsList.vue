@@ -74,6 +74,7 @@
         <option value="on_hold">On Hold</option>
       </select>
       <select
+        v-if="isOrgAdmin || canBulkUpload"
         v-model="staffFilter"
         class="filter-control w-full"
         @change="onFilterChange"
@@ -877,9 +878,13 @@ async function enroll() {
 
 onMounted(async () => {
   try {
+    const fetchStaff = (isOrgAdmin.value || canBulkUpload.value)
+      ? apiClient.get('/users', { params: { limit: 200, status: 'active' }, silent: true, skipErrorToast: true }).catch(() => ({ data: { data: [] } }))
+      : Promise.resolve({ data: { data: [] } });
+
     const [classesRes, staffRes] = await Promise.all([
-      fetchEducationClasses({ limit: 100 }),
-      apiClient.get('/users', { params: { limit: 200, status: 'active' } }).catch(() => ({ data: { data: [] } })),
+      fetchEducationClasses({ limit: 100 }).catch(() => ({ data: [] })),
+      fetchStaff,
     ]);
     classes.value = classesRes.data || [];
     staffList.value = staffRes.data?.data || [];

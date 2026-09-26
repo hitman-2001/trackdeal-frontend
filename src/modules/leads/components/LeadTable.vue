@@ -103,10 +103,18 @@
         <div class="flex items-center gap-1.5 justify-end">
           <router-link 
             :to="`/app/leads/${row._id || row.id}`"
-            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950 text-slate-700 dark:text-slate-300 hover:text-indigo-600 transition-colors"
+            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950 text-slate-700 dark:text-slate-300 hover:text-emerald-700 transition-colors"
           >
             View 360°
           </router-link>
+          <button
+            type="button"
+            @click.stop="$emit('delete', row)"
+            class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+            title="Delete Lead"
+          >
+            <PhTrash :size="14" />
+          </button>
         </div>
       </template>
     </AppTable>
@@ -115,6 +123,7 @@
 
 <script setup>
 import { ref } from 'vue';
+import { PhTrash } from '@phosphor-icons/vue';
 import AppTable from '@/components/AppTable.vue';
 import LeadStageBadge from './LeadStageBadge.vue';
 
@@ -125,7 +134,7 @@ const props = defineProps({
   pagination: { type: Object, default: null }
 });
 
-const emit = defineEmits(['sort', 'selectionChange', 'pageChange', 'pageSizeChange']);
+const emit = defineEmits(['sort', 'selectionChange', 'pageChange', 'pageSizeChange', 'delete']);
 
 const sorting = ref({ field: 'createdAt', direction: 'desc' });
 

@@ -165,7 +165,7 @@
           </div>
           <div class="mt-1.5 sm:mt-2 min-w-0">
             <div class="text-lg sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
-              {{ summary.totalStudents ?? summary.enrolledLeads ?? 0 }}
+              {{ (summary.enrolledLeads !== undefined ? summary.enrolledLeads : summary.totalStudents) || 0 }}
             </div>
             <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5 truncate">
               {{ conversionRateText }}
@@ -650,7 +650,7 @@
                 {{ conversionPercentage }}%
               </div>
               <p class="text-[11px] text-slate-500 dark:text-slate-400">
-                {{ summary.totalStudents || 0 }} enrolled out of {{ summary.totalLeads || 0 }} recorded inquiries
+                {{ (summary.enrolledLeads !== undefined ? summary.enrolledLeads : summary.totalStudents) || 0 }} enrolled out of {{ summary.totalLeads || 0 }} recorded inquiries
               </p>
             </div>
 
@@ -959,16 +959,16 @@ const activePipelineCount = computed(() => {
 
 const conversionPercentage = computed(() => {
   const total = summary.value.totalLeads || 0;
-  const enrolled = summary.value.totalStudents || summary.value.enrolledLeads || 0;
+  const enrolled = summary.value.enrolledLeads !== undefined ? summary.value.enrolledLeads : (summary.value.totalStudents || 0);
   if (!total || !enrolled) return 0;
-  return Math.round((enrolled / total) * 100);
+  return Math.min(100, Math.round((enrolled / total) * 100));
 });
 
 const conversionRateText = computed(() => {
   const total = summary.value.totalLeads || 0;
-  const enrolled = summary.value.totalStudents || summary.value.enrolledLeads || 0;
-  if (!total) return '0% conversion';
-  const pct = Math.round((enrolled / total) * 100);
+  const enrolled = summary.value.enrolledLeads !== undefined ? summary.value.enrolledLeads : (summary.value.totalStudents || 0);
+  if (!total) return '0% conversion rate';
+  const pct = Math.min(100, Math.round((enrolled / total) * 100));
   return `${pct}% conversion rate`;
 });
 

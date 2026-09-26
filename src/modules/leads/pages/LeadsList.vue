@@ -100,6 +100,7 @@
             @sort="handleSort"
             @pageChange="handlePageChange"
             @pageSizeChange="handlePageSizeChange"
+            @delete="handleDeleteLead"
           />
         </div>
 
@@ -134,12 +135,22 @@
                 <PhStar class="w-3.5 h-3.5 text-amber-500 fill-amber-500 shrink-0" />
                 {{ lead.score }}
               </span>
-              <button
-                @click.stop="openActivityCenter(lead)"
-                class="px-2 py-1 rounded-lg text-[10px] font-bold bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 hover:bg-violet-100 transition"
-              >
-                <AppIcon name="house" :size="12" /> Visits
-              </button>
+              <div class="flex items-center gap-1.5">
+                <button
+                  @click.stop="openActivityCenter(lead)"
+                  class="px-2 py-1 rounded-lg text-[10px] font-bold bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 hover:bg-violet-100 transition"
+                >
+                  <AppIcon name="house" :size="12" /> Visits
+                </button>
+                <button
+                  type="button"
+                  @click.stop="handleDeleteLead(lead)"
+                  class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"
+                  title="Delete Lead"
+                >
+                  <PhTrash :size="13" />
+                </button>
+              </div>
             </div>
           </div>
           
@@ -222,14 +233,26 @@
       @close="isBulkUploadOpen = false"
       @success="refetch"
     />
+
+    <!-- Delete Lead Confirmation Modal (Section 19) -->
+    <DeleteConfirmModal
+      :isOpen="isDeleteModalOpen"
+      title="Delete Property Lead?"
+      message="This action cannot be undone."
+      :itemName="leadToDelete ? `${leadToDelete.firstName} ${leadToDelete.lastName || ''}`.trim() : ''"
+      :loading="isDeleting"
+      @cancel="isDeleteModalOpen = false; leadToDelete = null"
+      @confirm="confirmDeleteLead"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
 import { useStore } from 'vuex';
-import { PhTable, PhColumns, PhPlus, PhPhone, PhStar, PhFileArrowUp } from '@phosphor-icons/vue';
+import { PhTable, PhColumns, PhPlus, PhPhone, PhStar, PhFileArrowUp, PhTrash } from '@phosphor-icons/vue';
 import apiClient from '@/api/client';
+import DeleteConfirmModal from '@/components/DeleteConfirmModal.vue';
 import LeadFilters from '../components/LeadFilters.vue';
 import LeadTable from '../components/LeadTable.vue';
 import LeadKanbanBoard from '../components/LeadKanbanBoard.vue';
@@ -390,5 +413,36 @@ const getAgingDotClass = (dateStr) => {
   if (diffDays <= 7) return 'bg-yellow-400';
   if (diffDays <= 14) return 'bg-orange-500';
   return 'bg-red-500';
+};
+
+const isDeleteModalOpen = ref(false);
+const leadToDelete = ref(null);
+const isDeleting = ref(false);
+
+const handleDeleteLead = (lead) => {
+  leadToDelete.value = lead;
+  isDeleteModalOpen.value = true;
+};
+
+const confirmDeleteLead = async () => {
+  if (!leadToDelete.value) return;
+  isDeleting.value = true;
+  try {
+    await apiClient.delete(`/leads/${leadToDelete.value._id || leadToDelete.value.id}`);
+    store.dispatch('notifications/triggerToast', {
+      message: 'Property lead deleted successfully.',
+      type: 'success'
+    });
+    isDeleteModalOpen.value = false;
+    leadToDelete.value = null;
+    refetch();
+  } catch (err) {
+    store.dispatch('notifications/triggerToast', {
+      message: err.response?.data?.message || 'Failed to delete lead.',
+      type: 'error'
+    });
+  } finally {
+    isDeleting.value = false;
+  }
 };
 </script>
