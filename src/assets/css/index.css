@@ -531,10 +531,14 @@
 /* Calm, task-first workspace pattern. Used by the education experience and
    available to every module so screens can share the landing page's restraint. */
 .workspace-page {
-  width: min(100%, 76rem);
+  width: 100%;
+  max-width: 76rem;
   margin-inline: auto;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 1.5rem;
+  min-width: 0;
+  box-sizing: border-box;
 }
 .workspace-page-header {
   display: flex;
@@ -723,6 +727,14 @@
 .education-list form input:focus, .education-list form select:focus { border-color: hsl(var(--accent-500)) !important; box-shadow: 0 0 0 3px hsl(var(--accent-100) / 0.72); outline: none; }
 
 @media (max-width: 640px) {
+  .workspace-page {
+    gap: 1rem;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: hidden;
+    box-sizing: border-box !important;
+  }
   .workspace-page-header { align-items: flex-start; flex-direction: column; }
   .workspace-page-header > .btn { width: 100%; }
   .workspace-filter-input { width: 100%; }
@@ -775,6 +787,9 @@
 
 .app-table-shell {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   overflow: hidden;
   background-color: hsl(var(--table-bg));
   border: 1px solid hsl(var(--table-border));

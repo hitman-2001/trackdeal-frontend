@@ -1,8 +1,8 @@
 <template>
-  <div class="workspace-page space-y-6 pb-12 max-w-full overflow-x-hidden">
+  <div class="workspace-page pb-12 w-full max-w-full min-w-0 overflow-x-hidden">
     <!-- Page Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-2 border-b border-slate-200/80 dark:border-slate-800/80">
-      <div class="min-w-0">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-2 border-b border-slate-200/80 dark:border-slate-800/80 w-full min-w-0">
+      <div class="min-w-0 w-full sm:w-auto">
         <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-primary/10 text-primary border border-primary/20 mb-1.5">
           <PhSparkle :size="12" weight="fill" />
           <span>Education Workspace</span>
@@ -10,41 +10,47 @@
         <h1 class="font-heading text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight break-words">
           Admissions & Counseling Overview
         </h1>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
           Monitor your prospective inquiries, active counseling stages, and scheduled parent follow-ups in real time.
         </p>
       </div>
-      <div class="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
+      <div class="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto shrink-0 min-w-0">
         <!-- Refresh Button -->
         <button
           type="button"
           @click="loadDashboard(true)"
           :disabled="refreshing"
-          class="btn btn-secondary btn-sm text-xs font-semibold gap-1.5 justify-center w-full sm:w-auto"
+          class="btn btn-secondary btn-sm text-xs font-semibold gap-1.5 justify-center w-full sm:w-auto min-w-0"
           title="Refresh dashboard data"
         >
-          <PhArrowsClockwise :size="14" :class="{ 'animate-spin': refreshing }" />
-          <span>Refresh</span>
+          <PhArrowsClockwise :size="14" :class="{ 'animate-spin': refreshing }" class="shrink-0" />
+          <span class="truncate">Refresh</span>
         </button>
 
-        <router-link to="/app/leads" class="btn btn-secondary btn-sm text-xs font-semibold gap-1.5 justify-center w-full sm:w-auto">
-          <PhUsersThree :size="14" />
-          <span>All Leads</span>
+        <router-link
+          to="/app/leads"
+          class="btn btn-secondary btn-sm text-xs font-semibold gap-1.5 justify-center w-full sm:w-auto min-w-0"
+        >
+          <PhUsersThree :size="14" class="shrink-0" />
+          <span class="truncate">All Leads</span>
         </router-link>
 
-        <router-link to="/app/leads?action=create" class="btn btn-primary btn-sm text-xs font-semibold gap-1.5 shadow-sm hover:shadow col-span-2 sm:col-span-1 justify-center w-full sm:w-auto whitespace-nowrap">
-          <PhPlus :size="14" weight="bold" />
-          <span>Add Student Lead</span>
+        <router-link
+          to="/app/leads?action=create"
+          class="btn btn-primary btn-sm text-xs font-semibold gap-1.5 shadow-sm hover:shadow col-span-2 sm:col-span-1 justify-center w-full sm:w-auto min-w-0"
+        >
+          <PhPlus :size="14" weight="bold" class="shrink-0" />
+          <span class="truncate">Add Student Lead</span>
         </router-link>
       </div>
     </div>
 
     <!-- Loading Skeleton -->
-    <div v-if="loading" class="space-y-6">
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
+    <div v-if="loading" class="space-y-6 w-full min-w-0">
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 w-full min-w-0">
         <div v-for="i in 6" :key="i" class="bg-surface border border-default rounded-xl sm:rounded-2xl p-4 sm:p-5 animate-pulse h-28"></div>
       </div>
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full min-w-0">
         <div class="lg:col-span-2 bg-surface border border-default rounded-xl sm:rounded-2xl p-5 sm:p-6 animate-pulse h-80"></div>
         <div class="bg-surface border border-default rounded-xl sm:rounded-2xl p-5 sm:p-6 animate-pulse h-80"></div>
       </div>
@@ -52,20 +58,20 @@
 
     <template v-else>
       <!-- Top Dynamic KPI Metrics (KokonutUI Glass Style) -->
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 w-full min-w-0">
         <!-- Total Leads -->
         <div
-          class="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-surface/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 hover:border-blue-400/60 dark:hover:border-blue-500/40 transition-all shadow-xs flex flex-col justify-between group cursor-pointer min-w-0"
+          class="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-surface border border-slate-200/80 dark:border-slate-800/80 hover:border-blue-400/60 dark:hover:border-blue-500/40 transition-all shadow-xs flex flex-col justify-between group cursor-pointer min-w-0"
           @click="navigateToLeads()"
         >
           <div class="flex items-center justify-between gap-1">
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">Total Leads</span>
             <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-              <PhUsersThree :size="16" weight="duotone" />
+              <PhUsersThree :size="15" weight="duotone" />
             </div>
           </div>
-          <div class="mt-2 min-w-0">
-            <div class="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tabular-nums">
+          <div class="mt-1.5 sm:mt-2 min-w-0">
+            <div class="text-lg sm:text-2xl font-black text-slate-900 dark:text-slate-100 tabular-nums">
               {{ summary.totalLeads ?? 0 }}
             </div>
             <div class="text-[10px] text-blue-600 dark:text-blue-400 font-medium mt-0.5 truncate">
@@ -76,17 +82,17 @@
 
         <!-- Follow-Ups Due Today -->
         <div
-          class="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-surface/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 hover:border-amber-400/60 dark:hover:border-amber-500/40 transition-all shadow-xs flex flex-col justify-between group cursor-pointer min-w-0"
+          class="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-surface border border-slate-200/80 dark:border-slate-800/80 hover:border-amber-400/60 dark:hover:border-amber-500/40 transition-all shadow-xs flex flex-col justify-between group cursor-pointer min-w-0"
           @click="setTab('today')"
         >
           <div class="flex items-center justify-between gap-1">
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">Due Today</span>
             <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-              <PhCalendarCheck :size="16" weight="duotone" />
+              <PhCalendarCheck :size="15" weight="duotone" />
             </div>
           </div>
-          <div class="mt-2 min-w-0">
-            <div class="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400 tabular-nums">
+          <div class="mt-1.5 sm:mt-2 min-w-0">
+            <div class="text-lg sm:text-2xl font-black text-amber-600 dark:text-amber-400 tabular-nums">
               {{ todayCount }}
             </div>
             <div class="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate">
@@ -97,7 +103,7 @@
 
         <!-- Overdue Follow-Ups (Pulsing if > 0) -->
         <div
-          class="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-surface/90 backdrop-blur-md border transition-all shadow-xs flex flex-col justify-between group cursor-pointer min-w-0"
+          class="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-surface border transition-all shadow-xs flex flex-col justify-between group cursor-pointer min-w-0"
           :class="overdueCount > 0 ? 'border-rose-300 dark:border-rose-900/60 bg-rose-50/20 dark:bg-rose-950/10' : 'border-slate-200/80 dark:border-slate-800/80 hover:border-rose-400/60'"
           @click="setTab('overdue')"
         >
@@ -112,11 +118,11 @@
               </span>
             </div>
             <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-              <PhWarning :size="16" weight="duotone" />
+              <PhWarning :size="15" weight="duotone" />
             </div>
           </div>
-          <div class="mt-2 min-w-0">
-            <div class="text-xl sm:text-2xl font-black tabular-nums" :class="overdueCount > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-slate-100'">
+          <div class="mt-1.5 sm:mt-2 min-w-0">
+            <div class="text-lg sm:text-2xl font-black tabular-nums" :class="overdueCount > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-slate-100'">
               {{ overdueCount }}
             </div>
             <div class="text-[10px] font-medium mt-0.5 truncate" :class="overdueCount > 0 ? 'text-rose-600 dark:text-rose-400 font-semibold' : 'text-slate-500 dark:text-slate-400'">
@@ -127,17 +133,17 @@
 
         <!-- Active Pipeline Inquiries -->
         <div
-          class="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-surface/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-400/60 dark:hover:border-indigo-500/40 transition-all shadow-xs flex flex-col justify-between group cursor-pointer min-w-0"
+          class="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-surface border border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-400/60 dark:hover:border-indigo-500/40 transition-all shadow-xs flex flex-col justify-between group cursor-pointer min-w-0"
           @click="navigateToLeads('contacted')"
         >
           <div class="flex items-center justify-between gap-1">
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">In Pipeline</span>
             <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-              <PhFunnel :size="16" weight="duotone" />
+              <PhFunnel :size="15" weight="duotone" />
             </div>
           </div>
-          <div class="mt-2 min-w-0">
-            <div class="text-xl sm:text-2xl font-black text-indigo-600 dark:text-indigo-400 tabular-nums">
+          <div class="mt-1.5 sm:mt-2 min-w-0">
+            <div class="text-lg sm:text-2xl font-black text-indigo-600 dark:text-indigo-400 tabular-nums">
               {{ activePipelineCount }}
             </div>
             <div class="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate">
@@ -148,17 +154,17 @@
 
         <!-- Enrolled Students -->
         <div
-          class="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-surface/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 hover:border-emerald-400/60 dark:hover:border-emerald-500/40 transition-all shadow-xs flex flex-col justify-between group cursor-pointer min-w-0"
+          class="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-surface border border-slate-200/80 dark:border-slate-800/80 hover:border-emerald-400/60 dark:hover:border-emerald-500/40 transition-all shadow-xs flex flex-col justify-between group cursor-pointer min-w-0"
           @click="navigateToStudents()"
         >
           <div class="flex items-center justify-between gap-1">
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">Enrolled</span>
             <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-              <PhGraduationCap :size="16" weight="duotone" />
+              <PhGraduationCap :size="15" weight="duotone" />
             </div>
           </div>
-          <div class="mt-2 min-w-0">
-            <div class="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
+          <div class="mt-1.5 sm:mt-2 min-w-0">
+            <div class="text-lg sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
               {{ summary.totalStudents ?? summary.enrolledLeads ?? 0 }}
             </div>
             <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5 truncate">
@@ -169,17 +175,17 @@
 
         <!-- Active Classes -->
         <div
-          class="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-surface/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 hover:border-purple-400/60 dark:hover:border-purple-500/40 transition-all shadow-xs flex flex-col justify-between group cursor-pointer min-w-0"
+          class="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-surface border border-slate-200/80 dark:border-slate-800/80 hover:border-purple-400/60 dark:hover:border-purple-500/40 transition-all shadow-xs flex flex-col justify-between group cursor-pointer min-w-0"
           @click="navigateToClasses()"
         >
           <div class="flex items-center justify-between gap-1">
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">Classes</span>
             <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-              <PhChalkboardTeacher :size="16" weight="duotone" />
+              <PhChalkboardTeacher :size="15" weight="duotone" />
             </div>
           </div>
-          <div class="mt-2 min-w-0">
-            <div class="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tabular-nums">
+          <div class="mt-1.5 sm:mt-2 min-w-0">
+            <div class="text-lg sm:text-2xl font-black text-slate-900 dark:text-slate-100 tabular-nums">
               {{ summary.totalClasses ?? 0 }}
             </div>
             <div class="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate">
@@ -190,54 +196,54 @@
       </div>
 
       <!-- Alerts Banner (if any) -->
-      <div v-if="hasAlerts" class="flex flex-wrap gap-2.5">
+      <div v-if="hasAlerts" class="flex flex-col sm:flex-row gap-2 sm:gap-2.5 w-full min-w-0">
         <div
           v-if="overdueCount > 0"
           @click="setTab('overdue')"
-          class="cursor-pointer flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 text-xs font-semibold text-rose-700 dark:text-rose-400 hover:bg-rose-100/60 transition-colors shadow-xs"
+          class="cursor-pointer flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 text-xs font-semibold text-rose-700 dark:text-rose-400 hover:bg-rose-100/60 transition-colors shadow-xs w-full sm:w-auto"
         >
-          <PhWarningCircle :size="16" weight="bold" />
-          <span>{{ overdueCount }} follow-up{{ overdueCount > 1 ? 's are' : ' is' }} overdue. Click to review immediately.</span>
-          <PhArrowRight :size="12" class="ml-1" />
+          <PhWarningCircle :size="16" weight="bold" class="shrink-0" />
+          <span class="leading-tight">{{ overdueCount }} follow-up{{ overdueCount > 1 ? 's are' : ' is' }} overdue. Click to review.</span>
+          <PhArrowRight :size="12" class="ml-auto sm:ml-1 shrink-0" />
         </div>
         <div
           v-if="(summary.unassignedLeads || 0) > 0"
           @click="navigateToLeads('unassigned')"
-          class="cursor-pointer flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:bg-amber-100/60 transition-colors shadow-xs"
+          class="cursor-pointer flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:bg-amber-100/60 transition-colors shadow-xs w-full sm:w-auto"
         >
-          <PhClock :size="16" weight="bold" />
-          <span>{{ summary.unassignedLeads }} unassigned student lead{{ summary.unassignedLeads > 1 ? 's need' : ' needs' }} counselor allocation.</span>
-          <PhArrowRight :size="12" class="ml-1" />
+          <PhClock :size="16" weight="bold" class="shrink-0" />
+          <span class="leading-tight">{{ summary.unassignedLeads }} unassigned student lead{{ summary.unassignedLeads > 1 ? 's need' : ' needs' }} counselor allocation.</span>
+          <PhArrowRight :size="12" class="ml-auto sm:ml-1 shrink-0" />
         </div>
       </div>
 
       <!-- MAIN SECTION: Scheduled Reminders & Follow-Ups (KokonutUI Modern Card System) -->
-      <div class="bg-surface/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-xl sm:rounded-2xl p-3.5 sm:p-6 shadow-xs space-y-4 sm:space-y-5">
+      <div class="bg-surface border border-slate-200/80 dark:border-slate-800/80 rounded-xl sm:rounded-2xl p-3.5 sm:p-6 shadow-xs space-y-4 w-full min-w-0">
         <!-- Section Header & Controls -->
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div>
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4 w-full min-w-0">
+          <div class="min-w-0">
             <div class="flex items-center gap-2">
-              <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+              <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                 <PhBell :size="18" weight="duotone" />
               </div>
-              <h2 class="font-heading text-lg font-bold text-slate-800 dark:text-slate-100">
+              <h2 class="font-heading text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 truncate">
                 Scheduled Follow-Ups & Reminders
               </h2>
-              <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 shrink-0">
                 {{ allFollowUps.length }} total
               </span>
             </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
               Directly dial parents, initiate WhatsApp chats, log interaction notes, or reschedule counseling reminders.
             </p>
           </div>
 
           <!-- Interactive Filter Tabs (Skiper UI inspired pill tabs) -->
-          <div class="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 self-start lg:self-auto overflow-x-auto max-w-full">
+          <div class="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 w-full lg:w-auto overflow-x-auto scrollbar-hide max-w-full">
             <button
               type="button"
               @click="reminderFilter = 'all'"
-              class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0"
               :class="reminderFilter === 'all' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
             >
               <span>All</span>
@@ -249,7 +255,7 @@
             <button
               type="button"
               @click="reminderFilter = 'overdue'"
-              class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0"
               :class="reminderFilter === 'overdue' ? 'bg-white dark:bg-slate-700 text-rose-600 dark:text-rose-400 shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-rose-600'"
             >
               <PhWarningCircle :size="13" weight="bold" />
@@ -265,7 +271,7 @@
             <button
               type="button"
               @click="reminderFilter = 'today'"
-              class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0"
               :class="reminderFilter === 'today' ? 'bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-amber-600'"
             >
               <PhCalendarCheck :size="13" weight="bold" />
@@ -281,7 +287,7 @@
             <button
               type="button"
               @click="reminderFilter = 'upcoming'"
-              class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0"
               :class="reminderFilter === 'upcoming' ? 'bg-white dark:bg-slate-700 text-purple-600 dark:text-purple-400 shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-purple-600'"
             >
               <PhClock :size="13" weight="bold" />
@@ -294,10 +300,10 @@
         </div>
 
         <!-- Secondary Filters: Search & Channel Type -->
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1 border-t border-slate-100 dark:border-slate-800/60">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-1 border-t border-slate-100 dark:border-slate-800/60 w-full min-w-0">
           <!-- Search box -->
-          <div class="relative w-full sm:w-72">
-            <PhMagnifyingGlass :size="14" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <div class="relative w-full sm:w-72 min-w-0">
+            <PhMagnifyingGlass :size="14" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               v-model="reminderSearch"
               type="text"
@@ -307,14 +313,14 @@
           </div>
 
           <!-- Channel Filter -->
-          <div class="flex items-center gap-1.5 self-start sm:self-auto flex-wrap">
-            <span class="text-[10px] font-bold uppercase text-slate-400 tracking-wider mr-1">Type:</span>
+          <div class="flex items-center gap-1 overflow-x-auto scrollbar-hide pb-1 sm:pb-0 w-full sm:w-auto max-w-full">
+            <span class="text-[10px] font-bold uppercase text-slate-400 tracking-wider mr-1 shrink-0">Type:</span>
             <button
               v-for="t in typeFilterOptions"
               :key="t.value"
               type="button"
               @click="reminderTypeFilter = t.value"
-              class="px-2 py-1 rounded-lg text-[11px] font-semibold border transition-all"
+              class="px-2 py-1 rounded-lg text-[11px] font-semibold border transition-all whitespace-nowrap shrink-0"
               :class="reminderTypeFilter === t.value ? 'bg-primary/10 text-primary border-primary/30 font-bold' : 'border-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'"
             >
               {{ t.label }}
@@ -323,19 +329,19 @@
         </div>
 
         <!-- REMINDERS LIST -->
-        <div v-if="filteredFollowUps.length > 0" class="space-y-2">
+        <div v-if="filteredFollowUps.length > 0" class="space-y-2.5 w-full min-w-0">
           <div
             v-for="fu in filteredFollowUps"
             :key="fu._id"
-            class="group relative flex flex-col gap-0 bg-white dark:bg-neutral-900 border rounded-xl overflow-hidden transition-all duration-150 hover:shadow-md"
+            class="group relative flex flex-col gap-0 bg-white dark:bg-neutral-900 border rounded-xl overflow-hidden transition-all duration-150 hover:shadow-md w-full min-w-0"
             :class="fu.isOverdue ? 'border-l-[3px] border-l-rose-400 border-t-neutral-200 border-r-neutral-200 border-b-neutral-200 dark:border-l-rose-600 dark:border-t-neutral-800 dark:border-r-neutral-800 dark:border-b-neutral-800' : 'border-neutral-200 dark:border-neutral-800'"
           >
             <!-- Card Header Row -->
-            <div class="flex items-center justify-between gap-3 px-4 pt-3 pb-2.5 border-b border-neutral-100 dark:border-neutral-800">
-              <div class="flex items-center gap-2 min-w-0">
+            <div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 px-3 sm:px-4 pt-3 pb-2.5 border-b border-neutral-100 dark:border-neutral-800 w-full min-w-0">
+              <div class="flex items-center gap-1.5 flex-wrap min-w-0">
                 <!-- Channel Badge -->
                 <span
-                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border shrink-0"
                   :class="getChannelMeta(fu.type).badgeClass"
                 >
                   <component :is="getChannelMeta(fu.type).icon" :size="11" weight="bold" />
@@ -344,7 +350,7 @@
 
                 <!-- Status badge -->
                 <span
-                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border shrink-0"
                   :class="getRelativeBadgeMeta(fu).class"
                 >
                   <PhClock :size="10" weight="bold" />
@@ -353,7 +359,7 @@
               </div>
 
               <!-- Timestamp + View -->
-              <div class="flex items-center gap-2 shrink-0">
+              <div class="flex items-center gap-2 shrink-0 ml-auto sm:ml-0">
                 <span class="text-[11px] text-neutral-400 tabular-nums font-mono">
                   {{ formatFollowUpDate(fu.scheduledAt) }}
                 </span>
@@ -369,13 +375,13 @@
             </div>
 
             <!-- Card Body -->
-            <div class="px-4 py-3 space-y-2">
+            <div class="px-3 sm:px-4 py-3 space-y-2 w-full min-w-0">
               <!-- Student name + tags -->
               <div class="flex items-center gap-2 flex-wrap">
                 <button
                   type="button"
                   @click="openDetails(fu.leadId)"
-                  class="font-heading font-bold text-sm text-neutral-900 dark:text-neutral-100 hover:text-primary transition-colors"
+                  class="font-heading font-bold text-sm text-neutral-900 dark:text-neutral-100 hover:text-primary transition-colors text-left"
                 >
                   {{ fu.studentName }}
                 </button>
@@ -419,16 +425,16 @@
               <!-- Notes -->
               <div
                 v-if="fu.notes"
-                class="flex items-start gap-2 text-[11px] text-neutral-500 dark:text-neutral-400 italic"
+                class="flex items-start gap-2 text-[11px] text-neutral-500 dark:text-neutral-400 italic break-words"
               >
                 <PhNotePencil :size="12" class="shrink-0 mt-0.5 text-neutral-400" />
-                <span class="line-clamp-1">{{ fu.notes }}</span>
+                <span class="line-clamp-2">{{ fu.notes }}</span>
               </div>
             </div>
 
             <!-- Card Actions -->
-            <div class="flex items-center justify-between gap-2 px-4 py-2 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 flex-wrap">
-              <div class="flex items-center gap-1.5 flex-wrap">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 sm:px-4 py-2.5 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 w-full min-w-0">
+              <div class="flex items-center gap-1.5 flex-wrap w-full sm:w-auto">
                 <a
                   v-if="fu.contactNumber"
                   :href="'tel:' + fu.contactNumber"
@@ -460,7 +466,7 @@
                 </button>
               </div>
 
-              <div class="flex items-center gap-1.5 ml-auto">
+              <div class="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-end pt-1.5 sm:pt-0 border-t sm:border-t-0 border-neutral-200/60 dark:border-neutral-800">
                 <button
                   type="button"
                   @click="markCompleted(fu)"
@@ -489,7 +495,7 @@
         <!-- Modern Empty State -->
         <div
           v-else
-          class="py-12 px-4 text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 flex flex-col items-center justify-center gap-3"
+          class="py-10 sm:py-12 px-4 text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 flex flex-col items-center justify-center gap-3 w-full min-w-0"
         >
           <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
             <PhBell :size="24" weight="duotone" />
@@ -498,11 +504,11 @@
             <h3 class="font-bold text-sm text-slate-800 dark:text-slate-200">
               {{ reminderFilter === 'overdue' ? 'No overdue follow-ups!' : 'No follow-up reminders in this view' }}
             </h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400">
+            <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
               {{ reminderFilter === 'overdue' ? 'Great job! All counseling touchpoints are on schedule.' : 'Schedule reminders from student lead profiles to keep track of upcoming inquiries.' }}
             </p>
           </div>
-          <div class="flex items-center gap-2 mt-2">
+          <div class="flex items-center gap-2 mt-2 flex-wrap justify-center">
             <button
               v-if="reminderFilter !== 'all'"
               type="button"
@@ -520,11 +526,11 @@
       </div>
 
       <!-- Pipeline & Performance Row -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 w-full min-w-0">
         <!-- Stage Pipeline Funnel (Left 2 cols) -->
-        <div class="lg:col-span-2 bg-surface/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-xl sm:rounded-2xl p-4 sm:p-6 space-y-4 sm:space-y-5 shadow-xs">
+        <div class="lg:col-span-2 bg-surface border border-slate-200/80 dark:border-slate-800/80 rounded-xl sm:rounded-2xl p-3.5 sm:p-6 space-y-4 shadow-xs w-full min-w-0">
           <!-- Funnel Header -->
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full min-w-0">
             <div>
               <div class="flex items-center gap-2">
                 <div class="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
@@ -554,8 +560,8 @@
           </div>
 
           <!-- Segmented Proportional Flow Stream (Linear/KokonutUI style) -->
-          <div class="space-y-1.5 p-3 rounded-xl bg-slate-50/80 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60">
-            <div class="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+          <div class="space-y-1.5 p-3 rounded-xl bg-slate-50/80 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 w-full min-w-0">
+            <div class="flex flex-wrap items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-medium gap-1">
               <span>Pipeline Stage Proportions</span>
               <span class="font-semibold text-slate-700 dark:text-slate-300">
                 {{ activePipelineCount }} active in counseling
@@ -579,7 +585,7 @@
           </div>
 
           <!-- 8-Stage Minimalist Bento Grid (4 cols on lg, 2 cols on mobile/tablet) -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 w-full min-w-0">
             <div
               v-for="(stage, idx) in pipelineStages"
               :key="stage.key"
@@ -626,9 +632,9 @@
         </div>
 
         <!-- Right Column: Conversion & Quick Counts -->
-        <div class="space-y-4 min-w-0">
+        <div class="space-y-4 min-w-0 w-full">
           <!-- Conversion Performance Card -->
-          <div class="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-surface/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-4">
+          <div class="p-3.5 sm:p-5 rounded-xl sm:rounded-2xl bg-surface border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-4 w-full min-w-0">
             <div class="flex items-center justify-between gap-2">
               <span class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">Conversion Snapshot</span>
               <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap">
@@ -666,7 +672,7 @@
           </div>
 
           <!-- Quick Navigation Card -->
-          <div class="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-surface/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-3">
+          <div class="p-3.5 sm:p-5 rounded-xl sm:rounded-2xl bg-surface border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-3 w-full min-w-0">
             <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Workspace Actions</span>
             <div class="grid grid-cols-1 gap-2">
               <router-link

@@ -1957,13 +1957,13 @@ const vClickOutside = {
     padding: 0 0.5rem;
     z-index: 999;
     padding-bottom: env(safe-area-inset-bottom);
-    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.04);
   }
 }
 
 .dark .mobile-bottom-nav {
   border-top-color: hsl(var(--neutral-800));
-  background-color: hsl(var(--bg-surface));
+  background-color: #0f172a;
 }
 
 .mobile-nav-item {
@@ -2023,18 +2023,33 @@ const vClickOutside = {
   .layout-body {
     padding: 0 !important;
     gap: 0 !important;
-    padding-bottom: calc(84px + env(safe-area-inset-bottom)) !important;
+    padding-bottom: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
   }
   .main-layout-container {
     width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
     border-radius: 0 !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
   }
   .content {
     border-radius: 0 !important;
     border: none !important;
     box-shadow: none !important;
-    padding: 16px 12px calc(28px + env(safe-area-inset-bottom)) 12px !important;
-    overflow-x: hidden;
+    background-image: none !important;
+    background-color: #ffffff !important;
+    padding: 16px 12px calc(80px + env(safe-area-inset-bottom)) 12px !important;
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
   }
   .navbar-left {
     min-width: auto;
@@ -2043,18 +2058,28 @@ const vClickOutside = {
 
 @media (max-width: 640px) {
   .navbar-center {
-    display: none;
+    display: none !important;
   }
   .app-navbar {
-    padding-left: 12px;
-    padding-right: 12px;
-    height: 56px;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    height: 56px !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
   }
   .navbar-left {
     gap: 8px;
+    min-width: auto !important;
+    flex-shrink: 1;
   }
   .navbar-right {
     gap: 6px;
+    padding-left: 0 !important;
+    flex-shrink: 0;
+  }
+  .action-btn.hidden {
+    display: none !important;
   }
   .quick-add-btn {
     display: none !important;
@@ -2085,8 +2110,17 @@ const vClickOutside = {
     height: 34px;
   }
   .content {
-    padding: 12px 10px calc(28px + env(safe-area-inset-bottom)) 10px !important;
-    overflow-x: hidden;
+    padding: 12px 10px calc(80px + env(safe-area-inset-bottom)) 10px !important;
+    background-image: none !important;
+    background-color: #ffffff !important;
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+  .dark .content {
+    background-color: #0f172a !important;
   }
 }
 </style>
