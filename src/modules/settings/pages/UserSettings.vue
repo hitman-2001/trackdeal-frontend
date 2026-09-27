@@ -97,7 +97,7 @@
                 class="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors"
               >
                 <td class="p-3 font-bold text-slate-850 dark:text-slate-200">
-                  {{ user.name || user.fullName }}
+                  {{ user.name || user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User' }}
                 </td>
                 <td class="p-3 text-slate-600 dark:text-slate-400 font-mono">
                   {{ user.email }}
@@ -107,9 +107,9 @@
                 >
                   <span
                     class="px-2 py-0.5 rounded text-[10px] border"
-                    :class="getRoleBadgeClass(getRoleCode(user.role))"
+                    :class="getRoleBadgeClass(getRoleCode(user.role, user))"
                   >
-                    {{ getRoleDisplayName(user.role) }}
+                    {{ getRoleDisplayName(user.role, user) }}
                   </span>
                 </td>
                 <td
@@ -393,18 +393,20 @@ function getRoleBadgeClass(role) {
   }
 }
 
-function getRoleCode(role) {
-  if (!role) return "";
-  if (typeof role === "object") {
-    return role.code || "";
+function getRoleCode(role, user) {
+  const r = role || user?.roleId;
+  if (!r) return "";
+  if (typeof r === "object") {
+    return r.code || "";
   }
-  return String(role);
+  return String(r);
 }
 
-function getRoleDisplayName(role) {
-  if (!role) return "";
+function getRoleDisplayName(role, user) {
+  const r = role || user?.roleId;
+  if (!r) return "";
   const val =
-    typeof role === "object" ? role.name || role.code || "" : String(role);
+    typeof r === "object" ? r.name || r.code || "" : String(r);
   const formatted = val.replace(/_/g, " ");
   return isEducationWorkspace.value
     ? formatted.replace(/agent/gi, "Staff")
