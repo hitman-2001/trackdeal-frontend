@@ -50,9 +50,9 @@
           Assign ({{ selectedRows.length }})
         </button>
 
-        <!-- Bulk Import Leads (Excel/CSV) for Org Admin -->
+        <!-- Bulk Import Leads (Excel/CSV) for Org Admin / Authorized Staff -->
         <button
-          v-if="isOrgAdmin"
+          v-if="canBulkUpload"
           type="button"
           @click="isBulkUploadOpen = true"
           class="btn btn-secondary h-[42px] px-3.5 text-xs font-semibold gap-2 hover:border-emerald-500 hover:text-emerald-600 transition-colors"
@@ -272,6 +272,18 @@ const isOrgAdmin = computed(() =>
     String(store.getters['auth/userRole'] || '').toLowerCase()
   )
 );
+const canBulkUpload = computed(() => {
+  const role = String(store.getters['auth/userRole'] || '').toLowerCase();
+  const isPrivilegedRole = [
+    'super_admin',
+    'system_admin',
+    'org_admin',
+    'organization_admin',
+    'manager',
+    'branch_manager',
+  ].includes(role);
+  return isPrivilegedRole || Boolean(store.getters['permissions/hasCapability']?.('leads.create'));
+});
 const isBulkUploadOpen = ref(false);
 
 const activeFilters = ref({

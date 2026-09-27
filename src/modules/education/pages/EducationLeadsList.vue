@@ -458,6 +458,7 @@
     <!-- Lead Bulk Upload Modal (Opens from right side) -->
     <LeadBulkUploadModal
       :isOpen="showBulkUpload"
+      :availableClasses="classes"
       @close="showBulkUpload = false"
       @success="load"
     />
@@ -518,7 +519,7 @@ const isOrgAdmin = computed(() =>
 );
 const canBulkUpload = computed(() => {
   const role = String(store.getters["auth/userRole"] || "").toLowerCase();
-  return [
+  const isPrivilegedRole = [
     "super_admin",
     "system_admin",
     "org_admin",
@@ -526,6 +527,7 @@ const canBulkUpload = computed(() => {
     "manager",
     "branch_manager",
   ].includes(role);
+  return isPrivilegedRole || Boolean(store.getters["permissions/hasCapability"]?.("leads.create"));
 });
 
 const columns = computed(() => {

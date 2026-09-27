@@ -213,6 +213,7 @@ import { createEducationLead } from '@/modules/education/api/endpoints';
 
 const props = defineProps({
   isOpen: { type: Boolean, default: false },
+  availableClasses: { type: Array, default: () => [] },
 });
 
 const emit = defineEmits(['close', 'success']);
@@ -233,6 +234,37 @@ const uploadProgress = computed(() => {
   if (validRowsCount.value === 0) return 0;
   return Math.round((uploadedCount.value / validRowsCount.value) * 100);
 });
+
+function cleanMobileNumber(raw) {
+  if (!raw) return '';
+  let str = String(raw).trim();
+  // Strip trailing .0 if Excel parsed integer as float
+  str = str.replace(/\.0+$/, '');
+  // Strip common formatting spaces, dashes, parentheses
+  str = str.replace(/[\s\-\(\)\[\]]/g, '');
+  return str;
+}
+
+function normalizePropertyType(raw) {
+  if (!raw) return undefined;
+  const lower = String(raw).toLowerCase().trim();
+  if (['apartment', 'flat', '1bhk', '2bhk', '3bhk', '4bhk', 'condo', 'penthouse'].some((k) => lower.includes(k))) {
+    return 'apartment';
+  }
+  if (['villa', 'house', 'bungalow', 'rowhouse', 'row house', 'duplex'].some((k) => lower.includes(k))) {
+    return 'villa';
+  }
+  if (['plot', 'land', 'site', 'layout'].some((k) => lower.includes(k))) {
+    return 'plot';
+  }
+  if (['commercial', 'shop', 'retail', 'showroom', 'mall'].some((k) => lower.includes(k))) {
+    return 'commercial';
+  }
+  if (['office', 'workspace', 'it park', 'co-working'].some((k) => lower.includes(k))) {
+    return 'office';
+  }
+  return undefined;
+}
 
 function triggerFileInput() {
   fileInput.value?.click();
@@ -266,7 +298,7 @@ function parseSpreadsheet(selectedFile) {
       const workbook = XLSX.read(data, { type: 'array' });
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
-      const rawJson = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+      const rawJson = XLSX.utils.sheet_to_json(worksheet, { defval: '', raw: false });
 
       parsedRows.value = rawJson.map((row) => normalizeRow(row));
     } catch (err) {
@@ -287,7 +319,7 @@ function normalizeRow(row) {
       const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
       for (const kw of keywords) {
         if (cleanKey.includes(kw)) {
-          return String(row[key] || '').trim();
+          return String(row[key] ?? '').trim();
         }
       }
     }
@@ -296,7 +328,8 @@ function normalizeRow(row) {
 
   const firstName = findVal(['firstname', 'studentname', 'name', 'first']) || 'Unknown';
   const lastName = findVal(['lastname', 'surname', 'last']);
-  const mobile = findVal(['mobile', 'phone', 'contact', 'cell', 'tel']);
+  const rawMobile = findVal(['mobile', 'phone', 'contact', 'cell', 'tel']);
+  const mobile = cleanMobileNumber(rawMobile);
   const email = findVal(['email', 'mail']);
   const classInterest = findVal(['class', 'grade', 'batch', 'course']);
   const parentName = findVal(['parent', 'guardian', 'father', 'mother']);
@@ -305,13 +338,20 @@ function normalizeRow(row) {
   const notes = findVal(['note', 'inquiry', 'remarks', 'comment']);
   const status = findVal(['status']) || 'new';
 
-  const isValid = Boolean(firstName && firstName !== 'Unknown' && mobile && mobile.length >= 5);
-  const errorReason = !mobile ? 'Missing mobile number' : (!firstName || firstName === 'Unknown') ? 'Missing name' : '';
+  const isValid = Boolean(firstName && firstName !== 'Unknown' && mobile && mobile.length >= 7);
+  const errorReason = !mobile
+    ? 'Missing mobile number'
+    : mobile.length < 7
+    ? 'Mobile number too short (minimum 7 digits)'
+    : (!firstName || firstName === 'Unknown')
+    ? 'Missing name'
+    : '';
 
   return {
     firstName,
     lastName,
     mobile,
+    rawMobile,
     email,
     classInterest,
     parentName,
@@ -378,27 +418,62 @@ async function executeImport() {
   for (const row of validRows) {
     try {
       if (isEducation.value) {
+        // Resolve classInterest against available classes if provided
+        let classInterestId = undefined;
+        if (row.classInterest && props.availableClasses?.length) {
+          const target = row.classInterest.toLowerCase().trim();
+          const match = props.availableClasses.find(
+            (c) =>
+              c.name?.toLowerCase().trim() === target ||
+              c.name?.toLowerCase().includes(target) ||
+              target.includes(c.name?.toLowerCase() || '')
+          );
+          if (match) classInterestId = match._id;
+        }
+
+        const noteParts = [];
+        if (row.classInterest && !classInterestId) {
+          noteParts.push(`Interested in: ${row.classInterest}`);
+        }
+        if (row.notes) {
+          noteParts.push(row.notes);
+        }
+
         await createEducationLead({
           firstName: row.firstName,
           lastName: row.lastName || '',
           mobile: row.mobile,
           email: row.email || undefined,
           parentName: row.parentName || undefined,
-          status: row.status || 'new',
-          notes: row.notes || undefined,
+          classInterestId: classInterestId || undefined,
+          status: ['new', 'assigned', 'contacted', 'follow_up'].includes(row.status?.toLowerCase())
+            ? row.status.toLowerCase()
+            : 'new',
+          notes: noteParts.join(' | ') || undefined,
           source: 'manual_entry',
         });
       } else {
+        const propType = normalizePropertyType(row.propertyType);
+        const budgetNumber = row.budget ? Number(String(row.budget).replace(/[^0-9.]/g, '')) : undefined;
+
+        const noteParts = [];
+        if (row.propertyType && !propType) {
+          noteParts.push(`Property Interest: ${row.propertyType}`);
+        }
+        if (row.notes) {
+          noteParts.push(row.notes);
+        }
+
         await apiClient.post('/leads', {
           firstName: row.firstName,
           lastName: row.lastName || '',
           mobile: row.mobile,
           email: row.email || undefined,
           source: 'manual_entry',
-          notes: row.notes || undefined,
+          notes: noteParts.join(' | ') || undefined,
           requirements: {
-            propertyType: row.propertyType ? [row.propertyType.toLowerCase()] : undefined,
-            budgetMax: row.budget ? Number(row.budget) : undefined,
+            propertyType: propType ? [propType] : undefined,
+            budgetMax: budgetNumber && !isNaN(budgetNumber) ? budgetNumber : undefined,
           },
         });
       }
@@ -413,7 +488,7 @@ async function executeImport() {
   isUploading.value = false;
 
   store.dispatch('notifications/triggerToast', {
-    message: `Batch import finished. Successfully created ${successCount} leads${failCount > 0 ? ` (${failCount} errors)` : ''}.`,
+    message: `Batch import finished. Successfully imported ${successCount} leads${failCount > 0 ? ` (${failCount} failed)` : ''}.`,
     type: successCount > 0 ? 'success' : 'error',
   });
 
