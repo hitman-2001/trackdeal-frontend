@@ -1,10 +1,10 @@
 <template>
   <div class="space-y-6 text-xs">
     <!-- Header -->
-    <div class="flex items-center justify-between">
-      <div>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-1">
+      <div class="min-w-0">
         <h1
-          class="font-heading text-xl font-extrabold text-slate-800 dark:text-slate-100"
+          class="font-heading text-xl font-extrabold text-slate-800 dark:text-slate-100 break-words"
         >
           {{
             isEducationWorkspace
@@ -12,7 +12,7 @@
               : "User Management & Audit Trails"
           }}
         </h1>
-        <p class="text-[11px] text-slate-500 dark:text-slate-400">
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
           {{
             isEducationWorkspace
               ? "Onboard counselors and staff, manage account access, assign campus branches, and review audit logs."
@@ -20,7 +20,7 @@
           }}
         </p>
       </div>
-      <button @click="openInviteDrawer" class="btn-md btn-primary gap-1.5">
+      <button @click="openInviteDrawer" class="btn-md btn-primary gap-1.5 self-start sm:self-auto shrink-0">
         <PhPlus :size="14" />
         <span>{{
           isEducationWorkspace ? "Onboard Staff" : "Onboard User"
@@ -30,7 +30,8 @@
 
     <!-- Inner Tabs -->
     <div
-      class="flex border-b border-default overflow-x-auto space-x-4 pb-0.5 scrollbar-none"
+      class="flex border-b border-default overflow-x-auto space-x-4 pb-0.5 scrollbar-none w-full min-w-0"
+      style="-webkit-overflow-scrolling: touch;"
     >
       <button
         @click="activeTab = 'directory'"

@@ -361,7 +361,7 @@
               class="filter-control w-full"
             />
           </div>
-          <div class="space-y-1">
+          <div v-if="canAssignLeads" class="space-y-1">
             <label class="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block">Assigned Staff</label>
             <select
               v-model="form.assignedToStaffId"
@@ -477,6 +477,10 @@ function defaultFollowUpDate() {
   d.setDate(d.getDate() + 1);
   return d.toISOString().split('T')[0];
 }
+
+const canAssignLeads = computed(() => {
+  return Boolean(store.getters["permissions/hasCapability"]?.("leads.assign"));
+});
 
 const drawerSubtitle = computed(() => {
   if (!lead.value) return 'Record touchpoint details';
@@ -646,7 +650,7 @@ async function saveUpdate() {
     } else {
       leadUpdates.nextFollowUpAt = null;
     }
-    if (form.value.assignedToStaffId && form.value.assignedToStaffId !== (lead.value.assignedTo?._id || lead.value.assignedTo)) {
+    if (canAssignLeads.value && form.value.assignedToStaffId && form.value.assignedToStaffId !== (lead.value.assignedTo?._id || lead.value.assignedTo)) {
       leadUpdates.assignedTo = form.value.assignedToStaffId;
     }
     leadUpdates.notesRemarks = description;

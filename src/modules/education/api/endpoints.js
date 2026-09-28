@@ -76,7 +76,12 @@ export async function enrollEducationLead(id, data = {}) {
 }
 
 export async function deleteEducationLead(id) {
-  const res = await apiClient.delete(`/leads/${id}`);
+  const res = await apiClient.delete(`/education/leads/${id}`).catch((err) => {
+    if (err.response?.status === 404) {
+      return apiClient.delete(`/leads/${id}`);
+    }
+    throw err;
+  });
   return res.data;
 }
 

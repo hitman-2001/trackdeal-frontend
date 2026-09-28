@@ -14,7 +14,7 @@
       </div>
       <div class="flex items-center gap-2.5 flex-wrap">
         <button
-          v-if="isOrgAdmin && selectedRows.length > 0"
+          v-if="canAssignLeads && selectedRows.length > 0"
           @click="openBulkAssign"
           class="btn btn-secondary btn-sm flex items-center gap-1.5"
           title="Assign selected leads to staff"
@@ -44,7 +44,8 @@
 
     <!-- Filters Bar (42px Equal Heights & Consistent Radii per Spec) -->
     <div
-      class="p-3 sm:p-4 rounded-xl bg-surface border border-default grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 shadow-xs"
+      class="p-3 sm:p-4 rounded-xl bg-surface border border-default grid grid-cols-1 sm:grid-cols-2 gap-3 shadow-xs"
+      :class="canFilterAllStaff ? 'lg:grid-cols-4' : 'lg:grid-cols-3'"
     >
       <div class="relative">
         <PhMagnifyingGlass :size="16" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
@@ -74,7 +75,7 @@
         <option value="on_hold">On Hold</option>
       </select>
       <select
-        v-if="isOrgAdmin || canBulkUpload"
+        v-if="canFilterAllStaff"
         v-model="staffFilter"
         class="filter-control w-full"
         @change="onFilterChange"
@@ -219,7 +220,7 @@
 
           <!-- 4. Assign Staff -->
           <button
-            v-if="isOrgAdmin"
+            v-if="canAssignLeads"
             type="button"
             @click="handleAssign(activeMenuRow)"
             class="w-full px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2.5 text-slate-700 dark:text-slate-200 transition-colors font-medium rounded-lg"
@@ -240,15 +241,17 @@
           </button>
 
           <!-- 6. Delete Lead (Destructive) -->
-          <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
-          <button
-            type="button"
-            @click="handleDelete(activeMenuRow)"
-            class="w-full px-3 py-2 text-left hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center gap-2.5 text-rose-600 dark:text-rose-400 transition-colors font-medium rounded-lg"
-          >
-            <PhTrash :size="15" weight="bold" />
-            <span>Delete</span>
-          </button>
+          <template v-if="canDeleteLeads">
+            <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
+            <button
+              type="button"
+              @click="handleDelete(activeMenuRow)"
+              class="w-full px-3 py-2 text-left hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center gap-2.5 text-rose-600 dark:text-rose-400 transition-colors font-medium rounded-lg"
+            >
+              <PhTrash :size="15" weight="bold" />
+              <span>Delete</span>
+            </button>
+          </template>
         </div>
       </div>
     </Teleport>
@@ -517,6 +520,12 @@ const isOrgAdmin = computed(() =>
     String(store.getters["auth/userRole"] || "").toLowerCase(),
   ),
 );
+const canDeleteLeads = computed(() => {
+  return Boolean(store.getters["permissions/hasCapability"]?.("leads.delete"));
+});
+const canAssignLeads = computed(() => {
+  return Boolean(store.getters["permissions/hasCapability"]?.("leads.assign"));
+});
 const canBulkUpload = computed(() => {
   const role = String(store.getters["auth/userRole"] || "").toLowerCase();
   const isPrivilegedRole = [
@@ -527,7 +536,21 @@ const canBulkUpload = computed(() => {
     "manager",
     "branch_manager",
   ].includes(role);
-  return isPrivilegedRole || Boolean(store.getters["permissions/hasCapability"]?.("leads.create"));
+  return isPrivilegedRole || Boolean(store.getters["permissions/hasCapability"]?.("leads.bulk_upload"));
+});
+// "All staff" filter dropdown should ONLY be visible to elevated roles (admin/manager) who can manage assignments
+// Regular staff should NEVER see the "All staff" dropdown!
+const canFilterAllStaff = computed(() => {
+  const role = String(store.getters["auth/userRole"] || "").toLowerCase();
+  const isElevated = [
+    "super_admin",
+    "system_admin",
+    "org_admin",
+    "organization_admin",
+    "manager",
+    "branch_manager",
+  ].includes(role);
+  return isElevated && canAssignLeads.value;
 });
 
 const columns = computed(() => {
@@ -537,7 +560,7 @@ const columns = computed(() => {
     { key: "class", label: "Interested class" },
   ];
   // Only show "Assigned staff" to admins/managers overseeing staff allocation
-  if (isOrgAdmin.value || canBulkUpload.value) {
+  if (canFilterAllStaff.value) {
     cols.push({ key: "staff", label: "Assigned staff" });
   }
   cols.push({ key: "status", label: "Status" });
@@ -880,7 +903,7 @@ async function enroll() {
 
 onMounted(async () => {
   try {
-    const fetchStaff = (isOrgAdmin.value || canBulkUpload.value)
+    const fetchStaff = canFilterAllStaff.value
       ? apiClient.get('/users', { params: { limit: 200, status: 'active' }, silent: true, skipErrorToast: true }).catch(() => ({ data: { data: [] } }))
       : Promise.resolve({ data: { data: [] } });
 

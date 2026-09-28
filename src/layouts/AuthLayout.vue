@@ -10,16 +10,19 @@
       ></div>
 
       <!-- Top Logo lockup -->
-      <div class="relative z-10 flex items-center space-x-2.5">
-        <div
-          class="brand-mark w-9 h-9 rounded-[11px] flex items-center justify-center"
-        >
-          <PhGraduationCap :size="18" weight="duotone" />
-        </div>
-        <span
-          class="font-heading font-extrabold text-slate-100 tracking-[-0.04em] text-lg"
-          >Track Deal</span
-        >
+      <div class="relative z-10 flex items-center">
+        <img
+          v-if="isEducationWorkspace"
+          src="/education_logo.png"
+          alt="Trackdeal Education"
+          class="auth-showcase-logo education-logo"
+        />
+        <img
+          v-else
+          src="/real_estate_black.png"
+          alt="Trackdeal Real Estate"
+          class="auth-showcase-logo real-estate-logo"
+        />
       </div>
 
       <!-- Center visual mock / value prop -->
@@ -28,16 +31,15 @@
           class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent-500/10 border border-accent-500/20 text-[10px] uppercase tracking-[0.14em] font-bold text-emerald-300"
         >
           <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
-          Institute operations workspace
+          {{ showcaseData.badge }}
         </div>
         <h1
           class="font-heading text-4xl xl:text-5xl font-bold text-white tracking-[-0.045em] leading-[1.08]"
         >
-          Every inquiry, from first counselling call to confirmed seat.
+          {{ showcaseData.headline }}
         </h1>
         <p class="text-slate-400 text-sm leading-6 max-w-lg">
-          Track student leads, place them in the right class, follow up on
-          admissions, and keep your institute team aligned in one workspace.
+          {{ showcaseData.subtext }}
         </p>
 
         <!-- Mock dashboard visualization card -->
@@ -45,7 +47,7 @@
           <div class="flex items-center justify-between">
             <span
               class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider"
-              >Active inquiries</span
+              >{{ showcaseData.metricLabel }}</span
             >
             <span
               class="text-[9px] font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20"
@@ -53,7 +55,7 @@
             >
           </div>
           <div class="text-2xl font-bold font-mono text-slate-100">
-            76 this week
+            {{ showcaseData.metricValue }}
           </div>
           <div class="flex space-x-2 pt-1">
             <span class="w-full h-1 bg-accent-600 rounded-full"></span>
@@ -75,7 +77,7 @@
       <router-link
         to="/"
         class="absolute top-6 left-6 inline-flex items-center gap-2 text-caption text-text-secondary hover:text-accent-600"
-        ><span aria-hidden="true">?</span> Back to TrackDeal</router-link
+        ><span aria-hidden="true">&larr;</span> Back to TrackDeal</router-link
       >
       <!-- Theme Switcher -->
       <button
@@ -92,16 +94,18 @@
       <div class="max-w-md w-full space-y-8">
         <!-- Logo for mobile -->
         <div class="lg:hidden flex flex-col items-center mb-8">
-          <div
-            class="brand-mark w-10 h-10 rounded-[12px] flex items-center justify-center mb-3"
-          >
-            <PhGraduationCap :size="20" weight="duotone" />
-          </div>
-          <h2
-            class="text-2xl font-bold text-neutral-900 dark:text-neutral-50 tracking-tight"
-          >
-            Track Deal
-          </h2>
+          <img
+            v-if="isEducationWorkspace"
+            src="/education_logo.png"
+            alt="Trackdeal Education"
+            class="auth-mobile-logo auth-logo-edu mb-2"
+          />
+          <img
+            v-else
+            src="/real_estate_black.png"
+            alt="Trackdeal Real Estate"
+            class="auth-mobile-logo auth-logo-re mb-2"
+          />
         </div>
 
         <router-view />
@@ -113,10 +117,34 @@
 <script setup>
 import { computed } from "vue";
 import { useStore } from "vuex";
-import { PhSun, PhMoon, PhGraduationCap } from "@phosphor-icons/vue";
+import { PhSun, PhMoon } from "@phosphor-icons/vue";
 
 const store = useStore();
 const activeTheme = computed(() => store.state.ui.activeThemeMode);
+const isEducationWorkspace = computed(
+  () => store.getters["organization/isEducationTenant"]
+);
+
+const showcaseData = computed(() => {
+  if (isEducationWorkspace.value) {
+    return {
+      badge: "Institute operations workspace",
+      headline: "Every inquiry, from first counselling call to confirmed seat.",
+      subtext:
+        "Track student leads, place them in the right class, follow up on admissions, and keep your institute team aligned in one workspace.",
+      metricLabel: "Active inquiries",
+      metricValue: "76 this week",
+    };
+  }
+  return {
+    badge: "Real Estate CRM & Operations",
+    headline: "Every deal, from first site visit to closed agreement.",
+    subtext:
+      "Track property leads, manage inventory, schedule site visits, and close deals faster with your real estate team.",
+    metricLabel: "Active property inquiries",
+    metricValue: "48 this week",
+  };
+});
 
 const toggleTheme = () => {
   const nextTheme = activeTheme.value === "dark" ? "light" : "dark";
@@ -153,6 +181,45 @@ const toggleTheme = () => {
     linear-gradient(90deg, rgb(255 255 255 / 0.035) 1px, transparent 1px);
   background-size: 32px 32px;
   mask-image: linear-gradient(to bottom, black, transparent 82%);
+}
+.auth-showcase-logo {
+  display: block;
+  object-fit: contain;
+}
+.auth-showcase-logo.real-estate-logo {
+  height: 40px;
+  width: auto;
+  max-width: 200px;
+  filter: brightness(0) invert(1);
+}
+.auth-showcase-logo.education-logo {
+  height: 50px;
+  width: auto;
+  max-width: 210px;
+  filter: brightness(0) invert(1);
+  mix-blend-mode: screen;
+}
+.auth-mobile-logo {
+  display: block;
+  object-fit: contain;
+}
+.auth-mobile-logo.auth-logo-re {
+  height: 34px;
+  width: auto;
+  max-width: 175px;
+}
+.auth-mobile-logo.auth-logo-edu {
+  height: 44px;
+  width: auto;
+  max-width: 185px;
+  mix-blend-mode: multiply;
+}
+:global(.dark) .auth-mobile-logo.auth-logo-re {
+  filter: brightness(0) invert(1);
+}
+:global(.dark) .auth-mobile-logo.auth-logo-edu {
+  filter: brightness(0) invert(1);
+  mix-blend-mode: screen;
 }
 .auth-form-panel {
   background: radial-gradient(

@@ -108,6 +108,11 @@ export default {
     tenantVertical: (state) => state.tenantVertical || 'realEstate',
     isEducationTenant: (state) => (state.tenantVertical || 'realEstate') === 'education',
     isRealEstateTenant: (state) => (state.tenantVertical || 'realEstate') !== 'education',
+    verticalLogoUrl: (state) => {
+      return (state.tenantVertical || 'realEstate') === 'education'
+        ? '/education_logo.png'
+        : '/real_estate_black.png';
+    },
     isEnterpriseAgency: (state) => state.organizationType === 'ENTERPRISE_AGENCY',
     isIndividualAgent: (state) => state.organizationType === 'INDIVIDUAL_AGENT',
     isAgency: (state) => state.organizationType === 'AGENCY',

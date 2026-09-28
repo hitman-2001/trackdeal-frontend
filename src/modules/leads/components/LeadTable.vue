@@ -108,6 +108,7 @@
             View 360°
           </router-link>
           <button
+            v-if="canDeleteLeads"
             type="button"
             @click.stop="$emit('delete', row)"
             class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
@@ -122,7 +123,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+import { useStore } from 'vuex';
 import { PhTrash } from '@phosphor-icons/vue';
 import AppTable from '@/components/AppTable.vue';
 import LeadStageBadge from './LeadStageBadge.vue';
@@ -131,7 +133,14 @@ const props = defineProps({
   rows: { type: Array, required: true },
   isLoading: { type: Boolean, default: false },
   selectedLeads: { type: Array, default: () => [] },
-  pagination: { type: Object, default: null }
+  pagination: { type: Object, default: null },
+  canDelete: { type: Boolean, default: undefined },
+});
+
+const store = useStore();
+const canDeleteLeads = computed(() => {
+  if (props.canDelete !== undefined) return props.canDelete;
+  return Boolean(store?.getters?.['permissions/hasCapability']?.('leads.delete'));
 });
 
 const emit = defineEmits(['sort', 'selectionChange', 'pageChange', 'pageSizeChange', 'delete']);

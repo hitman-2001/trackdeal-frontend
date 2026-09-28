@@ -13,27 +13,18 @@
           class="logo-container"
           title="TrackDeal Home"
         >
-          <div class="brand-mark-box shrink-0">
-            <PhGraduationCap
-              v-if="isEducationWorkspace"
-              weight="bold"
-              :size="20"
-              class="text-white"
-            />
-            <PhBuildings v-else weight="bold" :size="20" class="text-white" />
-          </div>
-          <div class="brand-text flex flex-col min-w-0">
-            <span class="brand-name font-heading">
-              Track<span class="brand-highlight">Deal</span>
-            </span>
-            <span class="brand-subline hidden sm:block">
-              {{
-                isEducationWorkspace
-                  ? "Education workspace"
-                  : "Revenue workspace"
-              }}
-            </span>
-          </div>
+          <img
+            v-if="isEducationWorkspace"
+            src="/education_logo.png"
+            alt="TrackDeal Education"
+            class="brand-logo-img education-logo"
+          />
+          <img
+            v-else
+            src="/real_estate_black.png"
+            alt="TrackDeal Real Estate"
+            class="brand-logo-img real-estate-logo"
+          />
         </router-link>
       </div>
 
@@ -353,17 +344,19 @@
           <div
             class="h-16 flex items-center justify-between px-4 border-b border-slate-200 dark:border-neutral-800 shrink-0"
           >
-            <div class="flex items-center gap-3">
-              <div
-                class="brand-mark-box w-8 h-8 rounded-xl flex items-center justify-center text-white"
-              >
-                <PhBuildings weight="bold" :size="18" />
-              </div>
-              <span
-                class="font-heading font-extrabold text-base text-neutral-900 dark:text-neutral-100"
-              >
-                Track<span class="brand-highlight">Deal</span>
-              </span>
+            <div class="flex items-center gap-2">
+              <img
+                v-if="isEducationWorkspace"
+                src="/education_logo.png"
+                alt="TrackDeal Education"
+                class="brand-logo-img education-logo !h-8 !max-w-[140px]"
+              />
+              <img
+                v-else
+                src="/real_estate_black.png"
+                alt="TrackDeal Real Estate"
+                class="brand-logo-img real-estate-logo !h-6 !max-w-[140px]"
+              />
             </div>
             <button
               @click="mobileMenuOpen = false"
@@ -1228,6 +1221,34 @@ const vClickOutside = {
   text-decoration: none;
 }
 
+.brand-logo-img {
+  display: block;
+  object-fit: contain;
+  transition: all 0.2s ease;
+}
+
+.real-estate-logo {
+  height: 34px;
+  width: auto;
+  max-width: 175px;
+}
+
+.dark .real-estate-logo {
+  filter: brightness(0) invert(1);
+}
+
+.education-logo {
+  height: 44px;
+  width: auto;
+  max-width: 185px;
+  mix-blend-mode: multiply;
+}
+
+.dark .education-logo {
+  filter: brightness(0) invert(1);
+  mix-blend-mode: screen;
+}
+
 .brand-mark-box {
   width: 38px;
   height: 38px;
@@ -2086,6 +2107,14 @@ const vClickOutside = {
   }
   .logo-container {
     gap: 8px;
+  }
+  .real-estate-logo {
+    height: 28px !important;
+    max-width: 135px !important;
+  }
+  .education-logo {
+    height: 36px !important;
+    max-width: 145px !important;
   }
   .brand-mark-box {
     width: 32px;

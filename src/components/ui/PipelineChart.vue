@@ -1,22 +1,24 @@
 <template>
   <figure class="pipeline-chart" :aria-label="label">
-    <div class="chart-bars">
-      <div
-        v-for="(item, index) in items"
-        :key="item.label"
-        class="chart-column"
-      >
-        <div class="bar-track">
-          <div
-            class="chart-bar"
-            :style="{
-              height: `${(Math.max(0, item.value) / maximum) * 100}%`,
-              opacity: 1 - index * 0.07,
-            }"
-          ></div>
+    <div class="chart-scroll-wrap">
+      <div class="chart-bars">
+        <div
+          v-for="(item, index) in items"
+          :key="item.label"
+          class="chart-column"
+        >
+          <div class="bar-track">
+            <div
+              class="chart-bar"
+              :style="{
+                height: `${(Math.max(0, item.value) / maximum) * 100}%`,
+                opacity: 1 - index * 0.07,
+              }"
+            ></div>
+          </div>
+          <span class="chart-value">{{ item.value }}</span>
+          <span class="chart-label" :title="item.label">{{ item.label }}</span>
         </div>
-        <span class="chart-value">{{ item.value }}</span>
-        <span class="chart-label">{{ item.label }}</span>
       </div>
     </div>
     <figcaption class="sr-only">
@@ -38,14 +40,36 @@ const maximum = computed(() =>
 </script>
 
 <style scoped>
+.pipeline-chart {
+  margin: 0;
+  width: 100%;
+}
+.chart-scroll-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 2px;
+}
+.chart-scroll-wrap::-webkit-scrollbar {
+  display: none;
+}
 .chart-bars {
   display: flex;
   gap: clamp(8px, 2vw, 22px);
   align-items: flex-end;
+  min-width: 100%;
+}
+@media (max-width: 640px) {
+  .chart-bars {
+    min-width: 380px;
+    gap: 8px;
+  }
 }
 .chart-column {
-  flex: 1;
-  min-width: 0;
+  flex: 1 1 0;
+  min-width: 44px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -72,9 +96,10 @@ const maximum = computed(() =>
 }
 .chart-label {
   font-size: 10px;
-  opacity: 0.8;
+  opacity: 0.85;
   text-align: center;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  line-height: 1.2;
 }
 @media (prefers-reduced-motion: reduce) {
   .chart-bar {

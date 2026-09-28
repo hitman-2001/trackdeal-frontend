@@ -78,9 +78,13 @@ const filteredSettingsMenu = computed(() => {
 .settings-subnav__intro { flex: 0 0 auto; }
 .settings-subnav__intro > p:last-child { margin-top: 0.25rem; color: hsl(var(--neutral-400)); font-size: 11px; }
 .settings-subnav__items { display: flex; align-items: center; gap: 0.25rem; min-width: 0; padding: 0.25rem; border: 1px solid hsl(var(--neutral-100)); border-radius: 9px; background: hsl(var(--neutral-25)); }
-.settings-subnav__item { display: inline-flex; align-items: center; gap: 0.45rem; min-height: 2rem; padding: 0 0.65rem; border-radius: 6px; color: hsl(var(--neutral-500)); font-size: 11px; font-weight: 600; white-space: nowrap; transition: color 150ms ease, background-color 150ms ease, box-shadow 150ms ease; }
+.settings-subnav__item { display: inline-flex; align-items: center; gap: 0.45rem; min-height: 2rem; padding: 0 0.65rem; border-radius: 6px; color: hsl(var(--neutral-500)); font-size: 11px; font-weight: 600; white-space: nowrap; flex-shrink: 0; transition: color 150ms ease, background-color 150ms ease, box-shadow 150ms ease; }
 .settings-subnav__item:hover { color: hsl(var(--neutral-900)); background: hsl(var(--bg-surface)); }
 .settings-subnav__item.is-active { color: hsl(var(--accent-700)); background: hsl(var(--bg-surface)); box-shadow: 0 1px 2px rgb(26 22 18 / 0.08); }
 .settings-content { min-width: 0; }
-@media (max-width: 900px) { .settings-subnav { align-items: stretch; flex-direction: column; } .settings-subnav__items { width: 100%; overflow-x: auto; } }
+@media (max-width: 900px) {
+  .settings-subnav { align-items: stretch; flex-direction: column; gap: 0.75rem; padding: 0.875rem; }
+  .settings-subnav__items { width: 100%; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none; }
+  .settings-subnav__items::-webkit-scrollbar { display: none; }
+}
 </style>

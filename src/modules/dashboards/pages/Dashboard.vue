@@ -1,5 +1,5 @@
 <template>
-  <div class="dash-root mx-auto max-w-[1600px]">
+  <div class="dash-root mx-auto max-w-[1600px] w-full min-w-0 overflow-x-hidden">
     <!-- ═══════════════════════════════════════════════
          HERO HEADER — KokonutUI bento-style greeting
          ═══════════════════════════════════════════════ -->
@@ -40,10 +40,10 @@
           </button>
         </div>
         <!-- Refresh + CTA -->
-        <div class="flex items-center gap-2">
+        <div class="dash-hero-actions flex items-center gap-2">
           <button
             type="button"
-            class="icon-btn"
+            class="icon-btn shrink-0"
             :class="{ spin: refreshing }"
             @click="refreshData"
             aria-label="Refresh dashboard"
@@ -53,7 +53,7 @@
           </button>
           <router-link
             to="/app/leads"
-            class="btn btn-primary btn-sm gap-1.5 font-semibold"
+            class="btn btn-primary btn-sm gap-1.5 font-semibold flex-1 sm:flex-initial justify-center"
           >
             <AppIcon name="add" :size="14" weight="bold" />
             <span>New Lead</span>
@@ -789,6 +789,60 @@ onMounted(() => loadData());
   flex-wrap: wrap;
   gap: 0.625rem;
   flex: 0 0 auto;
+}
+.dash-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .dash-hero {
+    gap: 0.875rem;
+  }
+  .dash-hero__copy {
+    width: 100%;
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+  .dash-hero__controls {
+    width: 100%;
+    flex: 1 1 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.625rem;
+  }
+  .period-pill {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .period-pill::-webkit-scrollbar {
+    display: none;
+  }
+  .period-pill__btn {
+    flex: 1;
+    text-align: center;
+    padding: 6px 2px;
+    font-size: 11px;
+  }
+  .dash-hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+  }
+  .dash-hero-actions .btn-primary {
+    flex: 1;
+    justify-content: center;
+  }
+  .pulse-card__body {
+    padding: 1.125rem 1rem !important;
+    gap: 1.25rem !important;
+  }
 }
 
 /* Period pill selector */

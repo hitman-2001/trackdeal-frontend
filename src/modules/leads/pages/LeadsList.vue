@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-6">
+  <div class="space-y-6 w-full max-w-full min-w-0 overflow-x-hidden">
     <!-- Section 6: Standardized Page Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-1">
       <div>
@@ -42,7 +42,7 @@
 
         <!-- Bulk Assign Action (Shows when items are checked) -->
         <button 
-          v-if="selectedRows.length > 0"
+          v-if="canAssignLeads && selectedRows.length > 0"
           type="button"
           @click="openBulkAssign"
           class="btn btn-secondary h-[42px] px-3.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40"
@@ -96,6 +96,7 @@
             :isLoading="isLoading"
             :selectedLeads="selectedRows"
             :pagination="pagination"
+            :canDelete="canDeleteLeads"
             @selectionChange="handleSelectionChange"
             @sort="handleSort"
             @pageChange="handlePageChange"
@@ -111,25 +112,25 @@
             :key="lead._id || lead.id"
             class="bg-surface border border-default rounded-xl p-4 shadow-xs flex items-center justify-between text-xs"
           >
-            <div>
+            <div class="min-w-0 flex-1 pr-2">
               <div class="flex items-center space-x-1.5 mb-1">
                 <span 
                   class="w-2 h-2 rounded-full shrink-0" 
                   :class="getAgingDotClass(lead.createdAt)"
                 ></span>
-                <router-link :to="`/app/leads/${lead._id || lead.id}`" class="font-bold text-primary hover:underline text-sm block">
+                <router-link :to="`/app/leads/${lead._id || lead.id}`" class="font-bold text-primary hover:underline text-sm block truncate">
                   {{ lead.firstName }} {{ lead.lastName || '' }}
                 </router-link>
               </div>
               <div class="text-neutral-500 space-y-1 text-caption">
-                <span class="flex items-center gap-1">
+                <span class="flex items-center gap-1 truncate">
                   <PhPhone class="w-3.5 h-3.5 text-neutral-400 shrink-0" />
                   {{ lead.mobile }}
                 </span>
-                <span class="block">Source: <b class="capitalize">{{ lead.source }}</b></span>
+                <span class="block truncate">Source: <b class="capitalize">{{ lead.source }}</b></span>
               </div>
             </div>
-            <div class="flex flex-col items-end space-y-2">
+            <div class="flex flex-col items-end space-y-2 shrink-0">
               <LeadStageBadge :stage="lead.status" />
               <span class="flex items-center gap-1 font-bold text-neutral-700 text-caption">
                 <PhStar class="w-3.5 h-3.5 text-amber-500 fill-amber-500 shrink-0" />
@@ -138,11 +139,12 @@
               <div class="flex items-center gap-1.5">
                 <button
                   @click.stop="openActivityCenter(lead)"
-                  class="px-2 py-1 rounded-lg text-[10px] font-bold bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 hover:bg-violet-100 transition"
+                  class="px-2 py-1 rounded-lg text-[10px] font-bold bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 hover:bg-violet-100 transition inline-flex items-center gap-1"
                 >
                   <AppIcon name="house" :size="12" /> Visits
                 </button>
                 <button
+                  v-if="canDeleteLeads"
                   type="button"
                   @click.stop="handleDeleteLead(lead)"
                   class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"
@@ -272,6 +274,12 @@ const isOrgAdmin = computed(() =>
     String(store.getters['auth/userRole'] || '').toLowerCase()
   )
 );
+const canDeleteLeads = computed(() =>
+  Boolean(store.getters['permissions/hasCapability']?.('leads.delete'))
+);
+const canAssignLeads = computed(() =>
+  Boolean(store.getters['permissions/hasCapability']?.('leads.assign'))
+);
 const canBulkUpload = computed(() => {
   const role = String(store.getters['auth/userRole'] || '').toLowerCase();
   const isPrivilegedRole = [
@@ -282,7 +290,7 @@ const canBulkUpload = computed(() => {
     'manager',
     'branch_manager',
   ].includes(role);
-  return isPrivilegedRole || Boolean(store.getters['permissions/hasCapability']?.('leads.create'));
+  return isPrivilegedRole || Boolean(store.getters['permissions/hasCapability']?.('leads.bulk_upload'));
 });
 const isBulkUploadOpen = ref(false);
 

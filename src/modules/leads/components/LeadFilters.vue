@@ -2,7 +2,7 @@
   <section class="filter-panel" aria-label="Lead filters">
     <div class="flex flex-col gap-4">
       <div class="flex flex-col gap-3 border-b pb-4 lg:flex-row lg:items-center lg:justify-between" style="border-color: hsl(var(--neutral-100));">
-        <div class="flex items-center gap-1 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
+        <div class="flex items-center gap-1 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0 scrollbar-none" style="-webkit-overflow-scrolling: touch;">
           <button
             v-for="view in savedViews"
             :key="view.id"
@@ -18,9 +18,9 @@
           </button>
         </div>
 
-        <label class="flex shrink-0 items-center gap-2.5 text-xs font-medium" style="color: hsl(var(--neutral-450));">
+        <label class="flex shrink-0 items-center justify-between sm:justify-start gap-2.5 text-xs font-medium w-full sm:w-auto" style="color: hsl(var(--neutral-450));">
           <span>Registered</span>
-          <select v-model="activeDateRange" class="filter-control !w-40" @change="handleFilterChange">
+          <select v-model="activeDateRange" class="filter-control flex-1 sm:flex-initial sm:!w-40" @change="handleFilterChange">
             <option value="all">All time</option>
             <option value="today">Today</option>
             <option value="week">This week</option>
@@ -30,7 +30,7 @@
         </label>
       </div>
 
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2" :class="canFilterAgents ? 'xl:grid-cols-5' : 'xl:grid-cols-4'">
         <label class="relative block sm:col-span-2 xl:col-span-1">
           <span class="sr-only">Search leads</span>
           <AppIcon name="search" :size="16" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2" style="color: hsl(var(--neutral-350));" />
@@ -84,7 +84,7 @@
           </select>
         </label>
 
-        <label>
+        <label v-if="canFilterAgents">
           <span class="sr-only">Assigned agent</span>
           <select v-model="filtersState.assignedTo" class="filter-control" @change="handleFilterChange">
             <option value="">All assigned agents</option>
@@ -104,6 +104,15 @@ import { ref, reactive, computed, onBeforeUnmount } from 'vue';
 import { useStore } from 'vuex';
 import { useUsersQuery } from '@/modules/settings/queries';
 
+const store = useStore();
+
+const canFilterAgents = computed(() => {
+  const role = String(store.getters['auth/userRole'] || '').toLowerCase();
+  const isElevated = ['super_admin', 'system_admin', 'org_admin', 'organization_admin', 'manager', 'branch_manager'].includes(role);
+  const canAssign = Boolean(store.getters['permissions/hasCapability']?.('leads.assign'));
+  return isElevated && canAssign;
+});
+
 const { data: usersData } = useUsersQuery();
 const agentsList = computed(() => {
   const data = usersData.value?.data || usersData.value;
@@ -111,18 +120,23 @@ const agentsList = computed(() => {
 });
 
 const emit = defineEmits(['change']);
-const store = useStore();
 const currentUser = computed(() => store.state.auth.user || {});
-const savedViews = computed(() => [
-  { id: 'all', name: 'All leads', filters: { status: '', assignedTo: '', source: '', temperature: '', search: '' } },
-  { id: 'my', name: 'My leads', filters: { status: '', assignedTo: currentUser.value.id || '', source: '', temperature: '', search: '' } },
-  { id: 'hot', name: 'Hot', filters: { status: '', assignedTo: '', source: '', temperature: 'hot', search: '' } },
-  { id: 'followup', name: 'Follow-up', filters: { status: 'contacted', assignedTo: '', source: '', temperature: '', search: '' } },
-  { id: 'received', name: 'Received', filters: { status: 'new', assignedTo: '', source: '', temperature: '', search: '' } },
-  { id: 'closed', name: 'Closed', filters: { status: 'won', assignedTo: '', source: '', temperature: '', search: '' } },
-]);
+const savedViews = computed(() => {
+  const views = [];
+  if (canFilterAgents.value) {
+    views.push({ id: 'all', name: 'All leads', filters: { status: '', assignedTo: '', source: '', temperature: '', search: '' } });
+  }
+  views.push(
+    { id: 'my', name: 'My leads', filters: { status: '', assignedTo: currentUser.value.id || '', source: '', temperature: '', search: '' } },
+    { id: 'hot', name: 'Hot', filters: { status: '', assignedTo: '', source: '', temperature: 'hot', search: '' } },
+    { id: 'followup', name: 'Follow-up', filters: { status: 'contacted', assignedTo: '', source: '', temperature: '', search: '' } },
+    { id: 'received', name: 'Received', filters: { status: 'new', assignedTo: '', source: '', temperature: '', search: '' } },
+    { id: 'closed', name: 'Closed', filters: { status: 'won', assignedTo: '', source: '', temperature: '', search: '' } }
+  );
+  return views;
+});
 
-const activeSavedView = ref('all');
+const activeSavedView = ref(canFilterAgents.value ? 'all' : 'my');
 const activeDateRange = ref('all');
 const filtersState = reactive({ search: '', status: '', temperature: '', source: '', assignedTo: '' });
 let searchDebounce;
