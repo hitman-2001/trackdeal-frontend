@@ -25,87 +25,84 @@
 
       <div class="space-y-3">
         <h4 class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Student Profile</h4>
-        <div class="grid grid-cols-2 gap-3">
-          <label class="space-y-1 font-medium text-slate-700 dark:text-slate-300">
-            <span>First name *</span>
+        <div class="modal-form-grid">
+          <div class="modal-form-group">
+            <label class="modal-form-label">First name <span class="required-star">*</span></label>
             <input
               v-model="form.firstName"
               required
-              class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none"
+              class="modal-form-input"
             />
-          </label>
-          <label class="space-y-1 font-medium text-slate-700 dark:text-slate-300">
-            <span>Last name</span>
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Last name</label>
             <input
               v-model="form.lastName"
-              class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none"
+              class="modal-form-input"
             />
-          </label>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <label class="space-y-1 font-medium text-slate-700 dark:text-slate-300">
-            <span>Mobile *</span>
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Mobile <span class="required-star">*</span></label>
             <input
               v-model="form.mobile"
               required
-              class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none"
+              class="modal-form-input"
             />
-          </label>
-          <label class="space-y-1 font-medium text-slate-700 dark:text-slate-300">
-            <span>Email</span>
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Email</label>
             <input
               v-model="form.email"
               type="email"
               placeholder="student@example.com"
-              class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none"
+              class="modal-form-input"
             />
-          </label>
+          </div>
         </div>
       </div>
 
       <div class="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">
         <h4 class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Parent / Guardian Information</h4>
-        <div class="grid grid-cols-2 gap-3">
-          <label class="space-y-1 font-medium text-slate-700 dark:text-slate-300">
-            <span>Parent name</span>
+        <div class="modal-form-grid">
+          <div class="modal-form-group">
+            <label class="modal-form-label">Parent name</label>
             <input
               v-model="form.parentName"
               placeholder="e.g. Ramesh Kumar"
-              class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none"
+              class="modal-form-input"
             />
-          </label>
-          <label class="space-y-1 font-medium text-slate-700 dark:text-slate-300">
-            <span>Parent mobile</span>
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Parent mobile</label>
             <input
               v-model="form.parentMobile"
               placeholder="+91 9876543210"
-              class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none"
+              class="modal-form-input"
             />
-          </label>
+          </div>
         </div>
       </div>
 
       <div class="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">
         <h4 class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Class & Source</h4>
-        <div class="grid grid-cols-2 gap-3">
-          <label class="space-y-1 font-medium text-slate-700 dark:text-slate-300">
-            <span>Interested class</span>
+        <div class="modal-form-grid">
+          <div class="modal-form-group">
+            <label class="modal-form-label">Interested class</label>
             <select
               v-model="form.classInterestId"
-              class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none"
+              class="modal-form-select"
             >
               <option value="">Select class</option>
               <option v-for="c in classes" :key="c._id" :value="c._id">
                 {{ c.name }} ({{ c.code }})
               </option>
             </select>
-          </label>
-          <label class="space-y-1 font-medium text-slate-700 dark:text-slate-300">
-            <span>Inquiry source</span>
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Inquiry source</label>
             <select
               v-model="form.source"
-              class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none"
+              class="modal-form-select"
             >
               <option value="walk_in">Walk-in</option>
               <option value="website">Website</option>
@@ -115,52 +112,61 @@
               <option value="manual_entry">Manual Entry</option>
               <option value="other">Other</option>
             </select>
-          </label>
+          </div>
         </div>
       </div>
 
       <div class="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">
-        <h4 class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Stage & Engagement</h4>
-        <div class="grid grid-cols-2 gap-3">
-          <label class="space-y-1 font-medium text-slate-700 dark:text-slate-300">
-            <span>Lead Stage</span>
+        <h4 class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Stage & Status</h4>
+        <div class="modal-form-grid">
+          <div class="modal-form-group">
+            <label class="modal-form-label">Status</label>
             <select
               v-model="form.status"
-              class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none"
+              class="modal-form-select"
+              @change="handleStatusChange"
             >
-              <option value="new">New</option>
-              <option value="contacted">Contacted</option>
-              <option value="follow_up">Follow Up</option>
-              <option value="meeting_scheduled">Meeting / Demo Scheduled</option>
-              <option value="qualified">Qualified</option>
-              <option value="application_trial">Application / Trial</option>
-              <option value="on_hold">On Hold</option>
-              <option value="lost">Lost</option>
+              <option v-for="st in EDUCATION_STATUSES" :key="st.value" :value="st.value">
+                {{ st.label }}
+              </option>
             </select>
-          </label>
+          </div>
 
-          <label class="space-y-1 font-medium text-slate-700 dark:text-slate-300">
-            <span>Interest Level</span>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Sub-Status</label>
+            <select
+              v-model="form.subStatus"
+              class="modal-form-select"
+            >
+              <option value="">Select Sub-Status</option>
+              <option v-for="sub in availableSubStatuses" :key="sub" :value="sub">
+                {{ sub }}
+              </option>
+            </select>
+          </div>
+
+          <div class="modal-form-group">
+            <label class="modal-form-label">Interest Level</label>
             <select
               v-model="form.leadTemperature"
-              class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none"
+              class="modal-form-select"
             >
               <option value="hot">🔥 Hot (High Intent)</option>
               <option value="warm">⚡ Warm (In Discussion)</option>
               <option value="cold">❄ Cold (Low Interest)</option>
             </select>
-          </label>
+          </div>
         </div>
 
-        <label class="block space-y-1 font-medium text-slate-700 dark:text-slate-300">
-          <span>Customer Feedback / Interest Remarks</span>
+        <div class="modal-form-group mt-2">
+          <label class="modal-form-label">Customer Feedback / Interest Remarks</label>
           <input
             v-model="form.customerInterest"
             type="text"
             placeholder="e.g. Seeking weekend batch, inquired about NEET crash course"
-            class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none"
+            class="modal-form-input"
           />
-        </label>
+        </div>
       </div>
     </form>
 
@@ -193,6 +199,11 @@ import {
   updateEducationLead,
   fetchEducationClasses,
 } from "../api/endpoints";
+import {
+  EDUCATION_STATUSES,
+  EDUCATION_SUB_STATUS_MAP,
+  normalizeStatus,
+} from "../constants/leadStatusConfig";
 
 const props = defineProps({
   isOpen: { type: Boolean, required: true },
@@ -217,10 +228,20 @@ const form = ref({
   parentMobile: "",
   classInterestId: "",
   source: "walk_in",
-  status: "new",
+  status: "interested",
+  subStatus: "",
   leadTemperature: "warm",
   customerInterest: "",
 });
+
+const availableSubStatuses = computed(() => {
+  return EDUCATION_SUB_STATUS_MAP[form.value.status] || [];
+});
+
+function handleStatusChange() {
+  const subs = EDUCATION_SUB_STATUS_MAP[form.value.status] || [];
+  form.value.subStatus = subs[0] || "";
+}
 
 async function loadClasses() {
   if (classes.value.length > 0) return;
@@ -241,6 +262,12 @@ async function loadLead() {
     const res = await fetchEducationLead(props.leadId);
     lead.value = res.data || res;
 
+    const normStatus = normalizeStatus(lead.value.status);
+    const validSubs = EDUCATION_SUB_STATUS_MAP[normStatus] || [];
+    const resolvedSub = lead.value.subStatus && validSubs.includes(lead.value.subStatus)
+      ? lead.value.subStatus
+      : (validSubs[0] || "");
+
     form.value = {
       firstName: lead.value.firstName || "",
       lastName: lead.value.lastName || "",
@@ -251,7 +278,8 @@ async function loadLead() {
       classInterestId:
         lead.value.classInterestId?._id || lead.value.classInterestId || "",
       source: lead.value.source || "walk_in",
-      status: lead.value.status || "new",
+      status: normStatus,
+      subStatus: resolvedSub,
       leadTemperature: lead.value.qualification?.leadTemperature || "warm",
       customerInterest:
         lead.value.customerFeedback ||
@@ -292,6 +320,7 @@ async function handleSave() {
       classInterestId: form.value.classInterestId || null,
       source: form.value.source,
       status: form.value.status,
+      subStatus: form.value.subStatus,
       customerFeedback: form.value.customerInterest,
       qualification: {
         ...(lead.value.qualification || {}),

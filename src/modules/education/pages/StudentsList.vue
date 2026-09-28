@@ -92,7 +92,10 @@
             <div class="font-bold text-slate-900 dark:text-slate-100 text-xs hover:text-primary transition-colors">
               {{ row.firstName }} {{ row.lastName || '' }}
             </div>
-            <div v-if="row.email" class="text-slate-400 text-[10px] truncate max-w-[150px]">
+            <div v-if="row.schoolName" class="text-slate-500 dark:text-slate-400 text-[10px] truncate max-w-[180px]">
+              {{ row.schoolName }}
+            </div>
+            <div v-else-if="row.email" class="text-slate-400 text-[10px] truncate max-w-[150px]">
               {{ row.email }}
             </div>
           </div>
@@ -245,6 +248,11 @@
             </p>
           </div>
 
+          <div v-if="viewingStudent.schoolName" class="p-3 bg-surface border border-default rounded-xl space-y-1 col-span-2">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">College / School Name</span>
+            <p class="font-bold text-slate-900 dark:text-slate-100 text-xs">{{ viewingStudent.schoolName }}</p>
+          </div>
+
           <div v-if="viewingStudent.notes" class="p-3 bg-surface border border-default rounded-xl space-y-1 col-span-2">
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Counselor / Academic Notes</span>
             <p class="text-slate-600 dark:text-slate-300 text-xs leading-relaxed whitespace-pre-wrap">{{ viewingStudent.notes }}</p>
@@ -274,42 +282,55 @@
     >
       <form id="student-form" class="space-y-4 text-xs" @submit.prevent="save">
         <p v-if="error" class="text-xs text-rose-600 bg-rose-50 dark:bg-rose-950/40 p-2.5 rounded-lg border border-rose-200 dark:border-rose-900">{{ error }}</p>
-        <div class="grid grid-cols-2 gap-3 text-xs">
-          <label class="space-y-1 font-medium text-slate-700 dark:text-slate-300">First Name *
-            <input v-model="form.firstName" required class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none" />
-          </label>
-          <label class="space-y-1 font-medium text-slate-700 dark:text-slate-300">Last Name
-            <input v-model="form.lastName" class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none" />
-          </label>
-          <label class="space-y-1 font-medium text-slate-700 dark:text-slate-300">Mobile Phone *
-            <input v-model="form.mobile" required class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none" />
-          </label>
-          <label class="space-y-1 font-medium text-slate-700 dark:text-slate-300">Email Address
-            <input v-model="form.email" type="email" class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none" />
-          </label>
-          <label class="space-y-1 font-medium text-slate-700 dark:text-slate-300">Parent / Guardian Name
-            <input v-model="form.parentName" class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none" />
-          </label>
-          <label class="space-y-1 font-medium text-slate-700 dark:text-slate-300">Parent Mobile
-            <input v-model="form.parentMobile" class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none" />
-          </label>
-          <label class="space-y-1 col-span-2 font-medium text-slate-700 dark:text-slate-300">Enrolled Batch / Class
-            <select v-model="form.classId" class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none">
+        <div class="modal-form-grid">
+          <div class="modal-form-group">
+            <label class="modal-form-label">First Name <span class="required-star">*</span></label>
+            <input v-model="form.firstName" required placeholder="e.g. Rahul" class="modal-form-input" />
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Last Name</label>
+            <input v-model="form.lastName" placeholder="e.g. Sharma" class="modal-form-input" />
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Mobile Phone <span class="required-star">*</span></label>
+            <input v-model="form.mobile" required placeholder="10-digit mobile" class="modal-form-input" />
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Email Address</label>
+            <input v-model="form.email" type="email" placeholder="student@example.com" class="modal-form-input" />
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Parent / Guardian Name</label>
+            <input v-model="form.parentName" placeholder="Parent or guardian name" class="modal-form-input" />
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Parent Mobile</label>
+            <input v-model="form.parentMobile" placeholder="Parent mobile number" class="modal-form-input" />
+          </div>
+          <div class="modal-form-group col-span-full">
+            <label class="modal-form-label">Enrolled Batch / Class</label>
+            <select v-model="form.classId" class="modal-form-select">
               <option value="">Unassigned</option>
               <option v-for="c in classes" :key="c._id" :value="c._id">{{ c.name }}</option>
             </select>
-          </label>
-          <label class="space-y-1 col-span-2 font-medium text-slate-700 dark:text-slate-300">Student Status
-            <select v-model="form.status" class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none">
+          </div>
+          <div class="modal-form-group col-span-full">
+            <label class="modal-form-label">College / School Name</label>
+            <input v-model="form.schoolName" placeholder="e.g. St. Xavier's College / Delhi Public School" class="modal-form-input" />
+          </div>
+          <div v-if="editing" class="modal-form-group col-span-full">
+            <label class="modal-form-label">Student Status</label>
+            <select v-model="form.status" class="modal-form-select">
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
               <option value="graduated">Graduated</option>
               <option value="dropped">Dropped</option>
             </select>
-          </label>
-          <label class="space-y-1 col-span-2 font-medium text-slate-700 dark:text-slate-300">Academic Notes
-            <textarea v-model="form.notes" rows="3" placeholder="Additional student background, goals, or fees schedule..." class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none"></textarea>
-          </label>
+          </div>
+          <div class="modal-form-group col-span-full">
+            <label class="modal-form-label">Academic Notes</label>
+            <textarea v-model="form.notes" rows="3" placeholder="Additional student background, goals, or fees schedule..." class="modal-form-textarea"></textarea>
+          </div>
         </div>
       </form>
       <template #footer>
@@ -394,6 +415,7 @@ function blank() {
     email: '', 
     parentName: '', 
     parentMobile: '', 
+    schoolName: '',
     classId: '',
     status: 'active',
     notes: '',
@@ -507,6 +529,7 @@ function openEdit(row) {
     email: row.email || '',
     parentName: row.parentName || '',
     parentMobile: row.parentMobile || '',
+    schoolName: row.schoolName || '',
     classId: row.classId?._id || row.classId || '',
     status: row.status || 'active',
     notes: row.notes || '',

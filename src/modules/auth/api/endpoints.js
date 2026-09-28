@@ -31,6 +31,9 @@ export async function acceptInvitation({ token, password }) {
 }
 
 export async function refreshTokens(refreshToken) {
+  if (!refreshToken) {
+    throw new Error('Refresh token is required');
+  }
   const response = await apiClient.post('/auth/refresh', { refreshToken });
   return response.data;
 }

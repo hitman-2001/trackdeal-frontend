@@ -4,7 +4,10 @@
     :class="computedClasses"
   >
     <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="dotClasses" />
-    <slot>{{ formattedStatus }}</slot>
+    <slot>
+      <span>{{ formattedStatus }}</span>
+      <span v-if="subStatus" class="font-normal opacity-80">· {{ subStatus }}</span>
+    </slot>
   </span>
 </template>
 
@@ -12,8 +15,9 @@
 import { computed } from 'vue';
 
 const props = defineProps({
-  status:  { type: String, required: true },
-  variant: { type: String, default: '' }, // success | warning | danger | info | neutral | auto
+  status:    { type: String, required: true },
+  subStatus: { type: String, default: '' },
+  variant:   { type: String, default: '' }, // success | warning | danger | info | neutral | auto
 });
 
 const resolvedVariant = computed(() => {
@@ -22,13 +26,13 @@ const resolvedVariant = computed(() => {
   if (['completed', 'converted', 'enrolled', 'qualified', 'won', 'approved', 'active'].includes(s)) {
     return 'success';
   }
-  if (['warm', 'interested', 'pending', 'followup', 'follow_up', 'contacted', 'meeting', 'inreview'].includes(s)) {
+  if (['warm', 'interested', 'pending', 'followup', 'contacted', 'meeting', 'inreview'].includes(s)) {
     return 'warning';
   }
-  if (['hot', 'danger', 'rejected', 'lost', 'failed', 'cancelled', 'urgent', 'overdue'].includes(s)) {
+  if (['hot', 'danger', 'rejected', 'lost', 'failed', 'cancelled', 'urgent', 'overdue', 'notinterested'].includes(s)) {
     return 'danger';
   }
-  if (['assigned', 'info', 'processing', 'scheduled'].includes(s)) {
+  if (['assigned', 'info', 'processing', 'scheduled', 'callback', 'futureprospect'].includes(s)) {
     return 'info';
   }
   return 'neutral';

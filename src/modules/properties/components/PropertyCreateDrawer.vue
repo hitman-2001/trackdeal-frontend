@@ -42,7 +42,7 @@
       </div>
 
       <!-- Tower & Unit Number -->
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Tower / Block *</label>
           <input 
@@ -71,7 +71,7 @@
       <span v-if="uniquenessError" class="text-[9px] text-red-500 block font-bold">{{ uniquenessError }}</span>
 
       <!-- Floor Numbers -->
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Floor Level *</label>
           <input 
@@ -95,7 +95,7 @@
       </div>
 
       <!-- Config & Type -->
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Property Type *</label>
           <select 
@@ -126,7 +126,7 @@
       </div>
 
       <!-- Super vs Carpet Areas -->
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Super Area (sqft) *</label>
           <input 
@@ -150,7 +150,7 @@
       </div>
 
       <!-- Pricing details -->
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Base Price (INR) *</label>
           <input 

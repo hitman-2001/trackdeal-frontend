@@ -51,7 +51,7 @@
       </div>
 
       <!-- Config & Type -->
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Property Type</label>
           <select 
@@ -84,7 +84,7 @@
       </div>
 
       <!-- Floor Details -->
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Floor Level</label>
           <input 

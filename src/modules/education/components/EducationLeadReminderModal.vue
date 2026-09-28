@@ -7,43 +7,43 @@
     @confirm="save"
   >
     <div class="space-y-4 text-xs">
-      <p class="text-[10px] text-slate-500 leading-relaxed">
+      <p class="text-[11px] text-slate-500 leading-relaxed">
         Schedule the next touchpoint for
         <strong class="text-slate-700 dark:text-slate-200">{{ leadName }}</strong>.
         This appears on the student lead timeline and tasks list.
       </p>
 
-      <label class="block space-y-1">
-        <span class="text-[10px] font-bold text-slate-500 uppercase">Reminder date & time *</span>
+      <div class="modal-form-group">
+        <label class="modal-form-label">Reminder date & time <span class="required-star">*</span></label>
         <input
           v-model="scheduledAt"
           type="datetime-local"
           required
-          class="w-full bg-surface border border-default rounded-lg px-3 py-2 outline-none focus:border-primary"
+          class="modal-form-input"
         />
-      </label>
+      </div>
 
-      <label class="block space-y-1">
-        <span class="text-[10px] font-bold text-slate-500 uppercase">Type</span>
-        <select v-model="type" class="w-full bg-surface border border-default rounded-lg px-3 py-2 outline-none focus:border-primary">
+      <div class="modal-form-group">
+        <label class="modal-form-label">Type</label>
+        <select v-model="type" class="modal-form-select">
           <option value="call">Phone call</option>
           <option value="whatsapp">WhatsApp</option>
           <option value="meeting">Counselling / demo class</option>
           <option value="email">Email</option>
         </select>
-      </label>
+      </div>
 
-      <label class="block space-y-1">
-        <span class="text-[10px] font-bold text-slate-500 uppercase">Notes for staff *</span>
+      <div class="modal-form-group">
+        <label class="modal-form-label">Notes for staff <span class="required-star">*</span></label>
         <textarea
           v-model="notes"
           rows="3"
           placeholder="What to discuss on the next call..."
-          class="w-full bg-surface border border-default rounded-lg px-3 py-2 outline-none focus:border-primary resize-none"
+          class="modal-form-textarea"
         />
-      </label>
+      </div>
 
-      <p v-if="error" class="text-[10px] text-red-500">{{ error }}</p>
+      <p v-if="error" class="text-[11px] text-red-500">{{ error }}</p>
     </div>
 
     <template #footer>

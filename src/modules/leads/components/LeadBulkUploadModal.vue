@@ -84,7 +84,7 @@
         </div>
 
         <!-- Maglo Metric Pill Highlights -->
-        <div class="grid grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div class="bg-surface border border-default rounded-xl p-3 text-center">
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Rows</span>
             <p class="text-base font-extrabold text-slate-800 dark:text-slate-100 mt-0.5">{{ parsedRows.length }}</p>

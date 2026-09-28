@@ -193,11 +193,10 @@ const toggleTheme = () => {
   filter: brightness(0) invert(1);
 }
 .auth-showcase-logo.education-logo {
-  height: 50px;
+  height: 40px;
   width: auto;
-  max-width: 210px;
+  max-width: 200px;
   filter: brightness(0) invert(1);
-  mix-blend-mode: screen;
 }
 .auth-mobile-logo {
   display: block;
@@ -209,17 +208,15 @@ const toggleTheme = () => {
   max-width: 175px;
 }
 .auth-mobile-logo.auth-logo-edu {
-  height: 44px;
+  height: 34px;
   width: auto;
-  max-width: 185px;
-  mix-blend-mode: multiply;
+  max-width: 175px;
 }
 :global(.dark) .auth-mobile-logo.auth-logo-re {
   filter: brightness(0) invert(1);
 }
 :global(.dark) .auth-mobile-logo.auth-logo-edu {
   filter: brightness(0) invert(1);
-  mix-blend-mode: screen;
 }
 .auth-form-panel {
   background: radial-gradient(

@@ -37,7 +37,7 @@
       </div>
 
       <!-- Type & Priority -->
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label
             class="block text-[10px] font-bold text-slate-500 uppercase mb-1"
@@ -85,7 +85,7 @@
       </div>
 
       <!-- Due Date & Assigned Agent -->
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label
             class="block text-[10px] font-bold text-slate-500 uppercase mb-1"
@@ -138,7 +138,7 @@
           Link to CRM Records
         </h4>
 
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label
               class="block text-[10px] font-bold text-slate-500 uppercase mb-1"

@@ -17,7 +17,7 @@
       />
 
       <!-- Basic Profile Fields -->
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">First Name *</label>
           <input 
@@ -38,7 +38,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Mobile *</label>
           <input 
@@ -61,7 +61,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Source *</label>
           <select 
@@ -95,7 +95,7 @@
         Lead Requirements
       </h4>
 
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Property Types</label>
           <div class="flex flex-wrap gap-2 mt-1">
@@ -116,7 +116,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Min Budget (INR)</label>
           <input 

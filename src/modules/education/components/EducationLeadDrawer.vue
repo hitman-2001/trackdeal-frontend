@@ -21,7 +21,7 @@
               <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 leading-tight">
                 {{ lead.firstName }} {{ lead.lastName || '' }}
               </h2>
-              <StatusBadge :status="lead.status" />
+              <StatusBadge :status="lead.status" :subStatus="lead.subStatus" />
               <span
                 v-if="lead.leadTemperature"
                 class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border"
@@ -103,6 +103,16 @@
 
           <button
             type="button"
+            @click="showStatusModal = true"
+            class="h-9 px-3 text-xs font-semibold rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors inline-flex items-center gap-1.5 shadow-xs"
+            title="Update Status & Sub-Status"
+          >
+            <PhArrowsClockwise :size="14" weight="bold" class="text-blue-600" />
+            <span>Update Status</span>
+          </button>
+
+          <button
+            type="button"
             @click="triggerLogUpdate"
             class="btn btn-primary h-9 px-3 text-xs font-medium inline-flex items-center gap-1.5 ml-auto"
           >
@@ -142,12 +152,20 @@
         <h4 class="font-semibold text-sm text-slate-900 dark:text-slate-100">Lead Information</h4>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-xs">
-          <!-- Stage -->
+          <!-- Status -->
           <div class="flex flex-col gap-0.5">
-            <span class="text-[11px] text-slate-400 font-medium">Stage</span>
-            <div class="font-medium text-slate-800 dark:text-slate-200 capitalize">
-              <StatusBadge :status="lead.status" />
+            <span class="text-[11px] text-slate-400 font-medium">Status</span>
+            <div class="font-medium text-slate-800 dark:text-slate-200">
+              <StatusBadge :status="lead.status" :subStatus="lead.subStatus" />
             </div>
+          </div>
+
+          <!-- Sub-Status -->
+          <div v-if="lead.subStatus" class="flex flex-col gap-0.5">
+            <span class="text-[11px] text-slate-400 font-medium">Sub-Status</span>
+            <span class="font-semibold text-blue-600 dark:text-blue-400">
+              {{ lead.subStatus }}
+            </span>
           </div>
 
           <!-- Interest Level -->
@@ -382,6 +400,14 @@
       </button>
     </template>
   </AppDrawer>
+
+  <!-- Maglo Status & Sub-Status Modal -->
+  <EducationLeadStatusModal
+    :isOpen="showStatusModal"
+    :lead="lead"
+    @close="showStatusModal = false"
+    @saved="handleStatusModalSaved"
+  />
 </template>
 
 <script setup>
@@ -398,9 +424,11 @@ import {
   PhClockCounterClockwise,
   PhChatCircleDots,
   PhPlus,
+  PhArrowsClockwise,
 } from '@phosphor-icons/vue';
 import AppDrawer from '@/components/AppDrawer.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
+import EducationLeadStatusModal from './EducationLeadStatusModal.vue';
 import { fetchEducationLead, fetchEducationLeadActivityCenter } from '../api/endpoints';
 
 const props = defineProps({
@@ -408,7 +436,9 @@ const props = defineProps({
   leadId: { type: String, default: '' },
 });
 
-const emit = defineEmits(['close', 'log-interaction']);
+const emit = defineEmits(['close', 'log-interaction', 'updated']);
+
+const showStatusModal = ref(false);
 
 const loading = ref(false);
 const lead = ref(null);
@@ -616,5 +646,13 @@ function formatRelativeTime(iso) {
   if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
   return `${days}d ago`;
+}
+
+function handleStatusModalSaved(updatedLead) {
+  if (updatedLead) {
+    lead.value = { ...lead.value, ...updatedLead };
+  }
+  loadDetails();
+  emit('updated', lead.value);
 }
 </script>

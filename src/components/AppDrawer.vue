@@ -14,8 +14,8 @@
       <div
         v-if="isOpen"
         ref="panel"
-        class="fixed right-0 top-0 z-[1010] h-full max-w-[calc(100vw-12px)] flex flex-col border-l premium-drawer"
-        :style="{ width, borderColor: 'hsl(var(--neutral-100))', backgroundColor: 'hsl(var(--bg-surface))' }"
+        class="fixed right-0 top-0 z-[1010] h-full w-full max-w-full sm:max-w-[calc(100vw-24px)] flex flex-col border-l premium-drawer"
+        :style="{ width: 'min(100vw, ' + width + ')', borderColor: 'hsl(var(--neutral-100))', backgroundColor: 'hsl(var(--bg-surface))' }"
         role="dialog"
         aria-modal="true"
         :aria-label="title"
@@ -23,12 +23,12 @@
       >
         <!-- Header -->
         <header
-          class="flex items-start justify-between px-5 sm:px-6 pt-5 pb-4 shrink-0 border-b"
+          class="flex items-start justify-between px-4 sm:px-6 pt-4 sm:pt-5 pb-3.5 sm:pb-4 shrink-0 border-b"
           style="border-color: hsl(var(--neutral-100));"
         >
           <div class="flex-1 min-w-0 pr-4">
-            <h3 class="text-h3 font-semibold leading-snug" style="color: hsl(var(--neutral-900));">{{ title }}</h3>
-            <p v-if="subtitle" class="text-body-sm mt-0.5" style="color: hsl(var(--neutral-400));">{{ subtitle }}</p>
+            <h3 class="text-base sm:text-lg font-semibold leading-snug" style="color: hsl(var(--neutral-900));">{{ title }}</h3>
+            <p v-if="subtitle" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" style="color: hsl(var(--neutral-400));">{{ subtitle }}</p>
           </div>
 
           <button
@@ -41,14 +41,14 @@
         </header>
 
         <!-- Scrollable Body -->
-        <div class="flex-1 overflow-y-auto px-5 sm:px-6 py-5">
+        <div class="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5">
           <slot />
         </div>
 
         <!-- Footer -->
         <footer
           v-if="$slots.footer"
-          class="px-5 sm:px-6 py-4 border-t flex flex-wrap items-center justify-end gap-2.5 shrink-0"
+          class="px-4 sm:px-6 py-3.5 sm:py-4 border-t flex flex-wrap items-center justify-end gap-2.5 shrink-0"
           style="border-color: hsl(var(--neutral-100));"
         >
           <slot name="footer" />

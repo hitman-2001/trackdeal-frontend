@@ -7,15 +7,16 @@
     >
       <span>{{ errorMessage }}</span>
       <button
+        type="button"
         @click="errorMessage = ''"
-        class="font-bold opacity-80 hover:opacity-100"
+        class="font-bold opacity-80 hover:opacity-100 p-1"
       >
-        <AppIcon name="close" :size="14" weight="bold" />
+        <PhX :size="14" weight="bold" />
       </button>
     </div>
 
     <!-- Login Form -->
-    <form @submit="onSubmit" class="space-y-4">
+    <form @submit.prevent="onSubmit" class="space-y-4">
       <!-- Organization Input -->
       <div class="space-y-1">
         <label for="organization" class="label-text"> Organization </label>
@@ -144,7 +145,7 @@
 import { ref, onMounted } from "vue";
 import { useForm, useField } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
-import { PhEye, PhEyeSlash, PhSpinner } from "@phosphor-icons/vue";
+import { PhEye, PhEyeSlash, PhSpinner, PhX } from "@phosphor-icons/vue";
 import { loginSchema } from "../schemas/validation";
 import { useLoginMutation } from "../queries";
 
@@ -207,7 +208,10 @@ const onSubmit = handleSubmit((values) => {
       onError: (err) => {
         // Render server errors
         errorMessage.value =
+          err.response?.data?.error?.message ||
+          err.response?.data?.message ||
           err.data?.message ||
+          err.message ||
           "Invalid credentials. Please verify your organization, email and password.";
       },
     },

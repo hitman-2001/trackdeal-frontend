@@ -62,17 +62,17 @@
         class="filter-control w-full"
         @change="onFilterChange"
       >
-        <option value="">All stages</option>
-        <option value="new">New</option>
-        <option value="assigned">Assigned</option>
-        <option value="contacted">Contacted</option>
-        <option value="follow_up">Follow Up</option>
-        <option value="meeting_scheduled">Meeting Scheduled</option>
-        <option value="qualified">Qualified</option>
-        <option value="application_trial">Application / Trial</option>
-        <option value="converted">Converted</option>
-        <option value="lost">Lost</option>
-        <option value="on_hold">On Hold</option>
+        <option value="">All statuses</option>
+        <option value="interested">Interested</option>
+        <option value="not_interested">Not Interested</option>
+        <option value="call_back">Call Back</option>
+        <option value="future_prospect">Future Prospect</option>
+        <option value="enrolled">Enrolled</option>
+        <option disabled>──────────</option>
+        <option value="new">New (Legacy)</option>
+        <option value="contacted">Contacted (Legacy)</option>
+        <option value="follow_up">Follow Up (Legacy)</option>
+        <option value="lost">Lost (Legacy)</option>
       </select>
       <select
         v-if="canFilterAllStaff"
@@ -154,7 +154,18 @@
         </template>
 
         <template #cell(status)="{ row }">
-          <StatusBadge :status="row.status" />
+          <button
+            type="button"
+            @click.stop="openStatusModal(row)"
+            class="group inline-flex items-center gap-1.5 transition-transform hover:scale-[1.02] text-left cursor-pointer"
+            title="Click to update status & sub-status"
+          >
+            <StatusBadge :status="row.status" :subStatus="row.subStatus" />
+            <PhPencilSimple
+              :size="12"
+              class="text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity"
+            />
+          </button>
         </template>
 
         <template #rowActions="{ row }">
@@ -198,7 +209,17 @@
             <span>View Details</span>
           </button>
 
-          <!-- 2. Log Interaction -->
+          <!-- 2. Update Status (Maglo selector) -->
+          <button
+            type="button"
+            @click="handleUpdateStatus(activeMenuRow)"
+            class="w-full px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2.5 text-slate-700 dark:text-slate-200 transition-colors font-medium rounded-lg"
+          >
+            <PhArrowsClockwise :size="15" weight="bold" class="text-blue-600" />
+            <span>Update Status</span>
+          </button>
+
+          <!-- 3. Log Interaction -->
           <button
             type="button"
             @click="handleLog(activeMenuRow)"
@@ -208,7 +229,7 @@
             <span>Log Interaction</span>
           </button>
 
-          <!-- 3. Edit Lead -->
+          <!-- 4. Edit Lead -->
           <button
             type="button"
             @click="handleEdit(activeMenuRow)"
@@ -262,6 +283,7 @@
       :leadId="activeLeadId"
       @close="isDetailsOpen = false"
       @log-interaction="handleLogFromDrawer"
+      @updated="load"
     />
 
     <!-- Edit Student Lead Drawer (Strictly Editing) -->
@@ -313,39 +335,35 @@
         >
           {{ error }}
         </p>
-        <div class="grid grid-cols-2 gap-3 text-xs">
-          <label
-            class="space-y-1 font-medium text-slate-700 dark:text-slate-300"
-            >First name *
+        <div class="modal-form-grid">
+          <div class="modal-form-group">
+            <label class="modal-form-label">First name <span class="required-star">*</span></label>
             <input
               v-model="form.firstName"
               required
-              class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none"
+              class="modal-form-input"
             />
-          </label>
-          <label
-            class="space-y-1 font-medium text-slate-700 dark:text-slate-300"
-            >Last name
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Last name</label>
             <input
               v-model="form.lastName"
-              class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none"
+              class="modal-form-input"
             />
-          </label>
-          <label
-            class="space-y-1 font-medium text-slate-700 dark:text-slate-300"
-            >Mobile *
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Mobile <span class="required-star">*</span></label>
             <input
               v-model="form.mobile"
               required
-              class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none"
+              class="modal-form-input"
             />
-          </label>
-          <label
-            class="space-y-1 font-medium text-slate-700 dark:text-slate-300"
-            >Source
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Source</label>
             <select
               v-model="form.source"
-              class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none"
+              class="modal-form-select"
             >
               <option value="walk_in">Walk-in</option>
               <option value="website">Website</option>
@@ -354,36 +372,33 @@
               <option value="campus">Campus</option>
               <option value="manual_entry">Manual</option>
             </select>
-          </label>
-          <label
-            class="space-y-1 font-medium text-slate-700 dark:text-slate-300"
-            >Parent name
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Parent name</label>
             <input
               v-model="form.parentName"
-              class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none"
+              class="modal-form-input"
             />
-          </label>
-          <label
-            class="space-y-1 font-medium text-slate-700 dark:text-slate-300"
-            >Parent mobile
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Parent mobile</label>
             <input
               v-model="form.parentMobile"
-              class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none"
+              class="modal-form-input"
             />
-          </label>
-          <label
-            class="space-y-1 col-span-2 font-medium text-slate-700 dark:text-slate-300"
-            >Interested class
+          </div>
+          <div class="modal-form-group col-span-full">
+            <label class="modal-form-label">Interested class</label>
             <select
               v-model="form.classInterestId"
-              class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none"
+              class="modal-form-select"
             >
               <option value="">Select class</option>
               <option v-for="c in classes" :key="c._id" :value="c._id">
                 {{ c.name }}
               </option>
             </select>
-          </label>
+          </div>
         </div>
       </form>
       <template #footer>
@@ -424,20 +439,19 @@
         >
           {{ error }}
         </p>
-        <label
-          class="space-y-1 text-xs block font-medium text-slate-700 dark:text-slate-300"
-          >Class *
+        <div class="modal-form-group">
+          <label class="modal-form-label">Class <span class="required-star">*</span></label>
           <select
             v-model="enrollClassId"
             required
-            class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none"
+            class="modal-form-select"
           >
             <option value="" disabled>Select class to enroll into</option>
             <option v-for="c in classes" :key="c._id" :value="c._id">
               {{ c.name }} ({{ c.code }})
             </option>
           </select>
-        </label>
+        </div>
       </form>
       <template #footer>
         <button
@@ -476,6 +490,14 @@
       @cancel="isDeleteOpen = false"
       @confirm="confirmDeleteLead"
     />
+
+    <!-- Maglo Status & Sub-Status Modal -->
+    <EducationLeadStatusModal
+      :isOpen="isStatusModalOpen"
+      :lead="activeStatusLead"
+      @close="isStatusModalOpen = false"
+      @saved="handleStatusModalSaved"
+    />
   </div>
 </template>
 
@@ -494,6 +516,7 @@ import {
   PhPlus,
   PhTrash,
   PhMagnifyingGlass,
+  PhArrowsClockwise,
 } from "@phosphor-icons/vue";
 import AppTable from "@/components/AppTable.vue";
 import AppDrawer from "@/components/AppDrawer.vue";
@@ -503,6 +526,7 @@ import EducationLeadDrawer from "../components/EducationLeadDrawer.vue";
 import EducationLeadEditDrawer from "../components/EducationLeadEditDrawer.vue";
 import EducationLeadLogDrawer from "../components/EducationLeadLogDrawer.vue";
 import EducationLeadReminderModal from "../components/EducationLeadReminderModal.vue";
+import EducationLeadStatusModal from "../components/EducationLeadStatusModal.vue";
 import LeadAssignModal from "@/modules/leads/components/LeadAssignModal.vue";
 import LeadBulkUploadModal from "@/modules/leads/components/LeadBulkUploadModal.vue";
 import apiClient from "@/api/client";
@@ -729,6 +753,23 @@ const closeActionMenu = () => {
 };
 
 // Menu Action Handlers
+const isStatusModalOpen = ref(false);
+const activeStatusLead = ref(null);
+
+const openStatusModal = (row) => {
+  activeStatusLead.value = row;
+  isStatusModalOpen.value = true;
+};
+
+const handleUpdateStatus = (row) => {
+  closeActionMenu();
+  openStatusModal(row);
+};
+
+const handleStatusModalSaved = () => {
+  load();
+};
+
 const handleView = (row) => {
   closeActionMenu();
   openDetails(row);

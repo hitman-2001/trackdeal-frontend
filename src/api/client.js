@@ -108,8 +108,7 @@ apiClient.interceptors.response.use(
 
     const { status, data } = error.response;
     const isAuthRequest = originalRequest.url && (
-      originalRequest.url.includes('/auth/refresh') ||
-      originalRequest.url.includes('/auth/login')
+      originalRequest.url.includes('/auth/')
     );
 
     if (status === 401 && !originalRequest._retry && !isAuthRequest) {
@@ -127,6 +126,17 @@ apiClient.interceptors.response.use(
           });
       }
 
+      const hasRefreshToken = !!storeInstance?.state?.auth?.refreshToken;
+      if (!hasRefreshToken) {
+        if (storeInstance) {
+          await storeInstance.dispatch('auth/logoutSession');
+        }
+        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+          window.location.href = '/login';
+        }
+        return Promise.reject(error);
+      }
+
       originalRequest._retry = true;
       isRefreshing = true;
 
@@ -142,7 +152,9 @@ apiClient.interceptors.response.use(
           isRefreshing = false;
           processQueue(refreshError, null);
           await storeInstance.dispatch('auth/logoutSession');
-          window.location.href = '/login';
+          if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+            window.location.href = '/login';
+          }
           return Promise.reject(refreshError);
         }
       }

@@ -80,6 +80,12 @@ export default {
       commit('organization/CLEAR_ORGANIZATION', null, { root: true });
     },
     async refreshUserTokens({ commit, state }) {
+      if (!state.refreshToken) {
+        commit('CLEAR_SESSION');
+        commit('permissions/CLEAR_CAPABILITIES', null, { root: true });
+        commit('organization/CLEAR_ORGANIZATION', null, { root: true });
+        return Promise.reject(new Error('No refresh token available'));
+      }
       try {
         const data = await authApi.refreshTokens(state.refreshToken);
         const payload = data.data || data;

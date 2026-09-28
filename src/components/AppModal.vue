@@ -4,7 +4,7 @@
     <Transition name="backdrop">
       <div
         v-if="isOpen"
-        class="fixed inset-0 z-[1000] flex items-center justify-center p-4 overflow-y-auto premium-backdrop"
+        class="fixed inset-0 z-[1000] flex items-center justify-center p-3 sm:p-4 overflow-y-auto premium-backdrop"
         @click.self="$emit('cancel')"
       >
         <!-- Modal Dialog (Centered) -->
@@ -12,7 +12,7 @@
           <div
             v-if="isOpen"
             ref="panel"
-            class="relative z-[1010] border premium-modal flex flex-col w-full my-auto rounded-2xl shadow-2xl overflow-hidden"
+            class="relative z-[1010] border premium-modal flex flex-col w-full max-w-full my-auto rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden"
             :style="{ maxWidth: maxSize, backgroundColor: 'hsl(var(--bg-surface))', borderColor: 'hsl(var(--neutral-100))' }"
             role="dialog"
             aria-modal="true"
@@ -21,7 +21,7 @@
           >
             <!-- Header -->
             <div
-              class="flex items-start justify-between px-6 pt-5 pb-4 border-b shrink-0"
+              class="flex items-start justify-between px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b shrink-0"
               style="border-color: hsl(var(--neutral-100));"
             >
               <div class="flex-1 min-w-0 pr-4">
@@ -38,13 +38,13 @@
             </div>
 
             <!-- Content -->
-            <div class="px-6 py-5 text-sm flex-1 overflow-y-auto leading-relaxed text-slate-600 dark:text-slate-300">
+            <div class="px-4 sm:px-6 py-4 sm:py-5 text-sm flex-1 overflow-y-auto leading-relaxed text-slate-600 dark:text-slate-300">
               <slot />
             </div>
 
             <!-- Footer -->
             <div
-              class="px-6 py-4 border-t flex items-center justify-end gap-3 shrink-0 bg-slate-50/50 dark:bg-slate-850/50"
+              class="px-4 sm:px-6 py-3.5 sm:py-4 border-t flex flex-wrap items-center justify-end gap-2.5 sm:gap-3 shrink-0 bg-slate-50/50 dark:bg-slate-850/50"
               style="border-color: hsl(var(--neutral-100));"
             >
               <slot name="footer">

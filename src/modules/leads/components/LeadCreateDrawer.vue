@@ -34,7 +34,7 @@
 
       <!-- SECTION 1: BASIC INFO & CONTACT -->
       <div v-if="activeSection === 0" class="space-y-3">
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">First Name *</label>
             <input 
@@ -55,7 +55,7 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Mobile *</label>
             <input 
@@ -80,7 +80,7 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Source *</label>
             <select 
@@ -110,7 +110,7 @@
           </div>
         </div>
 
-        <div v-if="showAdminFields" class="grid grid-cols-2 gap-3 border-t border-default pt-2">
+        <div v-if="showAdminFields" class="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-default pt-2">
           <div>
             <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Branch Office</label>
             <select v-model="branchId" class="w-full bg-surface border border-default rounded-lg px-3 py-1.5 outline-none focus:border-primary">
@@ -140,7 +140,7 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Preferred Location</label>
             <input v-model="preferredLocation" type="text" placeholder="e.g. South Mumbai" class="w-full bg-surface border border-default rounded-lg px-3 py-1.5 outline-none focus:border-primary" />
@@ -165,7 +165,7 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-4 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
           <div>
             <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Min Area (sqft)</label>
             <input v-model.number="minArea" type="number" placeholder="500" class="w-full bg-surface border border-default rounded-lg px-3 py-1.5 outline-none focus:border-primary" />
@@ -188,7 +188,7 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Min Budget (INR)</label>
             <input v-model.number="budgetMin" type="number" placeholder="5000000" class="w-full bg-surface border border-default rounded-lg px-3 py-1.5 outline-none focus:border-primary" />
@@ -226,7 +226,7 @@
         </div>
 
         <div v-if="loanRequired === 'yes'" class="space-y-3 pt-1">
-          <div class="grid grid-cols-3 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Total Expected Value (INR)</label>
               <input v-model.number="expectedPropertyValue" type="number" class="w-full bg-surface border border-default rounded-lg px-3 py-1.5 outline-none focus:border-primary" />
@@ -241,7 +241,7 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-3 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Loan Type</label>
               <select v-model="loanType" class="w-full bg-surface border border-default rounded-lg px-3 py-1.5 outline-none focus:border-primary">
@@ -261,7 +261,7 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-3 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Employment Type</label>
               <select v-model="employmentType" class="w-full bg-surface border border-default rounded-lg px-3 py-1.5 outline-none focus:border-primary">
@@ -282,7 +282,7 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Loan Status</label>
               <select v-model="loanStatus" class="w-full bg-surface border border-default rounded-lg px-3 py-1.5 outline-none focus:border-primary">
@@ -308,7 +308,7 @@
             </div>
           </div>
 
-          <div v-if="isSanctionLetterAvailable" class="grid grid-cols-3 gap-3 p-2 bg-surface border border-default rounded-lg">
+          <div v-if="isSanctionLetterAvailable" class="grid grid-cols-1 sm:grid-cols-3 gap-3 p-2 bg-surface border border-default rounded-lg">
             <div>
               <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Sanctioned Amount</label>
               <input v-model.number="sanctionedAmount" type="number" class="w-full bg-surface border border-default rounded-lg px-3 py-1.5 outline-none focus:border-primary" />
@@ -327,7 +327,7 @@
 
       <!-- SECTION 4: BUYER PROFILE & QUALIFICATION -->
       <div v-if="activeSection === 3" class="space-y-3">
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Co-Applicant Name</label>
             <input v-model="coApplicantName" type="text" placeholder="Spouse / Partner Name" class="w-full bg-surface border border-default rounded-lg px-3 py-1.5 outline-none focus:border-primary" />
@@ -338,7 +338,7 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Purchase Timeline</label>
             <select v-model="preferredPurchaseTimeline" class="w-full bg-surface border border-default rounded-lg px-3 py-1.5 outline-none focus:border-primary">
@@ -367,7 +367,7 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Source of Funds</label>
             <select v-model="sourceOfFunds" class="w-full bg-surface border border-default rounded-lg px-3 py-1.5 outline-none focus:border-primary">

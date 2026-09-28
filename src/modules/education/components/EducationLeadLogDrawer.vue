@@ -45,7 +45,7 @@
         <label class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
           Interaction Type *
         </label>
-        <div class="grid grid-cols-4 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 gap-1 select-none">
+        <div class="grid grid-cols-2 sm:grid-cols-4 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 gap-1 select-none">
           <button
             type="button"
             v-for="ch in channels"
@@ -99,22 +99,30 @@
             ></textarea>
           </div>
 
-          <div class="grid grid-cols-2 gap-3 pt-1">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
             <label class="space-y-1 font-semibold text-slate-700 dark:text-slate-300 block">
-              <span>Update Stage</span>
+              <span>Status</span>
               <select
                 v-model="form.status"
                 class="filter-control w-full"
+                @change="handleLogStatusChange"
               >
-                <option value="new">New</option>
-                <option value="assigned">Assigned</option>
-                <option value="contacted">Contacted</option>
-                <option value="follow_up">Follow Up</option>
-                <option value="meeting_scheduled">Demo / Meeting Scheduled</option>
-                <option value="qualified">Qualified</option>
-                <option value="application_trial">Application / Trial</option>
-                <option value="on_hold">On Hold</option>
-                <option value="lost">Lost</option>
+                <option v-for="st in EDUCATION_STATUSES" :key="st.value" :value="st.value">
+                  {{ st.label }}
+                </option>
+              </select>
+            </label>
+
+            <label class="space-y-1 font-semibold text-slate-700 dark:text-slate-300 block">
+              <span>Sub-Status</span>
+              <select
+                v-model="form.subStatus"
+                class="filter-control w-full"
+              >
+                <option value="">Select Sub-Status</option>
+                <option v-for="sub in availableSubStatuses" :key="sub" :value="sub">
+                  {{ sub }}
+                </option>
               </select>
             </label>
 
@@ -166,7 +174,7 @@
             ></textarea>
           </div>
 
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="space-y-1">
               <label class="font-semibold text-slate-700 dark:text-slate-300 text-xs block">
                 Message Status
@@ -214,7 +222,7 @@
       <!-- ================= 3. COUNSELLING FIELDS ================= -->
       <template v-else-if="form.type === 'meeting'">
         <div class="space-y-3 p-4 rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-surface shadow-2xs">
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="space-y-1">
               <label class="font-semibold text-slate-700 dark:text-slate-300 text-xs block">
                 Counsellor *
@@ -244,7 +252,7 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="space-y-1">
               <label class="font-semibold text-slate-700 dark:text-slate-300 text-xs block">
                 Course Discussed *
@@ -423,6 +431,11 @@ import {
   logEducationLeadActivity,
   updateEducationLead,
 } from '../api/endpoints';
+import {
+  EDUCATION_STATUSES,
+  EDUCATION_SUB_STATUS_MAP,
+  normalizeStatus,
+} from '../constants/leadStatusConfig';
 
 const props = defineProps({
   isOpen: { type: Boolean, required: true },
@@ -453,7 +466,8 @@ const form = ref({
   // Call fields
   outcome: 'Connected & Interested',
   remarks: '',
-  status: 'contacted',
+  status: 'interested',
+  subStatus: '',
   temperature: 'warm',
   // WhatsApp fields
   template: '',
@@ -565,8 +579,22 @@ async function loadLead() {
   }
 }
 
+const availableSubStatuses = computed(() => {
+  return EDUCATION_SUB_STATUS_MAP[form.value.status] || [];
+});
+
+function handleLogStatusChange() {
+  const subs = EDUCATION_SUB_STATUS_MAP[form.value.status] || [];
+  form.value.subStatus = subs[0] || '';
+}
+
 function resetFormForLead(currentLead) {
-  form.value.status = currentLead?.status || 'contacted';
+  const normStatus = normalizeStatus(currentLead?.status);
+  form.value.status = normStatus;
+  const validSubs = EDUCATION_SUB_STATUS_MAP[normStatus] || [];
+  form.value.subStatus = currentLead?.subStatus && validSubs.includes(currentLead.subStatus)
+    ? currentLead.subStatus
+    : (validSubs[0] || '');
   form.value.temperature = currentLead?.leadTemperature || 'warm';
   form.value.remarks = '';
   form.value.message = '';
@@ -637,12 +665,15 @@ async function saveUpdate() {
     // 1. Log Activity Record
     await logEducationLeadActivity(targetLeadId, payload);
 
-    // 2. Update Lead Stage, Temperature & Staff if modified
+    // 2. Update Lead Stage, Sub-Status, Temperature & Staff if modified
     const leadUpdates = {};
-    if (form.value.status && form.value.status !== lead.value.status) {
+    if (form.value.status) {
       leadUpdates.status = form.value.status;
     }
-    if (form.value.temperature && form.value.temperature !== lead.value.leadTemperature) {
+    if (form.value.subStatus) {
+      leadUpdates.subStatus = form.value.subStatus;
+    }
+    if (form.value.temperature && form.value.temperature !== lead.value?.leadTemperature) {
       leadUpdates.leadTemperature = form.value.temperature;
     }
     if (form.value.scheduleFollowUp && payload.nextFollowUpAt) {
@@ -650,7 +681,7 @@ async function saveUpdate() {
     } else {
       leadUpdates.nextFollowUpAt = null;
     }
-    if (canAssignLeads.value && form.value.assignedToStaffId && form.value.assignedToStaffId !== (lead.value.assignedTo?._id || lead.value.assignedTo)) {
+    if (canAssignLeads.value && form.value.assignedToStaffId && form.value.assignedToStaffId !== (lead.value?.assignedTo?._id || lead.value?.assignedTo)) {
       leadUpdates.assignedTo = form.value.assignedToStaffId;
     }
     leadUpdates.notesRemarks = description;

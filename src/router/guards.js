@@ -10,12 +10,18 @@ export function setupRouterGuards(router) {
     if (!sessionChecked) {
       sessionChecked = true;
       const isAuthenticated = store.getters["auth/isAuthenticated"];
-      if (!isAuthenticated) {
+      const hasRefreshToken = !!store.state.auth?.refreshToken;
+      const isAuthPage =
+        to.path.startsWith("/login") ||
+        to.path.startsWith("/forgot-password") ||
+        to.path.startsWith("/reset-password") ||
+        to.path.startsWith("/accept-invitation");
+
+      if (!isAuthenticated && hasRefreshToken && !isAuthPage) {
         try {
-          // Attempt silent refresh to restore session via HTTP-only cookie
           await store.dispatch("auth/refreshUserTokens");
         } catch (error) {
-          // Silent refresh failed (no valid refresh cookie), ignore and let standard guards handle redirects
+          // Silent refresh failed, ignore and let standard guards handle redirects
         }
       }
     }

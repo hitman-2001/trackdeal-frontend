@@ -23,14 +23,14 @@
         </p>
       </div>
 
-      <div>
-        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">
-          {{ selectLabel }} *
+      <div class="modal-form-group">
+        <label class="modal-form-label">
+          {{ selectLabel }} <span class="required-star">*</span>
         </label>
         <select
           v-model="assignedTo"
-          class="w-full bg-surface border rounded-lg px-3 py-1.5 outline-none focus:border-primary"
-          :class="errors.assignedTo ? 'border-red-500' : 'border-default'"
+          class="modal-form-select"
+          :class="errors.assignedTo ? '!border-red-500' : ''"
           :disabled="loadingStaff"
         >
           <option value="">{{ placeholderOption }}</option>
@@ -53,9 +53,9 @@
         </span>
       </div>
 
-      <div>
-        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">
-          Assignment reason *
+      <div class="modal-form-group">
+        <label class="modal-form-label">
+          Assignment reason <span class="required-star">*</span>
         </label>
         <input
           v-model="reason"
@@ -63,8 +63,8 @@
           :placeholder="staffMode
             ? 'e.g. Counselling handoff, batch allocation...'
             : 'e.g. Allocation re-balancing, lead rotation...'"
-          class="w-full bg-surface border rounded-lg px-3 py-1.5 outline-none focus:border-primary"
-          :class="errors.reason ? 'border-red-500' : 'border-default'"
+          class="modal-form-input"
+          :class="errors.reason ? '!border-red-500' : ''"
         />
         <span v-if="errors.reason" class="text-[9px] text-red-500 mt-1 block">
           {{ errors.reason }}

@@ -258,42 +258,52 @@
     >
       <form id="class-form" class="space-y-4 text-xs" @submit.prevent="save">
         <p v-if="error" class="text-xs text-rose-600 bg-rose-50 dark:bg-rose-950/40 p-2.5 rounded-lg border border-rose-200 dark:border-rose-900">{{ error }}</p>
-        <div class="grid grid-cols-2 gap-3 text-xs">
-          <label class="space-y-1 col-span-2 font-medium text-slate-700 dark:text-slate-300">Name *
-            <input v-model="form.name" required class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none" />
-          </label>
-          <label class="space-y-1 font-medium text-slate-700 dark:text-slate-300">Code
-            <input v-model="form.code" class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none" />
-          </label>
-          <label class="space-y-1 font-medium text-slate-700 dark:text-slate-300">Subject
-            <input v-model="form.subject" class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none" />
-          </label>
-          <label class="space-y-1 font-medium text-slate-700 dark:text-slate-300">Grade
-            <input v-model="form.grade" class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none" />
-          </label>
-          <label class="space-y-1 font-medium text-slate-700 dark:text-slate-300">Fees (₹)
-            <input v-model="form.fees" type="number" min="0" class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none" />
-          </label>
-          <label class="space-y-1 font-medium text-slate-700 dark:text-slate-300">Capacity
-            <input v-model="form.capacity" type="number" min="1" class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none" />
-          </label>
-          <label class="space-y-1 font-medium text-slate-700 dark:text-slate-300">Instructor
-            <input v-model="form.instructorName" class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none" />
-          </label>
-          <label class="space-y-1 font-medium text-slate-700 dark:text-slate-300">Status
-            <select v-model="form.status" class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none">
+        <div class="modal-form-grid">
+          <div class="modal-form-group col-span-full">
+            <label class="modal-form-label">Name <span class="required-star">*</span></label>
+            <input v-model="form.name" required placeholder="e.g. Grade 10 Mathematics" class="modal-form-input" />
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Code</label>
+            <input v-model="form.code" placeholder="e.g. MTH-10" class="modal-form-input" />
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Subject</label>
+            <input v-model="form.subject" placeholder="e.g. Mathematics" class="modal-form-input" />
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Grade</label>
+            <input v-model="form.grade" placeholder="e.g. 10th" class="modal-form-input" />
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Fees (₹)</label>
+            <input v-model="form.fees" type="number" min="0" placeholder="0" class="modal-form-input" />
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Capacity</label>
+            <input v-model="form.capacity" type="number" min="1" placeholder="30" class="modal-form-input" />
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Instructor</label>
+            <input v-model="form.instructorName" placeholder="Instructor name" class="modal-form-input" />
+          </div>
+          <div class="modal-form-group col-span-full sm:col-span-1">
+            <label class="modal-form-label">Status</label>
+            <select v-model="form.status" class="modal-form-select">
               <option value="upcoming">Upcoming</option>
               <option value="active">Active</option>
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
             </select>
-          </label>
-          <label class="space-y-1 col-span-2 font-medium text-slate-700 dark:text-slate-300">Schedule
-            <input v-model="form.schedule" class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none" />
-          </label>
-          <label class="space-y-1 col-span-2 font-medium text-slate-700 dark:text-slate-300">Description
-            <textarea v-model="form.description" rows="3" class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none"></textarea>
-          </label>
+          </div>
+          <div class="modal-form-group col-span-full">
+            <label class="modal-form-label">Schedule</label>
+            <input v-model="form.schedule" placeholder="e.g. Mon, Wed, Fri 4:00 PM - 5:30 PM" class="modal-form-input" />
+          </div>
+          <div class="modal-form-group col-span-full">
+            <label class="modal-form-label">Description</label>
+            <textarea v-model="form.description" rows="3" placeholder="Batch description or syllabus overview..." class="modal-form-textarea"></textarea>
+          </div>
         </div>
       </form>
       <template #footer>

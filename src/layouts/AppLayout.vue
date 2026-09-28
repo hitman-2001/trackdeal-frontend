@@ -349,7 +349,7 @@
                 v-if="isEducationWorkspace"
                 src="/education_logo.png"
                 alt="TrackDeal Education"
-                class="brand-logo-img education-logo !h-8 !max-w-[140px]"
+                class="brand-logo-img education-logo !h-7 !max-w-[140px]"
               />
               <img
                 v-else
@@ -1238,15 +1238,13 @@ const vClickOutside = {
 }
 
 .education-logo {
-  height: 44px;
+  height: 38px;
   width: auto;
   max-width: 185px;
-  mix-blend-mode: multiply;
 }
 
 .dark .education-logo {
   filter: brightness(0) invert(1);
-  mix-blend-mode: screen;
 }
 
 .brand-mark-box {
@@ -2113,8 +2111,8 @@ const vClickOutside = {
     max-width: 135px !important;
   }
   .education-logo {
-    height: 36px !important;
-    max-width: 145px !important;
+    height: 30px !important;
+    max-width: 140px !important;
   }
   .brand-mark-box {
     width: 32px;
