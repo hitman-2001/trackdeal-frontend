@@ -153,7 +153,7 @@
                 }}
               </option>
               <option
-                v-for="r in roles"
+                v-for="r in selectableRoles"
                 :key="r.id || r._id"
                 :value="r.id || r._id"
               >
@@ -427,15 +427,43 @@ const isEducationWorkspace = computed(
   () => store.getters["organization/isEducationTenant"],
 );
 
+const selectableRoles = computed(() => {
+  const disallowedCodes = ['super_admin', 'system_admin', 'org_admin', 'organization_admin'];
+  return (props.roles || []).filter((r) => {
+    const code = String(r.code || r.id || '').toLowerCase().trim();
+    const normalizedName = String(r.name || '').toLowerCase().trim().replace(/[\s-]+/g, '_');
+    return !disallowedCodes.includes(code) && !disallowedCodes.includes(normalizedName);
+  });
+});
+
 const EDUCATION_ACTIVE_PERMS = [
   {
     group: "Student Leads & Admissions",
     permissions: [
-      { key: "leads.read", label: "View Student Leads & Classes" },
+      { key: "leads.read", label: "View Student Leads" },
       { key: "leads.create", label: "Create Student Inquiry" },
-      { key: "leads.update", label: "Update Inquiries & Enroll" },
+      { key: "leads.update", label: "Update Inquiries & Status" },
       { key: "leads.delete", label: "Delete Student Inquiries" },
       { key: "leads.assign", label: "Assign Leads to Staff" },
+      { key: "leads.bulk_upload", label: "Bulk Import Leads (Excel)" },
+    ],
+  },
+  {
+    group: "Classes & Batches",
+    permissions: [
+      { key: "classes.read", label: "View Classes & Batches" },
+      { key: "classes.create", label: "Create Class / Batch" },
+      { key: "classes.update", label: "Update Class Details" },
+      { key: "classes.delete", label: "Delete Class / Batch" },
+    ],
+  },
+  {
+    group: "Enrolled Students",
+    permissions: [
+      { key: "students.read", label: "View Enrolled Students" },
+      { key: "students.create", label: "Register Student" },
+      { key: "students.update", label: "Update Student Profile" },
+      { key: "students.delete", label: "Delete Student Record" },
     ],
   },
   {
@@ -448,25 +476,10 @@ const EDUCATION_ACTIVE_PERMS = [
     ],
   },
   {
-    group: "Campuses & Center Branches",
-    permissions: [
-      { key: "branches.read", label: "View Campus Centers" },
-      { key: "branches.create", label: "Add Campus Branch" },
-      { key: "branches.update", label: "Update Campus Details" },
-    ],
-  },
-  {
     group: "Admission Reports & Analytics",
     permissions: [
       { key: "reports.view", label: "View Admission Reports" },
       { key: "reports.export", label: "Export Reports & Data" },
-    ],
-  },
-  {
-    group: "Institute & Workspace Settings",
-    permissions: [
-      { key: "settings.view", label: "View Workspace Settings" },
-      { key: "settings.manage", label: "Manage Settings & Policies" },
     ],
   },
 ];

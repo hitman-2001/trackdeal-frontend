@@ -33,6 +33,7 @@
           <span>Import Excel</span>
         </button>
         <button
+          v-if="canCreateLead"
           class="btn btn-primary btn-sm flex items-center gap-1.5"
           @click="openCreate"
         >
@@ -231,6 +232,7 @@
 
           <!-- 4. Edit Lead -->
           <button
+            v-if="canEditLead"
             type="button"
             @click="handleEdit(activeMenuRow)"
             class="w-full px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2.5 text-slate-700 dark:text-slate-200 transition-colors font-medium rounded-lg"
@@ -544,11 +546,17 @@ const isOrgAdmin = computed(() =>
     String(store.getters["auth/userRole"] || "").toLowerCase(),
   ),
 );
+const canCreateLead = computed(() => {
+  return isOrgAdmin.value || Boolean(store.getters["permissions/hasCapability"]?.("leads.create"));
+});
+const canEditLead = computed(() => {
+  return isOrgAdmin.value || Boolean(store.getters["permissions/hasCapability"]?.("leads.update"));
+});
 const canDeleteLeads = computed(() => {
-  return Boolean(store.getters["permissions/hasCapability"]?.("leads.delete"));
+  return isOrgAdmin.value || Boolean(store.getters["permissions/hasCapability"]?.("leads.delete"));
 });
 const canAssignLeads = computed(() => {
-  return Boolean(store.getters["permissions/hasCapability"]?.("leads.assign"));
+  return isOrgAdmin.value || Boolean(store.getters["permissions/hasCapability"]?.("leads.assign"));
 });
 const canBulkUpload = computed(() => {
   const role = String(store.getters["auth/userRole"] || "").toLowerCase();

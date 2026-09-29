@@ -23,7 +23,7 @@
         >
           <option value="" disabled>Select Target Role</option>
           <option
-            v-for="r in roles"
+            v-for="r in selectableRoles"
             :key="r.id"
             :value="r.id"
           >
@@ -100,6 +100,15 @@ const isEducationWorkspace = computed(
   () => store.getters['organization/isEducationTenant']
 );
 
+const selectableRoles = computed(() => {
+  const disallowedCodes = ['super_admin', 'system_admin', 'org_admin', 'organization_admin'];
+  return (props.roles || []).filter((r) => {
+    const code = String(r.code || r.id || '').toLowerCase().trim();
+    const normalizedName = String(r.name || '').toLowerCase().trim().replace(/[\s-]+/g, '_');
+    return !disallowedCodes.includes(code) && !disallowedCodes.includes(normalizedName);
+  });
+});
+
 function roleDisplayName(roleOption) {
   const name = roleOption?.name || roleOption?.code || '';
   return isEducationWorkspace.value ? name.replace(/agent/gi, 'Staff') : name;
@@ -119,7 +128,11 @@ const userRoleDisplayName = computed(() => {
 
 watch(() => props.isOpen, (open) => {
   if (open && props.user) {
-    targetRole.value = userRoleCode.value;
+    const currentCode = userRoleCode.value;
+    const isCurrentSelectable = selectableRoles.value.some(
+      r => r.id === currentCode || r.code === currentCode
+    );
+    targetRole.value = isCurrentSelectable ? currentCode : '';
   }
 });
 

@@ -81,6 +81,14 @@ export const applyThemeTokensToDOM = (tokens) => {
       body, main, .product-shell, .bg-slate-50, .dark .bg-neutral-950 { background-color: ${tokens.backgroundHex} !important; }
     `;
   }
+  if (tokens.fontHex) {
+    customCSS += `
+      body, main, .product-shell, .workspace-page, .app-layout { color: ${tokens.fontHex} !important; }
+      .text-slate-900, .text-slate-850, .text-slate-800, .text-slate-700, .text-slate-600,
+      .dark .text-slate-100, .dark .text-slate-200, .dark .text-slate-300 { color: ${tokens.fontHex} !important; }
+      h1, h2, h3, h4, h5, h6, .font-heading { color: ${tokens.fontHex} !important; }
+    `;
+  }
   if (customCSS) {
     const style = document.createElement('style');
     style.id = 'dynamic-brand-styles';

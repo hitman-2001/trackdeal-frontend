@@ -14,7 +14,7 @@
       </div>
 
       <!-- Quick Summary Stats -->
-      <div v-if="manageableUsers.length > 0 && selectedUser" class="flex items-center gap-2 shrink-0">
+      <div v-if="(manageableUsers?.length || 0) > 0 && selectedUser" class="flex items-center gap-2 shrink-0">
         <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-default">
           {{ totalActiveCount }} / {{ totalAvailableCount }} Active
         </span>
@@ -27,7 +27,7 @@
       </div>
     </div>
 
-    <div v-if="manageableUsers.length === 0" class="rounded-lg border border-default p-8 text-center text-xs text-slate-500">
+    <div v-if="!manageableUsers || manageableUsers.length === 0" class="rounded-lg border border-default p-8 text-center text-xs text-slate-500">
       {{ isEducation ? 'No eligible staff members found to manage.' : 'There are no eligible users to manage.' }}
     </div>
 
@@ -279,10 +279,12 @@ import {
   PhChartBar,
   PhHouse,
   PhHandshake,
-  PhCoins,
   PhBank,
   PhBriefcase,
-  PhFileText
+  PhFileText,
+  PhChalkboardTeacher,
+  PhStudent,
+  PhCoins
 } from '@phosphor-icons/vue';
 import { useUpdateUserPermissionsMutation } from '../queries';
 
@@ -303,7 +305,7 @@ const searchQuery = ref('');
 
 const currentUserId = computed(() => store.state.auth?.currentUser?.id || store.state.auth?.currentUser?._id);
 
-const manageableUsers = computed(() => props.users.filter((user) => {
+const manageableUsers = computed(() => (props.users || []).filter((user) => {
   const roleCode = getRole(user)?.code;
   return getUserId(user) !== currentUserId.value && roleCode !== 'super_admin';
 }));
@@ -385,11 +387,36 @@ const EDUCATION_ACTIVE_CATEGORIES = [
     icon: PhGraduationCap,
     description: 'Student inquiries, enrollment, class batches, and counselor assignment',
     permissions: [
-      { key: 'leads.read', label: 'View Student Leads & Classes', description: 'Browse student inquiries, batches, and class roster' },
+      { key: 'leads.read', label: 'View Student Leads', description: 'Browse incoming student inquiries, history, and status' },
       { key: 'leads.create', label: 'Create Student Inquiry', description: 'Register new admission inquiries and student leads' },
-      { key: 'leads.update', label: 'Update Inquiries & Enroll', description: 'Edit inquiry details and enroll students into batches' },
+      { key: 'leads.update', label: 'Update Inquiries & Status', description: 'Edit inquiry details and update status & sub-status' },
       { key: 'leads.delete', label: 'Delete Student Inquiries', description: 'Remove inactive or cancelled student inquiry records' },
       { key: 'leads.assign', label: 'Assign Leads to Staff', description: 'Assign student inquiries to counselors and staff members' },
+      { key: 'leads.bulk_upload', label: 'Bulk Import Leads (Excel)', description: 'Import student inquiries in bulk via Excel or CSV file' },
+    ]
+  },
+  {
+    id: 'classes',
+    title: 'Classes & Batches',
+    icon: PhChalkboardTeacher,
+    description: 'Course offerings, class schedules, fees, and batch enrollment capacities',
+    permissions: [
+      { key: 'classes.read', label: 'View Classes & Batches', description: 'Browse courses, class schedules, and enrollment capacities' },
+      { key: 'classes.create', label: 'Create Class / Batch', description: 'Add new courses, subjects, and batch offerings' },
+      { key: 'classes.update', label: 'Update Class Details', description: 'Edit schedules, instructors, fees, and capacity' },
+      { key: 'classes.delete', label: 'Delete Class / Batch', description: 'Remove obsolete or cancelled course batches' },
+    ]
+  },
+  {
+    id: 'students',
+    title: 'Enrolled Students',
+    icon: PhStudent,
+    description: 'Directory of enrolled students, course allocations, and parent guardian contacts',
+    permissions: [
+      { key: 'students.read', label: 'View Enrolled Students', description: 'Access student directory, academic batches, and parent contacts' },
+      { key: 'students.create', label: 'Register Student', description: 'Directly enroll and register new student admissions' },
+      { key: 'students.update', label: 'Update Student Profile', description: 'Edit student records, guardian details, and enrollment status' },
+      { key: 'students.delete', label: 'Delete Student Record', description: 'Remove student admission and enrollment records' },
     ]
   },
   {
@@ -400,19 +427,8 @@ const EDUCATION_ACTIVE_CATEGORIES = [
     permissions: [
       { key: 'users.read', label: 'View Staff Directory', description: 'View staff members, counselors, and faculty directory' },
       { key: 'users.create', label: 'Onboard Staff Members', description: 'Add new staff members with login credentials and roles' },
-      { key: 'users.update', label: 'Update Staff Profiles', description: 'Edit staff member details and campus assignments' },
+      { key: 'users.update', label: 'Update Staff Profiles', description: 'Edit staff member details, contact info, and roles' },
       { key: 'users.delete', label: 'Deactivate / Remove Staff', description: 'Suspend, deactivate, or delete staff accounts' },
-    ]
-  },
-  {
-    id: 'branches',
-    title: 'Campuses & Center Branches',
-    icon: PhBuildings,
-    description: 'Regional coaching centers, branches, and campus locations',
-    permissions: [
-      { key: 'branches.read', label: 'View Campus Centers', description: 'Browse active campus locations and center information' },
-      { key: 'branches.create', label: 'Add Campus Branch', description: 'Register new physical centers or campus locations' },
-      { key: 'branches.update', label: 'Update Campus Details', description: 'Modify campus address, details, and branch leads' },
     ]
   },
   {
@@ -425,16 +441,6 @@ const EDUCATION_ACTIVE_CATEGORIES = [
       { key: 'reports.export', label: 'Export Reports & Data', description: 'Download student inquiry and enrollment data to Excel / CSV' },
     ]
   },
-  {
-    id: 'settings',
-    title: 'Institute & Workspace Settings',
-    icon: PhGear,
-    description: 'Institution identity, branding, and workspace configurations',
-    permissions: [
-      { key: 'settings.view', label: 'View Workspace Settings', description: 'Inspect institute configuration and preferences' },
-      { key: 'settings.manage', label: 'Manage Settings & Policies', description: 'Update institute details and global preferences' },
-    ]
-  }
 ];
 
 const REAL_ESTATE_ACTIVE_CATEGORIES = [

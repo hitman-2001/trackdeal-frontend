@@ -11,6 +11,7 @@
         </p>
       </div>
       <button 
+        v-if="canCreateStudent"
         class="btn btn-primary btn-sm h-9 px-3.5 text-xs font-semibold gap-1.5 self-start sm:self-auto shadow-xs" 
         @click="openCreate"
       >
@@ -164,6 +165,7 @@
 
             <!-- 2. Edit Button (Pencil) -->
             <button
+              v-if="canEditStudent"
               class="inline-flex items-center justify-center w-7 h-7 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors"
               title="Edit student"
               aria-label="Edit student"
@@ -172,11 +174,11 @@
               <PhPencilSimple :size="15" weight="bold" />
             </button>
 
-            <!-- 3. Delete Button (Trash) - Admin Only -->
+            <!-- 3. Delete Button (Trash) -->
             <button
-              v-if="isAdmin"
+              v-if="canDeleteStudent"
               class="inline-flex items-center justify-center w-7 h-7 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-              title="Delete student (Admin only)"
+              title="Delete student"
               aria-label="Delete student"
               @click.stop="handleDelete(row)"
             >
@@ -262,6 +264,7 @@
       <template #footer>
         <button type="button" class="btn btn-secondary btn-sm" @click="showViewDrawer = false">Close</button>
         <button
+          v-if="canEditStudent"
           type="button"
           class="btn btn-primary btn-sm gap-1.5"
           @click="switchToEditFromView"
@@ -366,8 +369,20 @@ import {
 
 const store = useStore();
 const isAdmin = computed(() => {
-  const role = store.getters['auth/userRole'];
-  return ['super_admin', 'org_admin', 'admin'].includes(role);
+  const role = String(store.getters['auth/userRole'] || '').toLowerCase();
+  return ['super_admin', 'system_admin', 'org_admin', 'organization_admin', 'admin'].includes(role);
+});
+
+const canCreateStudent = computed(() => {
+  return isAdmin.value || Boolean(store.getters['permissions/hasCapability']?.('students.create'));
+});
+
+const canEditStudent = computed(() => {
+  return isAdmin.value || Boolean(store.getters['permissions/hasCapability']?.('students.update'));
+});
+
+const canDeleteStudent = computed(() => {
+  return isAdmin.value || Boolean(store.getters['permissions/hasCapability']?.('students.delete'));
 });
 
 const columns = [
@@ -558,10 +573,10 @@ async function save() {
 }
 
 async function handleDelete(row) {
-  if (!isAdmin.value) {
+  if (!canDeleteStudent.value) {
     Swal.fire({
       title: 'Access Restricted',
-      text: 'Only administrators have rights to delete student records.',
+      text: 'You do not have permission to delete student records.',
       icon: 'error',
     });
     return;
