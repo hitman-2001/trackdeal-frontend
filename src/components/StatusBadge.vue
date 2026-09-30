@@ -1,12 +1,12 @@
 <template>
   <span
-    class="inline-flex items-center gap-1.5 text-[11px] font-semibold shrink-0 px-2 py-0.5 rounded-md border"
+    class="inline-flex items-center gap-1.5 text-[11px] font-semibold shrink-0 px-2.5 py-0.5 rounded-full border shadow-2xs"
     :class="computedClasses"
   >
     <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="dotClasses" />
     <slot>
-      <span>{{ formattedStatus }}</span>
-      <span v-if="subStatus" class="font-normal opacity-80">· {{ subStatus }}</span>
+      <span class="tracking-tight">{{ formattedStatus }}</span>
+      <span v-if="subStatus" class="font-normal opacity-75">· {{ subStatus }}</span>
     </slot>
   </span>
 </template>

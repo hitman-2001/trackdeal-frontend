@@ -22,14 +22,6 @@
               >
                 {{ formatStatus(studentLead.status) }}
               </span>
-              <!-- Temperature Badge -->
-              <span
-                v-if="studentLead.leadTemperature"
-                class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
-                :class="tempBadgeClass(studentLead.leadTemperature)"
-              >
-                {{ tempLabel(studentLead.leadTemperature) }}
-              </span>
             </div>
 
             <!-- Contacts line -->
@@ -231,18 +223,6 @@
               <option value="application_trial">Application / Trial</option>
               <option value="on_hold">On Hold</option>
               <option value="lost">Lost</option>
-            </select>
-          </label>
-
-          <label class="space-y-1 font-medium text-slate-600 dark:text-slate-300 text-[11px]">
-            <span>Lead Interest Level</span>
-            <select
-              v-model="logForm.temperature"
-              class="w-full bg-slate-50 dark:bg-slate-800 border border-default rounded-xl px-2.5 py-1.5 text-xs outline-none focus:border-primary"
-            >
-              <option value="hot">🔥 Hot (High Intent)</option>
-              <option value="warm">⚡ Warm (In Discussion)</option>
-              <option value="cold">❄ Cold (Low Interest)</option>
             </select>
           </label>
         </div>
@@ -477,7 +457,6 @@ const logForm = ref({
   outcome: '',
   remarks: '',
   status: 'contacted',
-  temperature: 'warm',
   setFollowUp: false,
   followUpDateTime: defaultNextFollowUp(),
 });
@@ -602,7 +581,6 @@ async function loadData() {
 
     // Set initial composer defaults from lead
     logForm.value.status = studentLead.value.status || 'contacted';
-    logForm.value.temperature = studentLead.value.leadTemperature || 'warm';
   } catch (err) {
     console.error('Failed to load lead conversation data:', err);
   } finally {
@@ -656,9 +634,6 @@ async function submitLog() {
     if (logForm.value.status && logForm.value.status !== studentLead.value.status) {
       leadUpdates.status = logForm.value.status;
     }
-    if (logForm.value.temperature && logForm.value.temperature !== studentLead.value.leadTemperature) {
-      leadUpdates.leadTemperature = logForm.value.temperature;
-    }
     if (payload.nextFollowUpAt) {
       leadUpdates.nextFollowUpAt = payload.nextFollowUpAt;
     }
@@ -697,18 +672,6 @@ function statusBadgeClass(status) {
   if (s === 'new' || s === 'assigned') return 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300';
   if (s === 'lost') return 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300';
   return 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300';
-}
-
-function tempLabel(t) {
-  if (t === 'hot') return '🔥 Hot Intent';
-  if (t === 'cold') return '❄ Cold';
-  return '⚡ Warm';
-}
-
-function tempBadgeClass(t) {
-  if (t === 'hot') return 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300';
-  if (t === 'cold') return 'bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-950/40 dark:text-sky-300';
-  return 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300';
 }
 
 function getChannelTitle(item) {

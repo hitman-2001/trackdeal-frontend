@@ -2,17 +2,30 @@
   <div class="workspace-page education-list pb-16">
     <!-- Page Header (Section 6 Standard) -->
     <div
-      class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+      class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4"
     >
-      <div>
-        <h1 class="text-2xl sm:text-[28px] font-bold text-slate-900 dark:text-slate-100 tracking-tight leading-tight">
-          Student Leads
-        </h1>
-        <p class="text-xs sm:text-[13px] text-slate-500 mt-1">
-          Admission inquiries. Convert a lead into an enrolled student.
-        </p>
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-xl sm:text-[28px] font-bold text-slate-900 dark:text-slate-100 tracking-tight leading-tight">
+            Student Leads
+          </h1>
+          <p class="text-xs sm:text-[13px] text-slate-500 mt-0.5 hidden sm:block">
+            Admission inquiries. Convert a lead into an enrolled student.
+          </p>
+        </div>
+        <!-- Compact Add Button for Mobile Screen Header -->
+        <button
+          v-if="canCreateLead"
+          class="sm:hidden btn btn-primary btn-sm rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-transform"
+          @click="openCreate"
+        >
+          <PhPlus :size="14" weight="bold" />
+          <span>Add Lead</span>
+        </button>
       </div>
-      <div class="flex items-center gap-2.5 flex-wrap">
+
+      <!-- Desktop Action Buttons (sm and above) -->
+      <div class="hidden sm:flex items-center gap-2.5 flex-wrap">
         <button
           v-if="canAssignLeads && selectedRows.length > 0"
           @click="openBulkAssign"
@@ -43,18 +56,18 @@
       </div>
     </div>
 
-    <!-- Filters Bar (42px Equal Heights & Consistent Radii per Spec) -->
+    <!-- Filters Bar (Equal Heights & Clean Responsive Grid) -->
     <div
-      class="p-3 sm:p-4 rounded-xl bg-surface border border-default grid grid-cols-1 sm:grid-cols-2 gap-3 shadow-xs"
-      :class="canFilterAllStaff ? 'lg:grid-cols-4' : 'lg:grid-cols-3'"
+      class="p-2 sm:p-4 rounded-xl sm:rounded-2xl bg-white dark:bg-slate-900 sm:bg-surface border border-slate-100 dark:border-slate-800 sm:border-default grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 shadow-xs"
+      :class="canFilterAllStaff ? 'lg:grid-cols-3' : 'lg:grid-cols-2'"
     >
-      <div class="relative">
-        <PhMagnifyingGlass :size="16" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+      <div class="relative w-full">
+        <PhMagnifyingGlass :size="16" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
         <input
           v-model="search"
           type="text"
           placeholder="Search student lead..."
-          class="filter-control pl-9 w-full"
+          class="filter-control !pl-10 w-full"
           @input="handleSearch"
         />
       </div>
@@ -65,15 +78,10 @@
       >
         <option value="">All statuses</option>
         <option value="interested">Interested</option>
-        <option value="not_interested">Not Interested</option>
         <option value="call_back">Call Back</option>
         <option value="future_prospect">Future Prospect</option>
         <option value="enrolled">Enrolled</option>
-        <option disabled>──────────</option>
-        <option value="new">New (Legacy)</option>
-        <option value="contacted">Contacted (Legacy)</option>
-        <option value="follow_up">Follow Up (Legacy)</option>
-        <option value="lost">Lost (Legacy)</option>
+        <option value="not_interested">Not Interested</option>
       </select>
       <select
         v-if="canFilterAllStaff"
@@ -86,23 +94,10 @@
           {{ s.firstName }} {{ s.lastName || '' }}
         </option>
       </select>
-      <select
-        v-model="sourceFilter"
-        class="filter-control w-full"
-        @change="onFilterChange"
-      >
-        <option value="">All sources</option>
-        <option value="walk_in">Walk-in</option>
-        <option value="website">Website</option>
-        <option value="referral">Referral</option>
-        <option value="whatsapp">WhatsApp</option>
-        <option value="campus">Campus</option>
-        <option value="manual_entry">Manual</option>
-      </select>
     </div>
 
-    <!-- Data Table Card -->
-    <div class="rounded-xl bg-surface border border-default overflow-hidden shadow-xs">
+    <!-- Desktop Data Table Card (sm and above) -->
+    <div class="hidden sm:block rounded-xl bg-surface border border-default overflow-hidden shadow-xs">
       <AppTable
         :rows="rows"
         :columns="columns"
@@ -182,6 +177,148 @@
           </button>
         </template>
       </AppTable>
+    </div>
+
+    <!-- Mobile Card View (< 640px) -->
+    <div class="block sm:hidden space-y-3">
+      <!-- Loading Skeleton for Mobile -->
+      <div v-if="loading" class="py-16 text-center text-slate-400 text-sm flex flex-col items-center gap-3">
+        <div class="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <span class="font-medium">Loading leads...</span>
+      </div>
+
+      <!-- Empty State for Mobile -->
+      <div v-else-if="rows.length === 0" class="py-16 text-center space-y-3">
+        <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-400 flex items-center justify-center mx-auto">
+          <PhUserPlus :size="28" />
+        </div>
+        <div>
+          <p class="font-bold text-slate-800 text-base">No student leads yet</p>
+          <p class="text-sm text-slate-400 mt-1">Tap the + button to add your first lead.</p>
+        </div>
+      </div>
+
+      <!-- Lead Cards Feed -->
+      <div
+        v-else
+        v-for="row in rows"
+        :key="row._id || row.id"
+        @click="openDetails(row)"
+        class="bg-white dark:bg-neutral-900 rounded-2xl border border-slate-200/80 dark:border-neutral-800 shadow-[0_2px_10px_rgba(0,0,0,0.03)] p-4 space-y-3 active:scale-[0.99] transition-all cursor-pointer"
+      >
+        <!-- Header: Student Name + Status Badge (No initials box, ample width) -->
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0 flex-1">
+            <h3 class="font-bold text-base text-slate-900 dark:text-slate-100 tracking-tight leading-snug break-words">
+              {{ row.firstName }} {{ row.lastName || '' }}
+            </h3>
+            <!-- Phone & Class/Batch tags directly below name -->
+            <div class="flex items-center flex-wrap gap-2 mt-1.5">
+              <a
+                v-if="row.mobile"
+                :href="'tel:' + row.mobile"
+                @click.stop
+                class="inline-flex items-center gap-1 text-xs font-mono font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400"
+              >
+                <PhPhone :size="12" weight="bold" />
+                <span>{{ row.mobile }}</span>
+              </a>
+              <span
+                v-if="row.classInterestId?.name"
+                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/40"
+              >
+                <PhBookOpen :size="11" weight="bold" />
+                <span>{{ row.classInterestId.name }}</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Capsule Status Badge (Tap to update) -->
+          <button
+            type="button"
+            @click.stop="openStatusModal(row)"
+            class="shrink-0 active:scale-95 transition-transform"
+            title="Tap to update status"
+          >
+            <StatusBadge :status="row.status" :subStatus="row.subStatus" />
+          </button>
+        </div>
+
+        <!-- Metadata Grid: Parent & Assigned Staff (No cramped chips) -->
+        <div class="grid grid-cols-2 gap-2.5 pt-2.5 border-t border-slate-100 dark:border-neutral-800 text-xs">
+          <div class="min-w-0">
+            <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500 block">Parent</span>
+            <span class="font-semibold text-slate-700 dark:text-slate-200 truncate block text-[12px] mt-0.5">
+              {{ row.parentName || '—' }}
+            </span>
+          </div>
+          <div class="min-w-0">
+            <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500 block">Assigned Staff</span>
+            <span class="font-semibold text-slate-700 dark:text-slate-200 truncate block text-[12px] mt-0.5">
+              {{ row.assignedTo ? `${row.assignedTo.firstName || ''} ${row.assignedTo.lastName || ''}`.trim() : 'Unassigned' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Touch Action Row (Matching Platform Blue Standard) -->
+        <div class="flex items-center gap-2 pt-2.5 border-t border-slate-100 dark:border-neutral-800" @click.stop>
+          <a
+            v-if="row.mobile"
+            :href="'tel:' + row.mobile"
+            class="flex-1 h-9 rounded-xl bg-slate-50 dark:bg-neutral-800 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-slate-700 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 border border-slate-200/70 dark:border-neutral-700 flex items-center justify-center gap-1.5 text-xs font-semibold transition-all active:scale-[0.98]"
+          >
+            <PhPhoneCall :size="14" weight="bold" class="text-slate-500 dark:text-slate-400" />
+            <span>Call</span>
+          </a>
+          <a
+            v-if="row.mobile"
+            :href="getWhatsAppUrl(row.mobile)"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex-1 h-9 rounded-xl bg-slate-50 dark:bg-neutral-800 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-slate-700 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 border border-slate-200/70 dark:border-neutral-700 flex items-center justify-center gap-1.5 text-xs font-semibold transition-all active:scale-[0.98]"
+          >
+            <PhWhatsappLogo :size="15" weight="fill" class="text-slate-500 dark:text-slate-400" />
+            <span>WhatsApp</span>
+          </a>
+          <button
+            type="button"
+            @click="openStatusModal(row)"
+            class="flex-1 h-9 rounded-xl btn-primary flex items-center justify-center gap-1.5 text-xs font-bold transition-all shadow-xs active:scale-[0.98]"
+          >
+            <PhArrowsClockwise :size="14" weight="bold" />
+            <span>Status</span>
+          </button>
+          <button
+            type="button"
+            @click="toggleActionMenu(row, $event)"
+            class="w-9 h-9 rounded-xl bg-slate-50 dark:bg-neutral-800 hover:bg-slate-100 dark:hover:bg-neutral-700 text-slate-500 dark:text-slate-400 border border-slate-200/70 dark:border-neutral-700 flex items-center justify-center transition-all active:scale-[0.98]"
+            title="More actions"
+          >
+            <PhDotsThreeVertical :size="16" weight="bold" />
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Pagination Controls -->
+      <div v-if="pagination.totalPages > 1" class="flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm text-xs font-semibold">
+        <button
+          type="button"
+          :disabled="pagination.page <= 1"
+          @click="handlePageChange(pagination.page - 1)"
+          class="h-9 px-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-40 transition-colors"
+        >
+          Previous
+        </button>
+        <span class="text-slate-400 font-medium">{{ pagination.page }} / {{ pagination.totalPages }}</span>
+        <button
+          type="button"
+          :disabled="pagination.page >= pagination.totalPages"
+          @click="handlePageChange(pagination.page + 1)"
+          class="h-9 px-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-40 transition-colors"
+        >
+          Next
+        </button>
+      </div>
     </div>
 
     <!-- Floating 3-Dots Action Dropdown Menu -->
@@ -519,6 +656,12 @@ import {
   PhTrash,
   PhMagnifyingGlass,
   PhArrowsClockwise,
+  PhPhone,
+  PhPhoneCall,
+  PhWhatsappLogo,
+  PhUser,
+  PhBookOpen,
+  PhUsersThree,
 } from "@phosphor-icons/vue";
 import AppTable from "@/components/AppTable.vue";
 import AppDrawer from "@/components/AppDrawer.vue";
@@ -654,8 +797,14 @@ const saving = ref(false);
 const error = ref("");
 const form = ref({});
 const enrollLead = ref(null);
-const enrollClassId = ref("");
 let timer = null;
+
+function getWhatsAppUrl(mobile) {
+  if (!mobile) return "#";
+  const cleanPhone = String(mobile).replace(/\D/g, "");
+  const phone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+  return `https://wa.me/${phone}`;
+}
 
 // Delete confirmation state (Section 19)
 const isDeleteOpen = ref(false);

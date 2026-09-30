@@ -13,7 +13,7 @@
 
     <div v-else-if="lead" class="space-y-5 text-xs pb-4">
       <!-- 1. Lead Identity Card with Quick Actions (Section 11) -->
-      <div class="p-4 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 space-y-3.5">
+      <div class="p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 shadow-[0_2px_10px_rgba(0,0,0,0.03)] space-y-3.5">
         <div class="flex items-start justify-between gap-3">
           <div class="space-y-1">
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Student Lead</span>
@@ -22,13 +22,6 @@
                 {{ lead.firstName }} {{ lead.lastName || '' }}
               </h2>
               <StatusBadge :status="lead.status" :subStatus="lead.subStatus" />
-              <span
-                v-if="lead.leadTemperature"
-                class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border"
-                :class="tempBadgeClass(lead.leadTemperature)"
-              >
-                {{ tempLabel(lead.leadTemperature) }}
-              </span>
             </div>
 
             <!-- Phone & Class -->
@@ -36,7 +29,7 @@
               <a
                 v-if="lead.mobile"
                 :href="'tel:' + lead.mobile"
-                class="font-mono text-emerald-600 hover:text-emerald-700 font-semibold flex items-center gap-1 hover:underline"
+                class="font-mono text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-semibold flex items-center gap-1 hover:underline"
                 title="Click to call"
               >
                 <PhPhone :size="13" weight="bold" />
@@ -44,7 +37,7 @@
               </a>
               <span
                 v-if="lead.classInterestId?.name"
-                class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 font-semibold text-[11px] border border-blue-200/60 dark:border-blue-800/60"
+                class="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 font-semibold text-[11px] border border-blue-200/60 dark:border-blue-800/60"
               >
                 {{ lead.classInterestId.name }}
               </span>
@@ -53,17 +46,17 @@
         </div>
 
         <!-- Mini Key Meta Summary -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2.5 border-t border-slate-200/70 dark:border-slate-700/70 text-[11px]">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2.5 border-t border-slate-100 dark:border-neutral-800 text-[11px]">
           <div>
             <span class="text-[10px] uppercase font-bold text-slate-400 block">Parent / Guardian</span>
-            <span class="font-medium text-slate-800 dark:text-slate-200 truncate block">
+            <span class="font-medium text-slate-800 dark:text-slate-200 truncate block mt-0.5">
               {{ lead.parentName || '—' }}
             </span>
           </div>
 
           <div>
             <span class="text-[10px] uppercase font-bold text-slate-400 block">Assigned Staff</span>
-            <span class="font-medium text-slate-800 dark:text-slate-200 truncate flex items-center gap-1">
+            <span class="font-medium text-slate-800 dark:text-slate-200 truncate flex items-center gap-1 mt-0.5">
               <PhUser :size="12" class="text-slate-400 shrink-0" />
               <span class="truncate">{{ staffName }}</span>
             </span>
@@ -71,21 +64,21 @@
 
           <div>
             <span class="text-[10px] uppercase font-bold text-slate-400 block">Inquiry Source</span>
-            <span class="font-medium capitalize text-slate-800 dark:text-slate-200 truncate block">
+            <span class="font-medium capitalize text-slate-800 dark:text-slate-200 truncate block mt-0.5">
               {{ lead.source ? lead.source.replace(/_/g, ' ') : '—' }}
             </span>
           </div>
         </div>
 
-        <!-- Quick Action Buttons (Section 11: [ Call ] [ WhatsApp ] [ Log Update ]) -->
-        <div class="pt-2 border-t border-slate-200/70 dark:border-slate-700/70 flex items-center gap-2 flex-wrap">
+        <!-- Quick Action Buttons (Touch-friendly 3-column button row) -->
+        <div class="pt-3 border-t border-slate-100 dark:border-neutral-800 flex items-center gap-2">
           <a
             v-if="lead.mobile"
             :href="'tel:' + lead.mobile"
-            class="h-9 px-3 text-xs font-semibold rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors inline-flex items-center gap-1.5 shadow-xs"
+            class="flex-1 h-9.5 px-3 text-xs font-semibold rounded-xl bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-slate-200 hover:bg-blue-50 hover:text-blue-700 dark:hover:text-blue-400 transition-colors inline-flex items-center justify-center gap-1.5 shadow-2xs active:scale-[0.98]"
             title="Initiate phone call"
           >
-            <PhPhoneCall :size="14" weight="bold" class="text-emerald-600" />
+            <PhPhoneCall :size="14" weight="bold" class="text-slate-500 dark:text-slate-400" />
             <span>Call</span>
           </a>
 
@@ -94,30 +87,21 @@
             :href="whatsappUrl"
             target="_blank"
             rel="noopener noreferrer"
-            class="h-9 px-3 text-xs font-semibold rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors inline-flex items-center gap-1.5 shadow-xs"
+            class="flex-1 h-9.5 px-3 text-xs font-semibold rounded-xl bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-slate-200 hover:bg-blue-50 hover:text-blue-700 dark:hover:text-blue-400 transition-colors inline-flex items-center justify-center gap-1.5 shadow-2xs active:scale-[0.98]"
             title="Chat via WhatsApp"
           >
-            <PhWhatsappLogo :size="15" weight="fill" class="text-emerald-600" />
+            <PhWhatsappLogo :size="15" weight="fill" class="text-slate-500 dark:text-slate-400" />
             <span>WhatsApp</span>
           </a>
 
           <button
             type="button"
             @click="showStatusModal = true"
-            class="h-9 px-3 text-xs font-semibold rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors inline-flex items-center gap-1.5 shadow-xs"
-            title="Update Status & Sub-Status"
+            class="flex-1 h-9.5 px-3 text-xs font-bold rounded-xl btn btn-primary inline-flex items-center justify-center gap-1.5 shadow-xs active:scale-[0.98] transition-all"
+            title="Update Status & Disposition"
           >
-            <PhArrowsClockwise :size="14" weight="bold" class="text-blue-600" />
-            <span>Update Status</span>
-          </button>
-
-          <button
-            type="button"
-            @click="triggerLogUpdate"
-            class="btn btn-primary h-9 px-3 text-xs font-medium inline-flex items-center gap-1.5 ml-auto"
-          >
-            <PhNotePencil :size="14" weight="bold" />
-            <span>Log Update</span>
+            <PhArrowsClockwise :size="15" weight="bold" />
+            <span>Status</span>
           </button>
         </div>
       </div>
@@ -168,14 +152,6 @@
             </span>
           </div>
 
-          <!-- Interest Level -->
-          <div class="flex flex-col gap-0.5">
-            <span class="text-[11px] text-slate-400 font-medium">Interest Level</span>
-            <span class="font-medium text-slate-800 dark:text-slate-200 capitalize">
-              {{ lead.leadTemperature ? tempLabel(lead.leadTemperature) : '—' }}
-            </span>
-          </div>
-
           <!-- Interested Class -->
           <div class="flex flex-col gap-0.5">
             <span class="text-[11px] text-slate-400 font-medium">Interested Class</span>
@@ -200,7 +176,7 @@
               <a
                 v-if="lead.parentMobile"
                 :href="'tel:' + lead.parentMobile"
-                class="text-emerald-600 hover:underline font-mono text-[11px] ml-1"
+                class="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:underline font-mono text-[11px] ml-1"
               >
                 ({{ lead.parentMobile }})
               </a>
@@ -446,8 +422,15 @@ const activityData = ref({ activities: [], notes: [], followUps: [] });
 const activeFilter = ref('all');
 
 const staffName = computed(() => {
-  if (lead.value?.assignedTo) {
-    return `${lead.value.assignedTo.firstName || ''} ${lead.value.assignedTo.lastName || ''}`.trim() || 'Assigned Staff';
+  const staff = lead.value?.assignedTo;
+  if (!staff) return 'Unassigned';
+  if (typeof staff === 'object') {
+    const fullName = `${staff.firstName || ''} ${staff.lastName || ''}`.trim();
+    if (fullName) return fullName;
+    if (staff.email) return staff.email;
+  }
+  if (upcomingFollowUp.value?.assignedTo?.firstName) {
+    return `${upcomingFollowUp.value.assignedTo.firstName} ${upcomingFollowUp.value.assignedTo.lastName || ''}`.trim();
   }
   return 'Unassigned';
 });
@@ -565,18 +548,6 @@ watch(
   { immediate: true },
 );
 
-function tempLabel(t) {
-  if (t === 'hot') return 'Hot';
-  if (t === 'cold') return 'Cold';
-  return 'Warm';
-}
-
-function tempBadgeClass(t) {
-  if (t === 'hot') return 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800';
-  if (t === 'cold') return 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800';
-  return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800';
-}
-
 function getChannelTitle(item) {
   if (item.type === 'call' || item.type === 'phone_call') return 'Phone Call';
   if (item.type === 'whatsapp') return 'WhatsApp';
@@ -652,7 +623,7 @@ function handleStatusModalSaved(updatedLead) {
   if (updatedLead) {
     lead.value = { ...lead.value, ...updatedLead };
   }
-  loadDetails();
+  loadData();
   emit('updated', lead.value);
 }
 </script>

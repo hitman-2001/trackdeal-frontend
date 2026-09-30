@@ -1,251 +1,199 @@
 <template>
-  <Teleport to="body">
-    <div
-      v-if="isOpen"
-      class="fixed inset-0 z-[1200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150"
-      @click.self="handleClose"
-    >
+  <AppModal
+    :isOpen="isOpen"
+    title="Update Status"
+    :subtitle="lead ? `Update status for ${lead.firstName} ${lead.lastName || ''}`.trim() : 'Change status & disposition'"
+    maxSize="500px"
+    @cancel="handleClose"
+  >
+    <div class="space-y-4 text-xs">
+      <!-- Student Context Dossier Pill -->
       <div
-        class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-visible transform transition-all relative"
-        @click="closeAllDropdowns"
+        v-if="lead"
+        class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3 shadow-2xs"
       >
-        <!-- Modal Header -->
-        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-100 dark:border-blue-900/50 shadow-xs">
-              <svg class="w-5 h-5 animate-spin-once" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3" />
-              </svg>
-            </div>
-            <div>
-              <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 leading-tight">
-                Select Status
-              </h3>
-              <p v-if="lead" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                {{ lead.firstName }} {{ lead.lastName || '' }}
-              </p>
-            </div>
+        <div>
+          <div class="font-bold text-sm text-slate-800 dark:text-slate-100">
+            {{ lead.firstName }} {{ lead.lastName || '' }}
           </div>
-
-          <!-- Close Button -->
-          <button
-            type="button"
-            @click="handleClose"
-            class="w-7 h-7 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-transform hover:scale-105 active:scale-95 shadow-xs"
-            title="Close"
-          >
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </div>
-
-        <!-- Modal Body -->
-        <div class="p-5 space-y-4">
-          <!-- Error banner if any -->
-          <div
-            v-if="errorMessage"
-            class="p-3 text-xs bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 rounded-xl border border-rose-200 dark:border-rose-900"
-          >
-            {{ errorMessage }}
-          </div>
-
-          <!-- Top Row: Status dropdown & Sub-status button/dropdown -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 relative">
-            <!-- 1. Status Dropdown -->
-            <div class="relative" @click.stop>
-              <button
-                type="button"
-                @click="toggleStatusMenu"
-                class="w-full h-11 px-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 rounded-xl text-slate-800 dark:text-slate-100 text-xs sm:text-sm font-medium flex items-center justify-between gap-2 shadow-xs transition-colors"
-                :class="{ 'ring-2 ring-blue-500/20 border-blue-500': isStatusOpen }"
-              >
-                <span class="truncate">{{ currentStatusLabel }}</span>
-                <svg
-                  class="w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200"
-                  :class="{ 'rotate-180': isStatusOpen }"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </button>
-
-              <!-- Status Popover Menu -->
-              <div
-                v-if="isStatusOpen"
-                class="absolute left-0 right-0 top-[calc(100%+6px)] z-50 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-1.5 space-y-1 text-xs"
-              >
-                <!-- Search Box -->
-                <div class="relative px-1 pt-1 pb-1.5 border-b border-slate-100 dark:border-slate-700">
-                  <div class="relative flex items-center">
-                    <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <circle cx="11" cy="11" r="8"></circle>
-                      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                    <input
-                      ref="statusSearchInput"
-                      v-model="statusSearch"
-                      type="text"
-                      placeholder="Search status..."
-                      class="w-full pl-8 pr-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 text-xs focus:outline-none focus:border-blue-500"
-                    />
-                  </div>
-                </div>
-
-                <!-- Status Options List -->
-                <div class="max-h-48 overflow-y-auto space-y-0.5 pt-0.5">
-                  <button
-                    v-for="st in filteredStatusList"
-                    :key="st.value"
-                    type="button"
-                    @click="selectStatus(st.value)"
-                    class="w-full px-3 py-2 text-left rounded-lg transition-colors font-medium flex items-center justify-between"
-                    :class="selectedStatus === st.value
-                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 font-semibold'
-                      : 'hover:bg-slate-100 dark:hover:bg-slate-700/60 text-slate-700 dark:text-slate-300'"
-                  >
-                    <span>{{ st.label }}</span>
-                    <span
-                      v-if="selectedStatus === st.value"
-                      class="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400"
-                    />
-                  </button>
-                  <div v-if="filteredStatusList.length === 0" class="px-3 py-2 text-slate-400 italic text-center">
-                    No status found
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 2. Sub-Status Dropdown Button (Vibrant Blue per Maglo spec) -->
-            <div class="relative" @click.stop>
-              <button
-                type="button"
-                @click="toggleSubStatusMenu"
-                class="w-full h-11 px-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-medium flex items-center justify-between gap-2 shadow-sm transition-colors"
-                :class="{ 'ring-2 ring-blue-400/50': isSubStatusOpen }"
-              >
-                <span class="truncate">{{ selectedSubStatus || 'Select Sub-Status' }}</span>
-                <svg
-                  class="w-4 h-4 text-white/90 shrink-0 transition-transform duration-200"
-                  :class="{ 'rotate-180': isSubStatusOpen }"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </button>
-
-              <!-- Sub-Status Popover Menu -->
-              <div
-                v-if="isSubStatusOpen"
-                class="absolute left-0 right-0 top-[calc(100%+6px)] z-50 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-1.5 space-y-1 text-xs"
-              >
-                <!-- Search Box -->
-                <div class="relative px-1 pt-1 pb-1.5 border-b border-slate-100 dark:border-slate-700">
-                  <div class="relative flex items-center">
-                    <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <circle cx="11" cy="11" r="8"></circle>
-                      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                    <input
-                      ref="subStatusSearchInput"
-                      v-model="subStatusSearch"
-                      type="text"
-                      placeholder="Search sub-status..."
-                      class="w-full pl-8 pr-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 text-xs focus:outline-none focus:border-blue-500"
-                    />
-                  </div>
-                </div>
-
-                <!-- Sub-Status Options List -->
-                <div class="max-h-52 overflow-y-auto space-y-0.5 pt-0.5">
-                  <button
-                    v-for="sub in filteredSubStatusList"
-                    :key="sub"
-                    type="button"
-                    @click="selectSubStatus(sub)"
-                    class="w-full px-3 py-2 text-left rounded-lg transition-colors font-medium flex items-center justify-between"
-                    :class="selectedSubStatus === sub
-                      ? 'bg-blue-600 text-white font-semibold'
-                      : 'hover:bg-slate-100 dark:hover:bg-slate-700/60 text-slate-700 dark:text-slate-300'"
-                  >
-                    <span>{{ sub }}</span>
-                    <svg
-                      v-if="selectedSubStatus === sub"
-                      class="w-3.5 h-3.5 text-white"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="3"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    >
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                  </button>
-                  <div v-if="filteredSubStatusList.length === 0" class="px-3 py-2 text-slate-400 italic text-center">
-                    No matching sub-status
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Remarks Section -->
-          <div class="space-y-1.5 pt-1">
-            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-              Add Remarks
-            </label>
-            <textarea
-              v-model="remarks"
-              rows="4"
-              placeholder="Add your remark..."
-              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-xs sm:text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none transition-colors shadow-2xs"
-            ></textarea>
+          <div class="text-xs text-slate-500 font-mono flex items-center gap-2 mt-0.5">
+            <span>{{ lead.mobile }}</span>
+            <span v-if="lead.classInterestId?.name" class="font-sans text-slate-400">
+              · {{ lead.classInterestId.name }}
+            </span>
           </div>
         </div>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <span class="text-[11px] text-slate-400 font-medium">Current:</span>
+          <StatusBadge :status="lead.status || 'new'" />
+        </div>
+      </div>
 
-        <!-- Modal Footer -->
-        <div class="px-5 py-3.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2.5 bg-slate-50/50 dark:bg-slate-800/20 rounded-b-2xl">
+      <!-- Error banner if any -->
+      <div
+        v-if="errorMessage"
+        class="p-3 text-xs bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 rounded-xl border border-rose-200 dark:border-rose-900"
+      >
+        {{ errorMessage }}
+      </div>
+
+      <!-- Status Selection - Visual Touch Cards -->
+      <div class="space-y-2">
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+          Select Stage / Status <span class="text-rose-500">*</span>
+        </label>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
           <button
+            v-for="st in statusOptions"
+            :key="st.value"
             type="button"
-            @click="handleClose"
-            class="px-4 py-2 text-xs font-semibold rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition-colors"
-            :disabled="saving"
+            @click="selectStatus(st.value)"
+            class="h-11 px-3 rounded-xl border-2 text-xs font-bold flex items-center gap-2 transition-all text-left cursor-pointer"
+            :class="[
+              selectedStatus === st.value
+                ? 'border-blue-600 bg-blue-50/80 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 ring-2 ring-blue-500/20 shadow-xs'
+                : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600'
+            ]"
           >
-            Cancel
-          </button>
-          <button
-            type="button"
-            @click="handleSave"
-            class="px-5 py-2 text-xs font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition-colors flex items-center gap-1.5 disabled:opacity-50"
-            :disabled="saving"
-          >
-            <svg v-if="saving" class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <circle cx="12" cy="12" r="10" stroke-width="4" stroke="currentColor" class="opacity-25" />
-              <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" class="opacity-75" />
-            </svg>
-            <span>{{ saving ? 'Updating...' : 'Update Status' }}</span>
+            <component
+              :is="st.icon"
+              :size="18"
+              weight="bold"
+              :class="selectedStatus === st.value ? 'text-blue-600 dark:text-blue-400' : st.color"
+              class="shrink-0"
+            />
+            <span class="truncate">{{ st.label }}</span>
           </button>
         </div>
       </div>
+
+      <!-- Sub-Status Selection -->
+      <div class="space-y-1.5 pt-1">
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+          Sub-Status / Specific Reason <span class="text-rose-500">*</span>
+        </label>
+        <select
+          v-model="selectedSubStatus"
+          class="w-full h-11 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl px-3.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-slate-800 dark:text-slate-100 font-medium transition-all"
+        >
+          <option value="" disabled>Select Sub-Status</option>
+          <option v-for="sub in currentSubStatusList" :key="sub" :value="sub">
+            {{ sub }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Remarks / Internal Notes -->
+      <div class="space-y-1.5 pt-1">
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+          Remarks / Discussion Notes <span class="text-slate-400 font-normal">(Optional)</span>
+        </label>
+        <textarea
+          v-model="remarks"
+          rows="3"
+          placeholder="Add discussion notes, callback reason, or parent preferences..."
+          class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl p-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 resize-none leading-relaxed text-slate-800 dark:text-slate-100 transition-all placeholder:text-slate-400"
+        ></textarea>
+      </div>
+
+      <!-- Optional Next Follow-up -->
+      <div class="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/40 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <PhCalendar :size="15" weight="bold" class="text-blue-600" />
+            <span class="font-bold text-xs text-slate-800 dark:text-slate-200">Schedule Next Follow-up</span>
+          </div>
+          <button
+            type="button"
+            @click="scheduleFollowUp = !scheduleFollowUp"
+            class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 cursor-pointer"
+            :class="scheduleFollowUp ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-600'"
+          >
+            <span
+              class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform duration-200"
+              :class="scheduleFollowUp ? 'translate-x-4.5' : 'translate-x-0.5'"
+            ></span>
+          </button>
+        </div>
+
+        <template v-if="scheduleFollowUp">
+          <div class="flex flex-wrap gap-1.5 pt-1">
+            <button
+              v-for="quick in quickFollowUps"
+              :key="quick.label"
+              type="button"
+              @click="applyQuickFollowUp(quick)"
+              class="px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-all cursor-pointer"
+              :class="isQuickActive(quick)
+                ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-500 ring-1 ring-blue-500'
+                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-blue-400'"
+            >
+              {{ quick.label }}
+            </button>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <div>
+              <label class="text-[10px] font-semibold text-slate-500 block mb-0.5">Date</label>
+              <input
+                v-model="followUpDate"
+                type="date"
+                required
+                class="w-full h-9 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-2.5 text-xs outline-none focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label class="text-[10px] font-semibold text-slate-500 block mb-0.5">Time</label>
+              <input
+                v-model="followUpTime"
+                type="time"
+                required
+                class="w-full h-9 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-2.5 text-xs outline-none focus:border-blue-500"
+              />
+            </div>
+          </div>
+        </template>
+      </div>
     </div>
-  </Teleport>
+
+    <!-- Modal Footer Actions -->
+    <template #footer>
+      <button
+        type="button"
+        @click="handleClose"
+        class="h-10 px-4 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 transition-colors"
+        :disabled="saving"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        @click="handleSave"
+        class="btn btn-primary h-10 px-5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-xs active:scale-[0.98] transition-all disabled:opacity-50"
+        :disabled="saving || !selectedSubStatus"
+      >
+        <span v-if="saving" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+        <PhCheck v-else :size="16" weight="bold" />
+        <span>{{ saving ? 'Updating...' : 'Update Status' }}</span>
+      </button>
+    </template>
+  </AppModal>
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue';
+import { ref, computed, watch } from 'vue';
+import { useStore } from 'vuex';
+import {
+  PhCheck,
+  PhStar,
+  PhPhoneCall,
+  PhClock,
+  PhGraduationCap,
+  PhXCircle,
+  PhCalendar,
+} from '@phosphor-icons/vue';
+import AppModal from '@/components/AppModal.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import {
   EDUCATION_STATUSES,
   EDUCATION_SUB_STATUS_MAP,
@@ -259,6 +207,16 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['close', 'saved']);
+const store = useStore();
+
+// Status options with high-end Phosphor vector icons
+const statusOptions = [
+  { value: 'interested', label: 'Interested', icon: PhStar, color: 'text-amber-500' },
+  { value: 'call_back', label: 'Call Back', icon: PhPhoneCall, color: 'text-blue-500' },
+  { value: 'future_prospect', label: 'Future Prospect', icon: PhClock, color: 'text-indigo-500' },
+  { value: 'enrolled', label: 'Enrolled', icon: PhGraduationCap, color: 'text-emerald-500' },
+  { value: 'not_interested', label: 'Not Interested', icon: PhXCircle, color: 'text-rose-500' },
+];
 
 // Reactive state
 const selectedStatus = ref('interested');
@@ -267,14 +225,36 @@ const remarks = ref('');
 const saving = ref(false);
 const errorMessage = ref('');
 
-// Dropdowns and searches
-const isStatusOpen = ref(false);
-const statusSearch = ref('');
-const isSubStatusOpen = ref(false);
-const subStatusSearch = ref('');
+// Next Follow-up state
+const scheduleFollowUp = ref(false);
+const followUpDate = ref(defaultFollowUpDate());
+const followUpTime = ref('11:00');
 
-const statusSearchInput = ref(null);
-const subStatusSearchInput = ref(null);
+function defaultFollowUpDate() {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().split('T')[0];
+}
+
+const quickFollowUps = [
+  { label: 'Tomorrow', days: 1, time: '11:00' },
+  { label: 'In 2 Days', days: 2, time: '11:00' },
+  { label: 'In 3 Days', days: 3, time: '11:00' },
+  { label: 'Next Week', days: 7, time: '10:00' },
+];
+
+function applyQuickFollowUp(quick) {
+  const d = new Date();
+  d.setDate(d.getDate() + quick.days);
+  followUpDate.value = d.toISOString().split('T')[0];
+  followUpTime.value = quick.time;
+}
+
+function isQuickActive(quick) {
+  const d = new Date();
+  d.setDate(d.getDate() + quick.days);
+  return followUpDate.value === d.toISOString().split('T')[0] && followUpTime.value === quick.time;
+}
 
 // Initialize form values from lead prop
 watch(
@@ -294,78 +274,33 @@ watch(
       }
 
       remarks.value = leadData.statusRemarks || '';
-      isStatusOpen.value = false;
-      isSubStatusOpen.value = false;
-      statusSearch.value = '';
-      subStatusSearch.value = '';
+      scheduleFollowUp.value = norm === 'call_back';
+      followUpDate.value = defaultFollowUpDate();
+      followUpTime.value = '11:00';
     }
   },
   { immediate: true }
 );
 
 const currentStatusLabel = computed(() => {
-  const match = EDUCATION_STATUSES.find(s => s.value === selectedStatus.value);
+  const match = statusOptions.find(s => s.value === selectedStatus.value);
   return match ? match.label : selectedStatus.value;
-});
-
-const filteredStatusList = computed(() => {
-  if (!statusSearch.value.trim()) return EDUCATION_STATUSES;
-  const q = statusSearch.value.toLowerCase().trim();
-  return EDUCATION_STATUSES.filter(s => s.label.toLowerCase().includes(q));
 });
 
 const currentSubStatusList = computed(() => {
   return EDUCATION_SUB_STATUS_MAP[selectedStatus.value] || [];
 });
 
-const filteredSubStatusList = computed(() => {
-  const list = currentSubStatusList.value;
-  if (!subStatusSearch.value.trim()) return list;
-  const q = subStatusSearch.value.toLowerCase().trim();
-  return list.filter(s => s.toLowerCase().includes(q));
-});
-
-function toggleStatusMenu() {
-  isStatusOpen.value = !isStatusOpen.value;
-  isSubStatusOpen.value = false;
-  if (isStatusOpen.value) {
-    statusSearch.value = '';
-    nextTick(() => statusSearchInput.value?.focus());
-  }
-}
-
 function selectStatus(val) {
   selectedStatus.value = val;
-  isStatusOpen.value = false;
-  statusSearch.value = '';
-
-  // Default to first sub-status for newly picked status
   const subs = EDUCATION_SUB_STATUS_MAP[val] || [];
   selectedSubStatus.value = subs[0] || '';
-}
-
-function toggleSubStatusMenu() {
-  isSubStatusOpen.value = !isSubStatusOpen.value;
-  isStatusOpen.value = false;
-  if (isSubStatusOpen.value) {
-    subStatusSearch.value = '';
-    nextTick(() => subStatusSearchInput.value?.focus());
+  if (val === 'call_back') {
+    scheduleFollowUp.value = true;
   }
-}
-
-function selectSubStatus(sub) {
-  selectedSubStatus.value = sub;
-  isSubStatusOpen.value = false;
-  subStatusSearch.value = '';
-}
-
-function closeAllDropdowns() {
-  isStatusOpen.value = false;
-  isSubStatusOpen.value = false;
 }
 
 function handleClose() {
-  closeAllDropdowns();
   emit('close');
 }
 
@@ -384,21 +319,31 @@ async function handleSave() {
       statusRemarks: remarks.value.trim(),
     };
 
+    if (scheduleFollowUp.value && followUpDate.value) {
+      const timeStr = followUpTime.value || '11:00';
+      payload.nextFollowUpAt = new Date(`${followUpDate.value}T${timeStr}:00`).toISOString();
+    }
+
     const updated = await updateEducationLead(leadId, payload);
 
-    // Also record an audit activity log entry if remarks were provided
-    if (remarks.value.trim()) {
-      try {
-        await logEducationLeadActivity(leadId, {
-          type: 'note',
-          title: `Status updated to ${currentStatusLabel.value} (${selectedSubStatus.value || 'No sub-status'})`,
-          description: remarks.value.trim(),
-        });
-      } catch (logErr) {
-        // Activity log is non-blocking
-        console.warn('Failed to log activity entry:', logErr);
-      }
+    // Also record an audit activity log entry
+    try {
+      await logEducationLeadActivity(leadId, {
+        type: 'stage_change',
+        summary: `Status updated to ${currentStatusLabel.value} (${selectedSubStatus.value || 'No sub-status'})`,
+        description: remarks.value.trim() || `Status updated to ${currentStatusLabel.value}`,
+        customerResponse: selectedSubStatus.value,
+        nextFollowUpAt: payload.nextFollowUpAt || null,
+        status: 'completed',
+      });
+    } catch (logErr) {
+      console.warn('Failed to log activity entry:', logErr);
     }
+
+    store.dispatch('notifications/triggerToast', {
+      message: `Status updated to ${currentStatusLabel.value}`,
+      type: 'success',
+    });
 
     emit('saved', updated?.lead || updated);
     handleClose();

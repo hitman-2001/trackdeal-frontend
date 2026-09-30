@@ -323,54 +323,56 @@
       </div>
     </div>
 
-    <!-- ── Mobile Drawer Sidebar ───────────────────────────────────── -->
+    <!-- ── Mobile Bottom Sheet Menu ──────────────────────────────── -->
     <Teleport to="body">
       <Transition name="backdrop">
         <div
           v-if="mobileMenuOpen"
           class="fixed inset-0 z-[1000] lg:hidden"
           style="
-            background-color: rgba(9, 14, 26, 0.5);
-            backdrop-filter: blur(4px);
+            background-color: rgba(9, 14, 26, 0.45);
+            backdrop-filter: blur(6px);
           "
           @click="mobileMenuOpen = false"
         />
       </Transition>
-      <Transition name="drawer">
+      <Transition name="bottom-sheet">
         <aside
           v-if="mobileMenuOpen"
-          class="fixed left-0 top-0 z-[1010] h-full w-[260px] flex flex-col bg-white dark:bg-neutral-900 border-r border-slate-200 dark:border-neutral-800 shadow-2xl"
+          class="fixed bottom-0 left-0 right-0 z-[1010] flex flex-col bg-white dark:bg-neutral-900 shadow-2xl lg:hidden"
+          style="border-radius: 20px 20px 0 0; max-height: 85vh;"
         >
-          <div
-            class="h-16 flex items-center justify-between px-4 border-b border-slate-200 dark:border-neutral-800 shrink-0"
-          >
-            <div class="flex items-center gap-2">
-              <img
-                v-if="isEducationWorkspace"
-                src="/education_logo.png"
-                alt="TrackDeal Education"
-                class="brand-logo-img education-logo !h-7 !max-w-[140px]"
-              />
-              <img
-                v-else
-                src="/real_estate_black.png"
-                alt="TrackDeal Real Estate"
-                class="brand-logo-img real-estate-logo !h-6 !max-w-[140px]"
-              />
-            </div>
-            <button
-              @click="mobileMenuOpen = false"
-              class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
-            >
-              <PhX :size="18" weight="bold" />
-            </button>
+          <!-- Drag Handle -->
+          <div class="flex justify-center pt-3 pb-1 shrink-0" @click="mobileMenuOpen = false">
+            <div class="w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></div>
           </div>
 
-          <nav class="flex-1 px-3 py-3 overflow-y-auto space-y-1">
-            <template v-for="group in filteredMenuGroups" :key="group.title">
-              <div
-                class="px-2 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400"
+          <!-- User Profile Card -->
+          <div class="px-5 pb-4 pt-2 shrink-0">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 text-white flex items-center justify-center font-bold text-sm shadow-md">
+                {{ userInitials }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">{{ userName }}</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">{{ userEmail }}</p>
+              </div>
+              <button
+                @click="mobileMenuOpen = false"
+                class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
               >
+                <PhX :size="16" weight="bold" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div class="h-px bg-slate-100 dark:bg-slate-800 mx-5"></div>
+
+          <!-- Navigation List -->
+          <nav class="flex-1 overflow-y-auto px-4 py-3 space-y-1" style="-webkit-overflow-scrolling: touch;">
+            <template v-for="group in filteredMenuGroups" :key="group.title">
+              <div class="px-2 pt-3 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                 {{ group.title }}
               </div>
               <router-link
@@ -378,26 +380,41 @@
                 :key="item.name"
                 :to="item.to"
                 @click="mobileMenuOpen = false"
-                class="flex items-center h-10 px-3 gap-3 rounded-xl text-sm font-medium transition-colors"
-                :class="isActiveRoute(item) ? 'active' : 'inactive'"
+                class="flex items-center h-12 px-3 gap-3.5 rounded-2xl text-[13px] font-semibold transition-all"
+                :class="isActiveRoute(item)
+                  ? 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300'
+                  : 'text-slate-600 dark:text-slate-300 active:bg-slate-50 dark:active:bg-slate-800'"
               >
-                <component
-                  :is="item.icon"
-                  :size="19"
-                  :weight="isActiveRoute(item) ? 'bold' : 'regular'"
-                  class="shrink-0"
-                />
+                <div
+                  class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors"
+                  :class="isActiveRoute(item)
+                    ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'"
+                >
+                  <component
+                    :is="item.icon"
+                    :size="18"
+                    :weight="isActiveRoute(item) ? 'bold' : 'regular'"
+                  />
+                </div>
                 <span class="truncate">{{ item.name }}</span>
+                <PhCaretRight
+                  v-if="isActiveRoute(item)"
+                  :size="14"
+                  weight="bold"
+                  class="ml-auto text-blue-400 dark:text-blue-500"
+                />
               </router-link>
             </template>
           </nav>
 
-          <div class="p-3 border-t border-slate-100 dark:border-neutral-800">
+          <!-- Sign Out Button (pinned at bottom) -->
+          <div class="px-5 py-4 border-t border-slate-100 dark:border-slate-800 shrink-0" style="padding-bottom: calc(16px + env(safe-area-inset-bottom));">
             <button
               @click="handleLogout"
-              class="logout-action-btn w-full h-10 flex items-center justify-center gap-2 rounded-xl text-xs font-semibold"
+              class="w-full h-12 flex items-center justify-center gap-2.5 rounded-2xl text-sm font-semibold bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/30 transition-colors active:bg-red-100"
             >
-              <PhSignOut :size="16" weight="bold" />
+              <PhSignOut :size="18" weight="bold" />
               <span>Sign Out</span>
             </button>
           </div>
@@ -1910,14 +1927,14 @@ const vClickOutside = {
   opacity: 0;
 }
 
-.drawer-enter-active,
-.drawer-leave-active {
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+.bottom-sheet-enter-active,
+.bottom-sheet-leave-active {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.drawer-enter-from,
-.drawer-leave-to {
-  transform: translateX(-100%);
+.bottom-sheet-enter-from,
+.bottom-sheet-leave-to {
+  transform: translateY(100%);
 }
 
 .slide-right-enter-active,
@@ -1955,7 +1972,7 @@ const vClickOutside = {
 }
 
 /* ==========================================================================
-   Mobile Bottom Navigation (Strictly hidden on desktop, active on mobile)
+   Mobile Bottom Navigation (Modern App-Style Fixed Tab Bar)
    ========================================================================== */
 .mobile-bottom-nav {
   display: none !important;
@@ -1968,21 +1985,23 @@ const vClickOutside = {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 64px;
-    background-color: hsl(var(--bg-surface));
-    border-top: 1px solid hsl(var(--border-default));
+    height: 68px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(20px) saturate(1.6);
+    -webkit-backdrop-filter: blur(20px) saturate(1.6);
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
     align-items: center;
     justify-content: space-around;
-    padding: 0 0.5rem;
+    padding: 0 4px;
     z-index: 999;
     padding-bottom: env(safe-area-inset-bottom);
-    box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.04);
   }
 }
 
 .dark .mobile-bottom-nav {
-  border-top-color: hsl(var(--neutral-800));
-  background-color: #0f172a;
+  background: rgba(10, 15, 26, 0.92);
+  border-top-color: rgba(255, 255, 255, 0.06);
 }
 
 .mobile-nav-item {
@@ -1991,7 +2010,7 @@ const vClickOutside = {
   align-items: center;
   justify-content: center;
   gap: 3px;
-  color: hsl(var(--neutral-400));
+  color: #94a3b8;
   font-size: 10px;
   font-weight: 600;
   flex: 1;
@@ -2001,38 +2020,58 @@ const vClickOutside = {
   padding: 6px 0;
   transition: color 150ms ease;
   cursor: pointer;
+  position: relative;
 }
 .mobile-nav-item:hover,
 .mobile-nav-item:active {
-  color: hsl(var(--neutral-700));
+  color: #475569;
 }
 .dark .mobile-nav-item:hover,
 .dark .mobile-nav-item:active {
-  color: hsl(var(--neutral-200));
+  color: #cbd5e1;
 }
 
 .mobile-nav-item.active {
-  color: hsl(var(--accent-600));
+  color: hsl(var(--primary, 220 85% 45%));
 }
 .mobile-nav-item.active .nav-icon {
-  color: hsl(var(--accent-600));
+  color: hsl(var(--primary, 220 85% 45%));
+}
+/* Active pill indicator dot */
+.mobile-nav-item.active::after {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background: hsl(var(--primary, 220 85% 45%));
 }
 
 .mobile-nav-fab {
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  background-color: hsl(var(--accent-500));
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: hsl(var(--primary, 220 85% 45%));
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
-  margin-top: -22px;
-  box-shadow: 0 4px 14px rgba(var(--accent-500), 0.35);
+  margin-top: -28px;
+  box-shadow:
+    0 4px 16px rgba(37, 99, 235, 0.28),
+    0 0 0 4px rgba(255, 255, 255, 0.9);
   flex-shrink: 0;
   cursor: pointer;
-  transition: transform 150ms ease;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+.dark .mobile-nav-fab {
+  box-shadow:
+    0 4px 16px rgba(37, 99, 235, 0.4),
+    0 0 0 4px rgba(10, 15, 26, 0.9);
 }
 .mobile-nav-fab:active {
   transform: scale(0.92);
@@ -2080,12 +2119,20 @@ const vClickOutside = {
     display: none !important;
   }
   .app-navbar {
-    padding-left: 12px !important;
-    padding-right: 12px !important;
-    height: 56px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    height: 52px !important;
     width: 100% !important;
     max-width: 100vw !important;
     box-sizing: border-box !important;
+    background: rgba(255, 255, 255, 0.96) !important;
+    backdrop-filter: blur(20px) saturate(1.4) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(1.4) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+  }
+  .dark .app-navbar {
+    background: rgba(13, 21, 35, 0.96) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.06) !important;
   }
   .navbar-left {
     gap: 8px;
@@ -2093,7 +2140,7 @@ const vClickOutside = {
     flex-shrink: 1;
   }
   .navbar-right {
-    gap: 6px;
+    gap: 4px;
     padding-left: 0 !important;
     flex-shrink: 0;
   }
@@ -2107,16 +2154,16 @@ const vClickOutside = {
     gap: 8px;
   }
   .real-estate-logo {
+    height: 26px !important;
+    max-width: 130px !important;
+  }
+  .education-logo {
     height: 28px !important;
     max-width: 135px !important;
   }
-  .education-logo {
-    height: 30px !important;
-    max-width: 140px !important;
-  }
   .brand-mark-box {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     border-radius: 8px;
   }
   .brand-name {
@@ -2127,19 +2174,24 @@ const vClickOutside = {
     gap: 0;
   }
   .user-avatar {
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
-    font-size: 0.75rem;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    font-size: 0.7rem;
   }
   .action-btn {
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+  }
+  /* Hide breadcrumbs on mobile for cleaner look */
+  .breadcrumb-bar {
+    display: none !important;
   }
   .content {
-    padding: 12px 10px calc(80px + env(safe-area-inset-bottom)) 10px !important;
+    padding: 16px 16px calc(80px + env(safe-area-inset-bottom)) 16px !important;
     background-image: none !important;
-    background-color: #ffffff !important;
+    background-color: #f8fafc !important;
     overflow-x: hidden !important;
     width: 100% !important;
     max-width: 100% !important;
@@ -2147,7 +2199,7 @@ const vClickOutside = {
     box-sizing: border-box !important;
   }
   .dark .content {
-    background-color: #0f172a !important;
+    background-color: #0a0f1a !important;
   }
 }
 </style>

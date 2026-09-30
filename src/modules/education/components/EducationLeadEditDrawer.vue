@@ -145,17 +145,6 @@
             </select>
           </div>
 
-          <div class="modal-form-group">
-            <label class="modal-form-label">Interest Level</label>
-            <select
-              v-model="form.leadTemperature"
-              class="modal-form-select"
-            >
-              <option value="hot">🔥 Hot (High Intent)</option>
-              <option value="warm">⚡ Warm (In Discussion)</option>
-              <option value="cold">❄ Cold (Low Interest)</option>
-            </select>
-          </div>
         </div>
 
         <div class="modal-form-group mt-2">
@@ -230,7 +219,6 @@ const form = ref({
   source: "walk_in",
   status: "interested",
   subStatus: "",
-  leadTemperature: "warm",
   customerInterest: "",
 });
 
@@ -280,7 +268,6 @@ async function loadLead() {
       source: lead.value.source || "walk_in",
       status: normStatus,
       subStatus: resolvedSub,
-      leadTemperature: lead.value.qualification?.leadTemperature || "warm",
       customerInterest:
         lead.value.customerFeedback ||
         lead.value.customerInterest ||
@@ -324,7 +311,6 @@ async function handleSave() {
       customerFeedback: form.value.customerInterest,
       qualification: {
         ...(lead.value.qualification || {}),
-        leadTemperature: form.value.leadTemperature,
         notesRemarks: form.value.customerInterest,
       },
     };
