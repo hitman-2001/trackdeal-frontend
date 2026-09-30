@@ -1,18 +1,31 @@
 <template>
   <div class="workspace-page education-list space-y-5 text-xs">
     <!-- Page Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-default pb-4">
-      <div>
-        <h1 class="font-heading text-xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-          <span>Enrolled Students</span>
-        </h1>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-          Directory of enrolled students mapped to classes, batches, and parent guardian contacts.
-        </p>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-default pb-3 sm:pb-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="font-heading text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <span>Enrolled Students</span>
+          </h1>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 hidden sm:block">
+            Directory of enrolled students mapped to classes, batches, and parent guardian contacts.
+          </p>
+        </div>
+        <!-- Compact Add Student Button for Mobile Header -->
+        <button 
+          v-if="canCreateStudent"
+          class="sm:hidden btn btn-primary btn-sm h-9 px-3.5 text-xs font-semibold gap-1.5 shadow-xs rounded-xl active:scale-95 transition-transform" 
+          @click="openCreate"
+        >
+          <PhPlus :size="15" weight="bold" />
+          <span>Add Student</span>
+        </button>
       </div>
+
+      <!-- Desktop Add Student Button -->
       <button 
         v-if="canCreateStudent"
-        class="btn btn-primary btn-sm h-9 px-3.5 text-xs font-semibold gap-1.5 self-start sm:self-auto shadow-xs" 
+        class="hidden sm:inline-flex btn btn-primary btn-sm h-9 px-3.5 text-xs font-semibold gap-1.5 shadow-xs" 
         @click="openCreate"
       >
         <PhPlus :size="15" weight="bold" />
@@ -20,8 +33,86 @@
       </button>
     </div>
 
-    <!-- Filter & Search Bar -->
-    <div class="p-3.5 rounded-xl bg-surface border border-default shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <!-- Mobile Streamlined Search & Filter (Flipkart / Amazon Style) (< 640px) -->
+    <div class="sm:hidden space-y-2">
+      <!-- Search Input + Filters Button Row -->
+      <div class="flex items-center gap-2">
+        <div class="relative flex-1">
+          <PhMagnifyingGlass :size="16" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
+          <input 
+            v-model="search" 
+            type="text" 
+            placeholder="Search student, mobile, parent..." 
+            class="w-full h-10 pl-9 pr-8 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 placeholder:text-slate-400 shadow-2xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all" 
+            @input="handleSearch" 
+          />
+          <button
+            v-if="search"
+            type="button"
+            @click="search = ''; handleSearch()"
+            class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
+            aria-label="Clear search"
+          >
+            <PhX :size="14" weight="bold" />
+          </button>
+        </div>
+
+        <!-- Filter Trigger Button (Flipkart / Amazon style) -->
+        <button
+          type="button"
+          @click="openFilterModal"
+          class="h-10 px-3.5 rounded-xl border font-semibold text-xs inline-flex items-center gap-1.5 shadow-2xs shrink-0 active:scale-95 transition-all"
+          :class="activeFilterCount > 0
+            ? 'border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 font-bold'
+            : 'border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-neutral-800'"
+          title="Open Filters"
+        >
+          <PhSlidersHorizontal :size="16" weight="bold" />
+          <span>Filters</span>
+          <span
+            v-if="activeFilterCount > 0"
+            class="w-4.5 h-4.5 rounded-full bg-blue-600 text-white text-[10px] font-bold inline-flex items-center justify-center shrink-0"
+          >
+            {{ activeFilterCount }}
+          </span>
+        </button>
+      </div>
+
+      <!-- Applied Filter Chips Row -->
+      <div v-if="activeFilterCount > 0" class="flex items-center gap-1.5 flex-wrap pt-0.5">
+        <button
+          v-for="st in selectedStatuses"
+          :key="st"
+          type="button"
+          @click="removeStatusFilter(st)"
+          class="h-6 px-2.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-[11px] font-semibold text-blue-700 dark:text-blue-300 inline-flex items-center gap-1 active:scale-95 transition-all"
+        >
+          <span>{{ getStatusLabel(st) }}</span>
+          <PhX :size="11" weight="bold" class="opacity-70 hover:opacity-100" />
+        </button>
+
+        <button
+          v-if="classFilter"
+          type="button"
+          @click="classFilter = ''; onFilterChange()"
+          class="h-6 px-2.5 rounded-lg bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 text-[11px] font-semibold text-purple-700 dark:text-purple-300 inline-flex items-center gap-1 active:scale-95 transition-all"
+        >
+          <span>Batch: {{ getClassName(classFilter) }}</span>
+          <PhX :size="11" weight="bold" class="opacity-70 hover:opacity-100" />
+        </button>
+
+        <button
+          type="button"
+          @click="clearAllFilters"
+          class="h-6 px-2 text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline inline-flex items-center"
+        >
+          Clear all
+        </button>
+      </div>
+    </div>
+
+    <!-- Desktop Filter & Search Bar (sm and above) -->
+    <div class="hidden sm:flex p-3.5 rounded-2xl bg-surface border border-default shadow-xs flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div class="flex items-center gap-2.5 flex-1 flex-wrap">
         <!-- Search Field -->
         <div class="relative w-full sm:w-80">
@@ -47,20 +138,15 @@
           </select>
         </div>
 
-        <!-- Status Filter -->
-        <div class="flex items-center gap-1.5">
-          <select 
-            v-model="statusFilter" 
-            class="bg-slate-50 dark:bg-slate-850 border border-default rounded-xl px-3 py-2 text-xs text-slate-700 dark:text-slate-300 focus:border-primary outline-none"
-            @change="onFilterChange"
-          >
-            <option value="">All Statuses</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="graduated">Graduated</option>
-            <option value="dropped">Dropped</option>
-          </select>
-        </div>
+        <!-- Status Filter Button / Trigger -->
+        <button
+          type="button"
+          @click="openFilterModal"
+          class="bg-slate-50 dark:bg-slate-850 border border-default hover:border-blue-400 rounded-xl px-3 py-2 text-xs text-slate-700 dark:text-slate-300 outline-none inline-flex items-center gap-2 cursor-pointer transition-colors"
+        >
+          <span>{{ selectedStatuses.length === 0 ? 'All Statuses (Multi-select)' : (selectedStatuses.length === 1 ? getStatusLabel(selectedStatuses[0]) : `${selectedStatuses.length} statuses selected`) }}</span>
+          <PhSlidersHorizontal :size="14" class="text-slate-400 shrink-0" />
+        </button>
       </div>
 
       <!-- Results Pill -->
@@ -485,6 +571,107 @@
         </button>
       </template>
     </AppDrawer>
+
+    <!-- Flipkart / Amazon style Multi-Select Filter Modal -->
+    <AppModal
+      :isOpen="isFilterModalOpen"
+      title="Filter Students"
+      subtitle="Refine by multiple student statuses and enrolled batch"
+      maxSize="480px"
+      @cancel="isFilterModalOpen = false"
+    >
+      <div class="space-y-5">
+        <!-- Status Multi-Select Section -->
+        <div>
+          <div class="flex items-center justify-between pb-2 mb-2.5 border-b border-slate-100 dark:border-neutral-800">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              Student Status ({{ tempStatuses.length }} selected)
+            </span>
+            <button
+              v-if="tempStatuses.length > 0"
+              type="button"
+              @click="tempStatuses = []"
+              class="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+            >
+              Clear
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 gap-2">
+            <label
+              v-for="st in availableStatuses"
+              :key="st.value"
+              class="flex items-center justify-between p-3 rounded-xl border cursor-pointer select-none transition-all active:scale-[0.99]"
+              :class="tempStatuses.includes(st.value)
+                ? 'bg-blue-50/70 border-blue-500/80 dark:bg-blue-950/40 dark:border-blue-700'
+                : 'bg-white dark:bg-neutral-850 border-slate-200 dark:border-neutral-800 hover:bg-slate-50 dark:hover:bg-neutral-800'"
+            >
+              <div class="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  :value="st.value"
+                  v-model="tempStatuses"
+                  class="w-4.5 h-4.5 rounded text-blue-600 border-slate-300 dark:border-neutral-600 focus:ring-blue-500 cursor-pointer"
+                />
+                <span class="text-xs font-bold text-slate-800 dark:text-slate-100">{{ st.label }}</span>
+              </div>
+              <span
+                class="text-[10px] font-semibold px-2 py-0.5 rounded-full border"
+                :class="st.badgeClass"
+              >
+                {{ st.label }}
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Class / Batch Filter -->
+        <div class="pt-2">
+          <div class="flex items-center justify-between pb-2 mb-2.5 border-b border-slate-100 dark:border-neutral-800">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              Enrolled Class / Batch
+            </span>
+            <button
+              v-if="tempClass"
+              type="button"
+              @click="tempClass = ''"
+              class="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+            >
+              Clear
+            </button>
+          </div>
+
+          <select
+            v-model="tempClass"
+            class="w-full h-11 px-3.5 rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-xs font-medium text-slate-800 dark:text-slate-100 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
+          >
+            <option value="">All Classes & Batches</option>
+            <option v-for="c in classes" :key="c._id" :value="c._id">
+              {{ c.name }} {{ c.subject ? `• ${c.subject}` : '' }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <template #footer>
+        <div class="grid grid-cols-2 gap-2.5 w-full">
+          <button
+            type="button"
+            @click="clearFiltersInModal"
+            class="h-10 px-4 rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-slate-700 dark:text-slate-200 font-bold text-xs hover:bg-slate-50 dark:hover:bg-neutral-700 active:scale-95 transition-all text-center"
+          >
+            Clear All
+          </button>
+          <button
+            type="button"
+            @click="applyFiltersInModal"
+            class="h-10 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs active:scale-95 transition-all text-center"
+          >
+            Apply Filters {{ tempStatuses.length > 0 ? `(${tempStatuses.length})` : '' }}
+          </button>
+        </div>
+      </template>
+    </AppModal>
   </div>
 </template>
 
@@ -501,10 +688,13 @@ import {
   PhPhone,
   PhPhoneCall,
   PhBookOpen,
+  PhX,
+  PhSlidersHorizontal,
 } from '@phosphor-icons/vue';
 import Swal from 'sweetalert2';
 import AppTable from '@/components/AppTable.vue';
 import AppDrawer from '@/components/AppDrawer.vue';
+import AppModal from '@/components/AppModal.vue';
 import { 
   createEducationStudent, 
   fetchEducationClasses, 
@@ -546,6 +736,67 @@ const loading = ref(false);
 const search = ref('');
 const classFilter = ref('');
 const statusFilter = ref('');
+
+const availableStatuses = [
+  { value: 'active', label: 'Active', badgeClass: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/40' },
+  { value: 'inactive', label: 'Inactive', badgeClass: 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border-amber-200/60 dark:border-amber-800/40' },
+  { value: 'graduated', label: 'Graduated', badgeClass: 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border-blue-200/60 dark:border-blue-800/40' },
+  { value: 'dropped', label: 'Dropped', badgeClass: 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border-rose-200/60 dark:border-rose-800/40' },
+];
+
+const isFilterModalOpen = ref(false);
+const selectedStatuses = ref([]);
+const tempStatuses = ref([]);
+const tempClass = ref('');
+
+const activeFilterCount = computed(() => {
+  let count = selectedStatuses.value.length;
+  if (classFilter.value) count += 1;
+  return count;
+});
+
+function openFilterModal() {
+  tempStatuses.value = [...selectedStatuses.value];
+  tempClass.value = classFilter.value;
+  isFilterModalOpen.value = true;
+}
+
+function clearFiltersInModal() {
+  tempStatuses.value = [];
+  tempClass.value = '';
+}
+
+function applyFiltersInModal() {
+  selectedStatuses.value = [...tempStatuses.value];
+  classFilter.value = tempClass.value;
+  statusFilter.value = selectedStatuses.value.length === 1 ? selectedStatuses.value[0] : '';
+  isFilterModalOpen.value = false;
+  onFilterChange();
+}
+
+function removeStatusFilter(statusVal) {
+  selectedStatuses.value = selectedStatuses.value.filter((s) => s !== statusVal);
+  statusFilter.value = selectedStatuses.value.length === 1 ? selectedStatuses.value[0] : '';
+  onFilterChange();
+}
+
+function clearAllFilters() {
+  selectedStatuses.value = [];
+  statusFilter.value = '';
+  classFilter.value = '';
+  search.value = '';
+  onFilterChange();
+}
+
+function getStatusLabel(statusVal) {
+  const match = availableStatuses.find((s) => s.value === statusVal);
+  return match ? match.label : statusVal;
+}
+
+function getClassName(classId) {
+  const match = classes.value.find((c) => c._id === classId);
+  return match ? match.name : 'Batch';
+}
 
 const pagination = ref({
   page: 1,
@@ -604,10 +855,14 @@ function getStatusDotClass(status) {
 async function load() {
   loading.value = true;
   try {
+    const statusParam = selectedStatuses.value.length > 0
+      ? selectedStatuses.value.join(',')
+      : (statusFilter.value || undefined);
+
     const res = await fetchEducationStudents({
       search: search.value.trim() || undefined,
       classId: classFilter.value || undefined,
-      status: statusFilter.value || undefined,
+      status: statusParam,
       page: pagination.value.page,
       limit: pagination.value.limit,
     });

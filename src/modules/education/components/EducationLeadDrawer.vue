@@ -71,14 +71,17 @@
         </div>
 
         <!-- Quick Action Buttons (Touch-friendly 3-column button row) -->
-        <div class="pt-3 border-t border-slate-100 dark:border-neutral-800 flex items-center gap-2">
+        <div
+          class="pt-3 border-t border-slate-100 dark:border-neutral-800 grid gap-2 w-full"
+          :class="lead.mobile ? 'grid-cols-3' : 'grid-cols-1'"
+        >
           <a
             v-if="lead.mobile"
             :href="'tel:' + lead.mobile"
-            class="flex-1 h-9.5 px-3 text-xs font-semibold rounded-xl bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-slate-200 hover:bg-blue-50 hover:text-blue-700 dark:hover:text-blue-400 transition-colors inline-flex items-center justify-center gap-1.5 shadow-2xs active:scale-[0.98]"
+            class="h-10 px-2 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-slate-200 hover:bg-blue-50 hover:text-blue-700 dark:hover:text-blue-400 transition-colors inline-flex items-center justify-center gap-1.5 shadow-2xs active:scale-[0.98]"
             title="Initiate phone call"
           >
-            <PhPhoneCall :size="14" weight="bold" class="text-slate-500 dark:text-slate-400" />
+            <PhPhoneCall :size="15" weight="bold" class="text-slate-500 dark:text-slate-400 shrink-0" />
             <span>Call</span>
           </a>
 
@@ -87,20 +90,20 @@
             :href="whatsappUrl"
             target="_blank"
             rel="noopener noreferrer"
-            class="flex-1 h-9.5 px-3 text-xs font-semibold rounded-xl bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-slate-200 hover:bg-blue-50 hover:text-blue-700 dark:hover:text-blue-400 transition-colors inline-flex items-center justify-center gap-1.5 shadow-2xs active:scale-[0.98]"
+            class="h-10 px-2 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-slate-200 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors inline-flex items-center justify-center gap-1.5 shadow-2xs active:scale-[0.98]"
             title="Chat via WhatsApp"
           >
-            <PhWhatsappLogo :size="15" weight="fill" class="text-slate-500 dark:text-slate-400" />
+            <PhWhatsappLogo :size="16" weight="fill" class="text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span>WhatsApp</span>
           </a>
 
           <button
             type="button"
             @click="showStatusModal = true"
-            class="flex-1 h-9.5 px-3 text-xs font-bold rounded-xl btn btn-primary inline-flex items-center justify-center gap-1.5 shadow-xs active:scale-[0.98] transition-all"
+            class="h-10 px-2 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white inline-flex items-center justify-center gap-1.5 shadow-xs active:scale-[0.98] transition-all"
             title="Update Status & Disposition"
           >
-            <PhArrowsClockwise :size="15" weight="bold" />
+            <PhArrowsClockwise :size="15" weight="bold" class="shrink-0" />
             <span>Status</span>
           </button>
         </div>

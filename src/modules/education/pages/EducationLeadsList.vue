@@ -56,9 +56,87 @@
       </div>
     </div>
 
-    <!-- Filters Bar (Equal Heights & Clean Responsive Grid) -->
+    <!-- Mobile Streamlined Search & Filter (Flipkart / Amazon Style) (< 640px) -->
+    <div class="sm:hidden space-y-2">
+      <!-- Search Input + Filters Button Row -->
+      <div class="flex items-center gap-2">
+        <div class="relative flex-1">
+          <PhMagnifyingGlass :size="16" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
+          <input
+            v-model="search"
+            type="text"
+            placeholder="Search student lead..."
+            class="w-full h-10 pl-9 pr-8 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 placeholder:text-slate-400 shadow-2xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all"
+            @input="handleSearch"
+          />
+          <button
+            v-if="search"
+            type="button"
+            @click="search = ''; handleSearch()"
+            class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
+            aria-label="Clear search"
+          >
+            <PhX :size="14" weight="bold" />
+          </button>
+        </div>
+
+        <!-- Filter Trigger Button (Flipkart / Amazon style) -->
+        <button
+          type="button"
+          @click="openFilterModal"
+          class="h-10 px-3.5 rounded-xl border font-semibold text-xs inline-flex items-center gap-1.5 shadow-2xs shrink-0 active:scale-95 transition-all"
+          :class="activeFilterCount > 0
+            ? 'border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 font-bold'
+            : 'border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-neutral-800'"
+          title="Open Filters"
+        >
+          <PhSlidersHorizontal :size="16" weight="bold" />
+          <span>Filters</span>
+          <span
+            v-if="activeFilterCount > 0"
+            class="w-4.5 h-4.5 rounded-full bg-blue-600 text-white text-[10px] font-bold inline-flex items-center justify-center shrink-0"
+          >
+            {{ activeFilterCount }}
+          </span>
+        </button>
+      </div>
+
+      <!-- Applied Filter Chips Row -->
+      <div v-if="activeFilterCount > 0" class="flex items-center gap-1.5 flex-wrap pt-0.5">
+        <button
+          v-for="st in selectedStatuses"
+          :key="st"
+          type="button"
+          @click="removeStatusFilter(st)"
+          class="h-6 px-2.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-[11px] font-semibold text-blue-700 dark:text-blue-300 inline-flex items-center gap-1 active:scale-95 transition-all"
+        >
+          <span>{{ getStatusLabel(st) }}</span>
+          <PhX :size="11" weight="bold" class="opacity-70 hover:opacity-100" />
+        </button>
+
+        <button
+          v-if="staffFilter"
+          type="button"
+          @click="staffFilter = ''; onFilterChange()"
+          class="h-6 px-2.5 rounded-lg bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 text-[11px] font-semibold text-purple-700 dark:text-purple-300 inline-flex items-center gap-1 active:scale-95 transition-all"
+        >
+          <span>Staff: {{ getStaffName(staffFilter) }}</span>
+          <PhX :size="11" weight="bold" class="opacity-70 hover:opacity-100" />
+        </button>
+
+        <button
+          type="button"
+          @click="clearAllFilters"
+          class="h-6 px-2 text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline inline-flex items-center"
+        >
+          Clear all
+        </button>
+      </div>
+    </div>
+
+    <!-- Desktop Filters Bar (sm and above) -->
     <div
-      class="p-2 sm:p-4 rounded-xl sm:rounded-2xl bg-white dark:bg-slate-900 sm:bg-surface border border-slate-100 dark:border-slate-800 sm:border-default grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 shadow-xs"
+      class="hidden sm:grid p-4 rounded-2xl bg-surface border border-default grid-cols-1 sm:grid-cols-2 gap-3 shadow-xs items-center"
       :class="canFilterAllStaff ? 'lg:grid-cols-3' : 'lg:grid-cols-2'"
     >
       <div class="relative w-full">
@@ -71,18 +149,18 @@
           @input="handleSearch"
         />
       </div>
-      <select
-        v-model="statusFilter"
-        class="filter-control w-full"
-        @change="onFilterChange"
+
+      <button
+        type="button"
+        @click="openFilterModal"
+        class="filter-control w-full flex items-center justify-between text-left cursor-pointer hover:border-blue-400"
       >
-        <option value="">All statuses</option>
-        <option value="interested">Interested</option>
-        <option value="call_back">Call Back</option>
-        <option value="future_prospect">Future Prospect</option>
-        <option value="enrolled">Enrolled</option>
-        <option value="not_interested">Not Interested</option>
-      </select>
+        <span class="truncate">
+          {{ selectedStatuses.length === 0 ? 'All statuses (Multi-select)' : (selectedStatuses.length === 1 ? getStatusLabel(selectedStatuses[0]) : `${selectedStatuses.length} statuses selected`) }}
+        </span>
+        <PhSlidersHorizontal :size="15" class="text-slate-400 shrink-0" />
+      </button>
+
       <select
         v-if="canFilterAllStaff"
         v-model="staffFilter"
@@ -637,6 +715,107 @@
       @close="isStatusModalOpen = false"
       @saved="handleStatusModalSaved"
     />
+
+    <!-- Flipkart / Amazon style Multi-Select Filter Modal (Bottom Sheet on Mobile) -->
+    <AppModal
+      :isOpen="isFilterModalOpen"
+      title="Filter Leads"
+      subtitle="Refine by multiple lead statuses and assigned staff"
+      maxSize="480px"
+      @cancel="isFilterModalOpen = false"
+    >
+      <div class="space-y-5">
+        <!-- Status Multi-Select Section -->
+        <div>
+          <div class="flex items-center justify-between pb-2 mb-2.5 border-b border-slate-100 dark:border-neutral-800">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              Lead Status ({{ tempStatuses.length }} selected)
+            </span>
+            <button
+              v-if="tempStatuses.length > 0"
+              type="button"
+              @click="tempStatuses = []"
+              class="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+            >
+              Clear
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 gap-2">
+            <label
+              v-for="st in availableStatuses"
+              :key="st.value"
+              class="flex items-center justify-between p-3 rounded-xl border cursor-pointer select-none transition-all active:scale-[0.99]"
+              :class="tempStatuses.includes(st.value)
+                ? 'bg-blue-50/70 border-blue-500/80 dark:bg-blue-950/40 dark:border-blue-700'
+                : 'bg-white dark:bg-neutral-850 border-slate-200 dark:border-neutral-800 hover:bg-slate-50 dark:hover:bg-neutral-800'"
+            >
+              <div class="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  :value="st.value"
+                  v-model="tempStatuses"
+                  class="w-4.5 h-4.5 rounded text-blue-600 border-slate-300 dark:border-neutral-600 focus:ring-blue-500 cursor-pointer"
+                />
+                <span class="text-xs font-bold text-slate-800 dark:text-slate-100">{{ st.label }}</span>
+              </div>
+              <span
+                class="text-[10px] font-semibold px-2 py-0.5 rounded-full border"
+                :class="statusClass(st.value)"
+              >
+                {{ st.label }}
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Staff Filter (if admin) -->
+        <div v-if="canFilterAllStaff" class="pt-2">
+          <div class="flex items-center justify-between pb-2 mb-2.5 border-b border-slate-100 dark:border-neutral-800">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              Assigned Staff
+            </span>
+            <button
+              v-if="tempStaff"
+              type="button"
+              @click="tempStaff = ''"
+              class="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+            >
+              Clear
+            </button>
+          </div>
+
+          <select
+            v-model="tempStaff"
+            class="w-full h-11 px-3.5 rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-xs font-medium text-slate-800 dark:text-slate-100 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
+          >
+            <option value="">All Staff</option>
+            <option v-for="s in staffList" :key="s._id || s.id" :value="s._id || s.id">
+              {{ s.firstName }} {{ s.lastName || '' }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <template #footer>
+        <div class="grid grid-cols-2 gap-2.5 w-full">
+          <button
+            type="button"
+            @click="clearFiltersInModal"
+            class="h-10 px-4 rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-slate-700 dark:text-slate-200 font-bold text-xs hover:bg-slate-50 dark:hover:bg-neutral-700 active:scale-95 transition-all text-center"
+          >
+            Clear All
+          </button>
+          <button
+            type="button"
+            @click="applyFiltersInModal"
+            class="h-10 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs active:scale-95 transition-all text-center"
+          >
+            Apply Filters {{ tempStatuses.length > 0 ? `(${tempStatuses.length})` : '' }}
+          </button>
+        </div>
+      </template>
+    </AppModal>
   </div>
 </template>
 
@@ -662,9 +841,12 @@ import {
   PhUser,
   PhBookOpen,
   PhUsersThree,
+  PhX,
+  PhSlidersHorizontal,
 } from "@phosphor-icons/vue";
 import AppTable from "@/components/AppTable.vue";
 import AppDrawer from "@/components/AppDrawer.vue";
+import AppModal from "@/components/AppModal.vue";
 import StatusBadge from "@/components/StatusBadge.vue";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal.vue";
 import EducationLeadDrawer from "../components/EducationLeadDrawer.vue";
@@ -792,6 +974,69 @@ const statusFilter = ref("");
 const staffFilter = ref("");
 const sourceFilter = ref("");
 const staffList = ref([]);
+
+const availableStatuses = [
+  { value: "interested", label: "Interested" },
+  { value: "call_back", label: "Call Back" },
+  { value: "future_prospect", label: "Future Prospect" },
+  { value: "enrolled", label: "Enrolled" },
+  { value: "not_interested", label: "Not Interested" },
+];
+
+const isFilterModalOpen = ref(false);
+const selectedStatuses = ref([]);
+const tempStatuses = ref([]);
+const tempStaff = ref("");
+
+const activeFilterCount = computed(() => {
+  let count = selectedStatuses.value.length;
+  if (staffFilter.value) count += 1;
+  return count;
+});
+
+function openFilterModal() {
+  tempStatuses.value = [...selectedStatuses.value];
+  tempStaff.value = staffFilter.value;
+  isFilterModalOpen.value = true;
+}
+
+function clearFiltersInModal() {
+  tempStatuses.value = [];
+  tempStaff.value = "";
+}
+
+function applyFiltersInModal() {
+  selectedStatuses.value = [...tempStatuses.value];
+  staffFilter.value = tempStaff.value;
+  statusFilter.value = selectedStatuses.value.length === 1 ? selectedStatuses.value[0] : "";
+  isFilterModalOpen.value = false;
+  onFilterChange();
+}
+
+function removeStatusFilter(statusVal) {
+  selectedStatuses.value = selectedStatuses.value.filter((s) => s !== statusVal);
+  statusFilter.value = selectedStatuses.value.length === 1 ? selectedStatuses.value[0] : "";
+  onFilterChange();
+}
+
+function clearAllFilters() {
+  selectedStatuses.value = [];
+  statusFilter.value = "";
+  staffFilter.value = "";
+  search.value = "";
+  onFilterChange();
+}
+
+function getStatusLabel(statusVal) {
+  const match = availableStatuses.find((s) => s.value === statusVal);
+  return match ? match.label : formatStatus(statusVal);
+}
+
+function getStaffName(staffId) {
+  const match = staffList.value.find((s) => (s._id || s.id) === staffId);
+  return match ? `${match.firstName} ${match.lastName ? match.lastName.charAt(0) + '.' : ''}` : "Staff";
+}
+
 const showModal = ref(false);
 const saving = ref(false);
 const error = ref("");
@@ -1000,9 +1245,13 @@ const handleReminderSuccess = () => {
 async function load() {
   loading.value = true;
   try {
+    const statusParam = selectedStatuses.value.length > 0
+      ? selectedStatuses.value.join(",")
+      : (statusFilter.value || undefined);
+
     const res = await fetchEducationLeads({
       search: search.value.trim() || undefined,
-      status: statusFilter.value || undefined,
+      status: statusParam,
       assignedTo: staffFilter.value || undefined,
       source: sourceFilter.value || undefined,
       page: pagination.value.page,
