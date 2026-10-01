@@ -92,8 +92,9 @@ watch(
   () => props.isOpen,
   (open) => {
     if (open) {
-      if (props.lead?.currentFollowUpDate) {
-        const d = new Date(props.lead.currentFollowUpDate);
+      const followUpDate = props.lead?.currentFollowUpDate || props.lead?.nextFollowUpAt;
+      if (followUpDate) {
+        const d = new Date(followUpDate);
         if (!isNaN(d.getTime())) {
           const z = (n) => (n < 10 ? '0' : '') + n;
           scheduledAt.value = `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`;
@@ -103,8 +104,8 @@ watch(
       } else {
         scheduledAt.value = defaultDateTime();
       }
-      type.value = props.lead?.currentType || 'call';
-      notes.value = props.lead?.currentNotes || '';
+      type.value = props.lead?.currentType || props.lead?.lastActivityType || 'call';
+      notes.value = props.lead?.currentNotes || props.lead?.notesRemarks || '';
       error.value = '';
     }
   },
@@ -126,7 +127,9 @@ async function save() {
   error.value = '';
   try {
     const iso = new Date(scheduledAt.value).toISOString();
-    if (props.lead?.currentFollowUpId) {
+    const isSynthetic = String(props.lead?.currentFollowUpId || '').startsWith('fu-');
+
+    if (props.lead?.currentFollowUpId && !isSynthetic) {
       await updateLeadFollowUp({
         leadId,
         followUpId: props.lead.currentFollowUpId,
@@ -144,14 +147,18 @@ async function save() {
       });
     }
 
-    await logLeadActivity({
-      id: leadId,
-      type: 'reminder',
-      summary: `Follow-up reminder: ${notes.value.trim()}`,
-      description: notes.value.trim(),
-      nextFollowUpAt: iso,
-      status: 'scheduled',
-    });
+    // Optional audit log into lead activity timeline
+    try {
+      await logLeadActivity({
+        id: leadId,
+        type: type.value === 'whatsapp' ? 'whatsapp' : (type.value === 'meeting' ? 'meeting' : 'call'),
+        summary: `Follow-up reminder: ${notes.value.trim()}`,
+        description: notes.value.trim(),
+        status: 'completed',
+      });
+    } catch (logErr) {
+      console.warn('Activity logging non-fatal:', logErr);
+    }
 
     store.dispatch('notifications/triggerToast', {
       message: props.lead?.currentFollowUpId ? 'Follow-up reminder rescheduled.' : 'Follow-up reminder saved.',

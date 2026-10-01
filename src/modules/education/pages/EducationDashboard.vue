@@ -807,15 +807,33 @@ const isLogOpen = ref(false);
 const activeReminderLead = ref(null);
 const isReminderOpen = ref(false);
 
-// Follow-Ups extraction
-const allFollowUps = computed(() => summary.value.followUps || []);
+// Follow-Ups extraction with timezone-safe normalization
+const allFollowUps = computed(() => {
+  const items = summary.value.followUps || [];
+  const now = new Date();
+  const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+  const endToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+  return items.map((f) => {
+    const sched = f.scheduledAt ? new Date(f.scheduledAt) : null;
+    const isOverdue = f.isOverdue !== undefined ? f.isOverdue : (sched && sched < now && f.status === 'scheduled');
+    const isToday = f.isToday !== undefined ? f.isToday : (sched && sched >= startToday && sched <= endToday);
+    const isUpcoming = f.isUpcoming !== undefined ? f.isUpcoming : (sched && sched > endToday);
+    return {
+      ...f,
+      isOverdue,
+      isToday,
+      isUpcoming,
+    };
+  });
+});
 
 const overdueCount = computed(() =>
   allFollowUps.value.filter((f) => f.isOverdue).length
 );
 
 const todayCount = computed(() =>
-  allFollowUps.value.filter((f) => f.isToday && !f.isOverdue).length
+  allFollowUps.value.filter((f) => f.isToday).length
 );
 
 const upcomingCount = computed(() =>
@@ -829,7 +847,7 @@ const filteredFollowUps = computed(() => {
   if (reminderFilter.value === 'overdue') {
     list = list.filter((f) => f.isOverdue);
   } else if (reminderFilter.value === 'today') {
-    list = list.filter((f) => f.isToday && !f.isOverdue);
+    list = list.filter((f) => f.isToday);
   } else if (reminderFilter.value === 'upcoming') {
     list = list.filter((f) => f.isUpcoming);
   }

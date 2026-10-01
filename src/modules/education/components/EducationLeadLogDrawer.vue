@@ -690,9 +690,6 @@ async function saveUpdate() {
     if (form.value.scheduleFollowUp && form.value.followUpDate) {
       const timeStr = form.value.followUpTime || '10:00';
       payload.nextFollowUpAt = new Date(`${form.value.followUpDate}T${timeStr}:00`).toISOString();
-    } else {
-      payload.clearFollowUp = true;
-      payload.nextFollowUpAt = null;
     }
 
     // 1. Log Activity Record
@@ -708,8 +705,6 @@ async function saveUpdate() {
     }
     if (form.value.scheduleFollowUp && payload.nextFollowUpAt) {
       leadUpdates.nextFollowUpAt = payload.nextFollowUpAt;
-    } else {
-      leadUpdates.nextFollowUpAt = null;
     }
     if (canAssignLeads.value && form.value.assignedToStaffId && form.value.assignedToStaffId !== (lead.value?.assignedTo?._id || lead.value?.assignedTo)) {
       leadUpdates.assignedTo = form.value.assignedToStaffId;

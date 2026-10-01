@@ -260,9 +260,8 @@
     <!-- Mobile Card View (< 640px) -->
     <div class="block sm:hidden space-y-3">
       <!-- Loading Skeleton for Mobile -->
-      <div v-if="loading" class="py-16 text-center text-slate-400 text-sm flex flex-col items-center gap-3">
-        <div class="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-        <span class="font-medium">Loading leads...</span>
+      <div v-if="loading" class="py-16 text-center text-slate-400 text-sm flex flex-col items-center justify-center gap-3">
+        <AppSpinner size="md" color="primary" text="Loading student leads..." vertical />
       </div>
 
       <!-- Empty State for Mobile -->
@@ -847,6 +846,7 @@ import {
 import AppTable from "@/components/AppTable.vue";
 import AppDrawer from "@/components/AppDrawer.vue";
 import AppModal from "@/components/AppModal.vue";
+import AppSpinner from "@/components/AppSpinner.vue";
 import StatusBadge from "@/components/StatusBadge.vue";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal.vue";
 import EducationLeadDrawer from "../components/EducationLeadDrawer.vue";

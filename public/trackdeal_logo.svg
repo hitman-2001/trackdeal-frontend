@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1569 345" width="1569" height="345" fill="none">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&amp;display=swap');
+      .brand-title {
+        font-family: 'Montserrat', 'Inter', 'Segoe UI', -apple-system, sans-serif;
+        font-weight: 900;
+        font-size: 168px;
+        letter-spacing: -0.03em;
+        fill: #111827;
+      }
+      .brand-sub {
+        font-family: 'Montserrat', 'Inter', 'Segoe UI', -apple-system, sans-serif;
+        font-weight: 800;
+        font-size: 40px;
+        letter-spacing: 0.32em;
+        fill: #111827;
+      }
+    </style>
+  </defs>
+
+  <!-- LMS Emblem: Inbound Leads (Speed lines) -> Pipeline Funnel -> Deal Conversion Checkmark & Target Pin -->
+  <g id="lms-emblem" transform="translate(15, 0)">
+    <!-- 1. Multi-Channel Lead Ingestion: 3 Speed / Pipeline Flow Lines -->
+    <path d="M40 108 H140" stroke="#111827" stroke-width="26" stroke-linecap="round"/>
+    <path d="M10 172 H124" stroke="#111827" stroke-width="26" stroke-linecap="round"/>
+    <path d="M35 236 H150" stroke="#111827" stroke-width="26" stroke-linecap="round"/>
+
+    <!-- 2. Lead Funnel & Deal Shield: Capturing, Qualifiying & Converting -->
+    <!-- Outer Funnel/Shield Container with Precision Fillets -->
+    <path d="M190 74 C180 74 172 82 172 92 V130 C172 136 175 142 179 146 L226 195 V278 C226 290 236 300 248 300 H272 C284 300 294 290 294 278 V195 L341 146 C345 142 348 136 348 130 V92 C348 82 340 74 330 74 H190 Z" fill="#111827"/>
+
+    <!-- 3. Inside Negative Space: The Conversion Stage (Pipeline Node + Upward Deal Checkmark) -->
+    <!-- Lead Contact Node (Head) -->
+    <circle cx="260" cy="120" r="22" fill="#ffffff"/>
+
+    <!-- Deal Conversion Arrow & Checkmark (Lead Successfully Converted to Deal) -->
+    <path d="M205 186 L242 222 L315 148" stroke="#ffffff" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Pipeline Stage Notch (Signifying structured stages from Inquiry to Won) -->
+    <circle cx="260" cy="272" r="8" fill="#ffffff"/>
+
+    <!-- 4. Target Precision Notch Accent (Top Right) -->
+    <path d="M365 72 L378 54 M388 82 L406 82 M378 110 L396 118" stroke="#111827" stroke-width="12" stroke-linecap="round"/>
+  </g>
+
+  <!-- Typography Right: Matching Brand Anatomy -->
+  <text x="470" y="210" class="brand-title">TRACKDEAL</text>
+  <text x="475" y="288" class="brand-sub">LEAD MANAGEMENT SYSTEM</text>
+</svg>

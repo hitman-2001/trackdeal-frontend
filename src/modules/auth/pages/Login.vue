@@ -1,15 +1,29 @@
 <template>
   <div class="space-y-6">
+    <!-- Header Section -->
+    <div class="login-header text-left">
+      <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-[#213c31] font-heading">
+        Sign in to your workspace
+      </h2>
+      <p class="text-sm text-[#70776f] mt-1.5 leading-relaxed">
+        Enter your organization and account details to access your leads and pipelines.
+      </p>
+    </div>
+
     <!-- Server Exception Alerts -->
     <div
       v-if="errorMessage"
-      class="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-xs font-semibold flex items-center justify-between"
+      class="p-3.5 bg-red-50/90 border border-red-200 text-red-700 rounded-xl text-xs font-medium flex items-center justify-between gap-2 shadow-sm animate-shake"
     >
-      <span>{{ errorMessage }}</span>
+      <div class="flex items-center gap-2">
+        <span class="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0"></span>
+        <span>{{ errorMessage }}</span>
+      </div>
       <button
         type="button"
         @click="errorMessage = ''"
-        class="font-bold opacity-80 hover:opacity-100 p-1"
+        class="text-red-500 hover:text-red-800 p-1 rounded-md hover:bg-red-100 transition-colors"
+        aria-label="Dismiss error"
       >
         <PhX :size="14" weight="bold" />
       </button>
@@ -18,68 +32,67 @@
     <!-- Login Form -->
     <form @submit.prevent="onSubmit" class="space-y-4">
       <!-- Organization Input -->
-      <div class="space-y-1">
-        <label for="organization" class="label-text"> Organization </label>
-        <input
-          id="organization"
-          v-model="organization"
-          type="text"
-          placeholder="Organization name"
-          autocomplete="organization"
-          class="input-field text-caption text-neutral-900"
-          :class="{ 'input-field-error': errors.organization }"
-          :disabled="isPending"
-        />
+      <div class="space-y-1.5">
+        <label for="organization" class="block text-xs font-semibold text-[#213c31]">
+          Organization <span class="text-neutral-400 font-normal">(Required)</span>
+        </label>
+        <div class="relative">
+          <input
+            id="organization"
+            v-model="organization"
+            type="text"
+            placeholder="e.g. AcmeCorp or Institute name"
+            autocomplete="organization"
+            class="w-full h-11 px-3.5 rounded-xl border border-[#dcddd5] bg-[#faf9f6] text-[#213c31] placeholder-[#939c8c] text-sm focus:bg-white focus:border-[#254e3b] focus:ring-2 focus:ring-[#254e3b]/15 outline-none transition-all"
+            :class="{ 'border-red-400 focus:border-red-500 focus:ring-red-500/15': errors.organization }"
+            :disabled="isPending"
+          />
+        </div>
         <span
           v-if="errors.organization"
-          class="text-[10px] text-danger-text block mt-1"
+          class="text-[11px] text-red-600 block mt-1 font-medium"
         >
           {{ errors.organization }}
         </span>
-        <span v-else class="text-[10px] text-neutral-400 block mt-1">
-          Required for organization users.
+        <span v-else class="text-[11px] text-[#939c8c] block mt-0.5">
+          Your unique organization workspace slug or identifier.
         </span>
       </div>
 
       <!-- Email Address Input -->
-      <div class="space-y-1">
-        <label
-          for="email"
-          class="label-text"
-          :class="{ 'label-required': true }"
-        >
-          Email Address
+      <div class="space-y-1.5">
+        <label for="email" class="block text-xs font-semibold text-[#213c31]">
+          Work Email <span class="text-red-500">*</span>
         </label>
-        <input
-          id="email"
-          v-model="email"
-          type="email"
-          placeholder="name@company.com"
-          class="input-field text-caption text-neutral-900"
-          :class="{ 'input-field-error': errors.email }"
-          :disabled="isPending"
-        />
+        <div class="relative">
+          <input
+            id="email"
+            v-model="email"
+            type="email"
+            placeholder="name@company.com"
+            autocomplete="email"
+            class="w-full h-11 px-3.5 rounded-xl border border-[#dcddd5] bg-[#faf9f6] text-[#213c31] placeholder-[#939c8c] text-sm focus:bg-white focus:border-[#254e3b] focus:ring-2 focus:ring-[#254e3b]/15 outline-none transition-all"
+            :class="{ 'border-red-400 focus:border-red-500 focus:ring-red-500/15': errors.email }"
+            :disabled="isPending"
+          />
+        </div>
         <span
           v-if="errors.email"
-          class="text-[10px] text-danger-text block mt-1"
+          class="text-[11px] text-red-600 block mt-1 font-medium"
         >
           {{ errors.email }}
         </span>
       </div>
 
       <!-- Password Input -->
-      <div class="space-y-1">
+      <div class="space-y-1.5">
         <div class="flex justify-between items-center mb-1">
-          <label
-            for="password"
-            class="label-text"
-            :class="{ 'label-required': true }"
-          >
-            Password
+          <label for="password" class="block text-xs font-semibold text-[#213c31]">
+            Password <span class="text-red-500">*</span>
           </label>
           <router-link
             to="/forgot-password"
-            class="text-[11px] font-semibold text-accent-600 hover:text-accent-700 hover:underline"
+            class="text-xs font-semibold text-[#254e3b] hover:text-[#153a29] hover:underline"
             :disabled="isPending"
           >
             Forgot password?
@@ -91,15 +104,17 @@
             v-model="password"
             :type="showPassword ? 'text' : 'password'"
             placeholder="••••••••"
-            class="input-field text-caption text-neutral-900 pr-10"
-            :class="{ 'input-field-error': errors.password }"
+            autocomplete="current-password"
+            class="w-full h-11 px-3.5 pr-11 rounded-xl border border-[#dcddd5] bg-[#faf9f6] text-[#213c31] placeholder-[#939c8c] text-sm focus:bg-white focus:border-[#254e3b] focus:ring-2 focus:ring-[#254e3b]/15 outline-none transition-all font-mono"
+            :class="{ 'border-red-400 focus:border-red-500 focus:ring-red-500/15': errors.password }"
             :disabled="isPending"
           />
           <button
             type="button"
             @click="showPassword = !showPassword"
-            class="absolute right-3 text-neutral-400 hover:text-neutral-600 focus:outline-none"
+            class="absolute right-3 p-1 text-[#70776f] hover:text-[#213c31] focus:outline-none transition-colors"
             :disabled="isPending"
+            aria-label="Toggle password visibility"
           >
             <component
               :is="showPassword ? PhEyeSlash : PhEye"
@@ -109,33 +124,39 @@
         </div>
         <span
           v-if="errors.password"
-          class="text-[10px] text-danger-text block mt-1"
+          class="text-[11px] text-red-600 block mt-1 font-medium"
         >
           {{ errors.password }}
         </span>
       </div>
 
       <!-- Remember Me Toggle -->
-      <div class="flex items-center justify-between">
-        <label class="flex items-center cursor-pointer">
+      <div class="flex items-center justify-between pt-1">
+        <label class="flex items-center gap-2 cursor-pointer select-none">
           <input
             type="checkbox"
             v-model="rememberMe"
-            class="rounded border-neutral-200 text-accent-600 focus:ring-accent-500 h-3.5 w-3.5"
+            class="rounded border-[#dcddd5] text-[#254e3b] focus:ring-[#254e3b]/20 h-4 w-4 accent-[#254e3b]"
             :disabled="isPending"
           />
-          <span class="ml-2 text-caption text-neutral-500">Remember email</span>
+          <span class="text-xs text-[#70776f]">Remember my email</span>
         </label>
       </div>
 
       <!-- Submit Button -->
       <button
         type="submit"
-        class="w-full btn btn-primary h-10 text-xs font-semibold"
+        class="w-full h-11 mt-2 bg-[#254e3b] hover:bg-[#153a29] active:scale-[0.99] text-white rounded-xl font-semibold text-sm transition-all duration-200 shadow-[0_3px_8px_rgba(23,51,33,0.18)] hover:shadow-[0_6px_20px_rgba(23,51,33,0.22)] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         :disabled="isPending"
       >
-        <PhSpinner v-if="isPending" class="animate-spin w-4 h-4 mr-2" />
-        <span>{{ isPending ? "Signing in..." : "Sign In" }}</span>
+        <AppSpinner v-if="isPending" size="xs" color="white" />
+        <span v-if="isPending">Signing in...</span>
+        <template v-else>
+          <span>Sign In</span>
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </template>
       </button>
     </form>
   </div>
@@ -145,7 +166,8 @@
 import { ref, onMounted } from "vue";
 import { useForm, useField } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
-import { PhEye, PhEyeSlash, PhSpinner, PhX } from "@phosphor-icons/vue";
+import { PhEye, PhEyeSlash, PhX } from "@phosphor-icons/vue";
+import AppSpinner from "@/components/AppSpinner.vue";
 import { loginSchema } from "../schemas/validation";
 import { useLoginMutation } from "../queries";
 
@@ -218,3 +240,15 @@ const onSubmit = handleSubmit((values) => {
   );
 });
 </script>
+
+<style scoped>
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+.animate-shake {
+  animation: shake 0.35s ease-in-out;
+}
+</style>

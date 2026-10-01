@@ -1,5 +1,7 @@
 import axios from 'axios';
-import { isRef } from 'vue';
+import { isRef, ref } from 'vue';
+
+export const activeApiRequests = ref(0);
 
 let storeInstance = null;
 
@@ -47,6 +49,10 @@ const apiClient = axios.create({
 // Request Interceptor: Inject JWT and Tenant ID Headers
 apiClient.interceptors.request.use(
   (config) => {
+    if (!config.silent) {
+      activeApiRequests.value++;
+    }
+
     // Un-wrap any Vue refs/reactives in params/data to avoid sending proxy/ref wrappers
     if (config.params) {
       config.params = unwrap(config.params);
@@ -72,6 +78,9 @@ apiClient.interceptors.request.use(
     return config;
   },
   (error) => {
+    if (!error.config?.silent) {
+      activeApiRequests.value = Math.max(0, activeApiRequests.value - 1);
+    }
     return Promise.reject(error);
   }
 );
@@ -92,8 +101,16 @@ const processQueue = (error, token = null) => {
 
 // Response Interceptor: Manage Global Errors
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (!response.config?.silent) {
+      activeApiRequests.value = Math.max(0, activeApiRequests.value - 1);
+    }
+    return response;
+  },
   async (error) => {
+    if (!error.config?.silent) {
+      activeApiRequests.value = Math.max(0, activeApiRequests.value - 1);
+    }
     const originalRequest = error.config;
 
     if (!error.response) {

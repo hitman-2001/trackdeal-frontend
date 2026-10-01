@@ -328,14 +328,17 @@ async function handleSave() {
 
     // Also record an audit activity log entry
     try {
-      await logEducationLeadActivity(leadId, {
+      const actPayload = {
         type: 'stage_change',
         summary: `Status updated to ${currentStatusLabel.value} (${selectedSubStatus.value || 'No sub-status'})`,
         description: remarks.value.trim() || `Status updated to ${currentStatusLabel.value}`,
         customerResponse: selectedSubStatus.value,
-        nextFollowUpAt: payload.nextFollowUpAt || null,
         status: 'completed',
-      });
+      };
+      if (payload.nextFollowUpAt) {
+        actPayload.nextFollowUpAt = payload.nextFollowUpAt;
+      }
+      await logEducationLeadActivity(leadId, actPayload);
     } catch (logErr) {
       console.warn('Failed to log activity entry:', logErr);
     }

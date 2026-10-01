@@ -1,235 +1,211 @@
 <template>
-  <div class="auth-shell min-h-screen flex bg-app text-text-primary">
-    <!-- Left Panel: Brand / Showcase (Hidden on small screens) -->
+  <div class="auth-shell min-h-screen flex bg-[#faf9f6] text-[#213c31]">
+    <!-- ── Left Panel: Brand Showcase (Desktop >= 1024px) ── -->
     <div
-      class="auth-showcase hidden lg:flex lg:w-[54%] relative p-12 xl:p-16 flex-col justify-between overflow-hidden"
+      class="auth-showcase hidden lg:flex lg:w-[50%] xl:w-[52%] relative p-12 xl:p-16 flex-col justify-between overflow-hidden"
     >
-      <!-- Background subtle grid effect -->
-      <div
-        class="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"
-      ></div>
+      <!-- Background subtle grid & ambient glows -->
+      <div class="auth-mesh-grid" aria-hidden="true"></div>
+      <div class="auth-ambient-glow" aria-hidden="true"></div>
 
       <!-- Top Logo lockup -->
       <div class="relative z-10 flex items-center">
-        <img
-          v-if="isEducationWorkspace"
-          src="/education_logo.png"
-          alt="Trackdeal Education"
-          class="auth-showcase-logo education-logo"
-        />
-        <img
-          v-else
-          src="/real_estate_black.png"
-          alt="Trackdeal Real Estate"
-          class="auth-showcase-logo real-estate-logo"
-        />
+        <router-link to="/" class="inline-block transition-opacity hover:opacity-90" aria-label="TrackDeal Home">
+          <img
+            src="/trackdeal_logo.svg"
+            alt="TrackDeal - Lead Management System"
+            class="auth-showcase-logo h-10 w-auto"
+          />
+        </router-link>
       </div>
 
-      <!-- Center visual mock / value prop -->
-      <div class="relative z-10 space-y-6 my-auto max-w-md">
+      <!-- Center visual value prop & live pipeline preview -->
+      <div class="relative z-10 space-y-6 my-auto max-w-lg">
         <div
-          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent-500/10 border border-accent-500/20 text-[10px] uppercase tracking-[0.14em] font-bold text-emerald-300"
+          class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#254e3b]/10 border border-[#254e3b]/20 text-[11px] font-semibold text-[#254e3b]"
         >
-          <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
-          {{ showcaseData.badge }}
+          <span class="h-2 w-2 rounded-full bg-[#3d7a55] animate-pulse"></span>
+          Next-Gen Lead Management System
         </div>
+
         <h1
-          class="font-heading text-4xl xl:text-5xl font-bold text-white tracking-[-0.045em] leading-[1.08]"
+          class="font-heading text-4xl xl:text-5xl font-extrabold text-[#213c31] tracking-[-0.04em] leading-[1.12]"
         >
-          {{ showcaseData.headline }}
+          Turn every inquiry<br />into a
+          <span class="auth-gradient-text">closed deal.</span>
         </h1>
-        <p class="text-slate-400 text-sm leading-6 max-w-lg">
-          {{ showcaseData.subtext }}
+
+        <p class="text-[#70776f] text-sm leading-relaxed max-w-md">
+          Capture multi-channel leads, automate follow-up schedules, coordinate reps, and accelerate your entire sales pipeline in one calm workspace.
         </p>
 
-        <!-- Mock dashboard visualization card -->
-        <div class="auth-metric p-5 space-y-3">
-          <div class="flex items-center justify-between">
-            <span
-              class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider"
-              >{{ showcaseData.metricLabel }}</span
-            >
-            <span
-              class="text-[9px] font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20"
-              >+14.2%</span
-            >
+        <!-- Mock pipeline preview card -->
+        <div class="auth-pipeline-card p-5 space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-[#e5e5dd]">
+            <div class="flex items-center gap-2">
+              <span class="h-2.5 w-2.5 rounded-full bg-[#3d7a55]"></span>
+              <span class="text-xs font-bold text-[#213c31]">Active Sales Pipeline</span>
+            </div>
+            <span class="text-[10px] font-semibold text-[#3d7a55] bg-[#3d7a55]/10 px-2 py-0.5 rounded-md border border-[#3d7a55]/20">
+              78% Win Rate
+            </span>
           </div>
-          <div class="text-2xl font-bold font-mono text-slate-100">
-            {{ showcaseData.metricValue }}
+
+          <!-- Mini stats in showcase -->
+          <div class="grid grid-cols-3 gap-3">
+            <div class="bg-white/80 p-2.5 rounded-lg border border-[#e5e5dd]/80">
+              <span class="text-[10px] text-[#70776f] block">Active Leads</span>
+              <strong class="text-base font-bold text-[#213c31]">142</strong>
+            </div>
+            <div class="bg-white/80 p-2.5 rounded-lg border border-[#e5e5dd]/80">
+              <span class="text-[10px] text-[#70776f] block">Deals Won</span>
+              <strong class="text-base font-bold text-[#213c31]">86</strong>
+            </div>
+            <div class="bg-white/80 p-2.5 rounded-lg border border-[#e5e5dd]/80">
+              <span class="text-[10px] text-[#70776f] block">Today's Tasks</span>
+              <strong class="text-base font-bold text-[#213c31]">14</strong>
+            </div>
           </div>
-          <div class="flex space-x-2 pt-1">
-            <span class="w-full h-1 bg-accent-600 rounded-full"></span>
-            <span class="w-1/2 h-1 bg-slate-700 rounded-full"></span>
+
+          <!-- Lead activity preview row -->
+          <div class="flex items-center justify-between bg-white/90 p-3 rounded-xl border border-[#e5e5dd]">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div class="w-7 h-7 rounded-full bg-[#254e3b] text-white flex items-center justify-center text-[10px] font-bold shrink-0">
+                PS
+              </div>
+              <div class="min-w-0">
+                <strong class="text-xs text-[#213c31] block truncate">Priya Sharma</strong>
+                <span class="text-[10px] text-[#70776f] block truncate">Demo class · High Intent</span>
+              </div>
+            </div>
+            <span class="text-[10px] font-semibold px-2 py-1 rounded bg-[#254e3b]/10 text-[#254e3b] shrink-0">
+              Call Back Today
+            </span>
           </div>
         </div>
       </div>
 
       <!-- Bottom footer credits -->
-      <div class="relative z-10 text-xs text-slate-500 font-medium">
-        © 2026 Track Deal Inc. All rights reserved.
+      <div class="relative z-10 text-xs text-[#939c8c] font-medium flex items-center justify-between">
+        <span>© {{ currentYear }} TrackDeal Technologies.</span>
+        <span>Thoughtfully built for high-velocity teams.</span>
       </div>
     </div>
 
-    <!-- Right Panel: Auth Container -->
+    <!-- ── Right Panel: Auth Form Container (Desktop & Mobile) ── -->
     <div
-      class="auth-form-panel w-full lg:w-[46%] flex items-center justify-center p-6 sm:p-12 lg:p-16 relative"
+      class="auth-form-panel w-full lg:w-[50%] xl:w-[48%] flex flex-col justify-between items-center p-6 sm:p-10 lg:p-14 relative min-h-screen"
     >
-      <router-link
-        to="/"
-        class="absolute top-6 left-6 inline-flex items-center gap-2 text-caption text-text-secondary hover:text-accent-600"
-        ><span aria-hidden="true">&larr;</span> Back to TrackDeal</router-link
-      >
-      <!-- Theme Switcher -->
-      <button
-        @click="toggleTheme"
-        class="absolute top-6 right-6 btn btn-secondary h-8 w-8 p-0 rounded-lg shadow-sm"
-        title="Toggle color theme"
-      >
-        <component
-          :is="activeTheme === 'dark' ? PhSun : PhMoon"
-          class="w-4 h-4 text-neutral-500"
-        />
-      </button>
+      <!-- Top Bar: Navigation -->
+      <div class="w-full flex items-center justify-between mb-6">
+        <router-link
+          to="/"
+          class="inline-flex items-center gap-2 text-xs font-semibold text-[#70776f] hover:text-[#254e3b] transition-colors py-1.5 px-3 rounded-lg hover:bg-black/5"
+        >
+          <span aria-hidden="true">&larr;</span> Back to website
+        </router-link>
+      </div>
 
-      <div class="max-w-md w-full space-y-8">
-        <!-- Logo for mobile -->
+      <!-- Main Form Wrapper -->
+      <div class="w-full max-w-[440px] my-auto">
+        <!-- Logo for Mobile & Tablet (< 1024px) -->
         <div class="lg:hidden flex flex-col items-center mb-8">
-          <img
-            v-if="isEducationWorkspace"
-            src="/education_logo.png"
-            alt="Trackdeal Education"
-            class="auth-mobile-logo auth-logo-edu mb-2"
-          />
-          <img
-            v-else
-            src="/real_estate_black.png"
-            alt="Trackdeal Real Estate"
-            class="auth-mobile-logo auth-logo-re mb-2"
-          />
+          <router-link to="/" aria-label="TrackDeal Home">
+            <img
+              src="/trackdeal_logo.svg"
+              alt="TrackDeal - Lead Management System"
+              class="auth-mobile-logo h-9 w-auto"
+            />
+          </router-link>
         </div>
 
-        <router-view />
+        <!-- Elevated Form Card -->
+        <div class="auth-card bg-white border border-[#e5e5dd] rounded-2xl p-7 sm:p-9 shadow-[0_8px_30px_rgba(0,0,0,0.03)]">
+          <router-view />
+        </div>
+      </div>
+
+      <!-- Bottom Help Note -->
+      <div class="w-full text-center text-xs text-[#939c8c] mt-8 pt-4">
+        Need assistance accessing your account?
+        <span class="text-[#70776f] font-medium">Contact your workspace administrator.</span>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from "vue";
-import { useStore } from "vuex";
-import { PhSun, PhMoon } from "@phosphor-icons/vue";
-
-const store = useStore();
-const activeTheme = computed(() => store.state.ui.activeThemeMode);
-const isEducationWorkspace = computed(
-  () => store.getters["organization/isEducationTenant"]
-);
-
-const showcaseData = computed(() => {
-  if (isEducationWorkspace.value) {
-    return {
-      badge: "Institute operations workspace",
-      headline: "Every inquiry, from first counselling call to confirmed seat.",
-      subtext:
-        "Track student leads, place them in the right class, follow up on admissions, and keep your institute team aligned in one workspace.",
-      metricLabel: "Active inquiries",
-      metricValue: "76 this week",
-    };
-  }
-  return {
-    badge: "Real Estate CRM & Operations",
-    headline: "Every deal, from first site visit to closed agreement.",
-    subtext:
-      "Track property leads, manage inventory, schedule site visits, and close deals faster with your real estate team.",
-    metricLabel: "Active property inquiries",
-    metricValue: "48 this week",
-  };
-});
-
-const toggleTheme = () => {
-  const nextTheme = activeTheme.value === "dark" ? "light" : "dark";
-  store.commit("ui/SET_THEME_MODE", nextTheme);
-};
+const currentYear = new Date().getFullYear();
 </script>
 
 <style scoped>
 .auth-shell {
-  background: hsl(var(--bg-app));
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+  background: #faf9f6;
 }
+
+/* Left Showcase Panel Styling */
 .auth-showcase {
   background:
-    radial-gradient(
-      circle at 15% 10%,
-      hsl(var(--accent-500) / 0.2),
-      transparent 28rem
-    ),
-    radial-gradient(
-      circle at 90% 85%,
-      hsl(var(--highlight-500) / 0.09),
-      transparent 24rem
-    ),
-    hsl(18 20% 7%);
-  border-right: 1px solid hsl(20 10% 16%);
+    radial-gradient(ellipse 70% 60% at 20% 20%, rgba(99, 140, 99, 0.16) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 60% at 85% 85%, rgba(37, 78, 59, 0.14) 0%, transparent 70%),
+    #f4f3ee;
+  border-right: 1px solid #e5e5dd;
 }
-.auth-showcase::after {
-  content: "";
+
+.auth-mesh-grid {
   position: absolute;
   inset: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(rgb(255 255 255 / 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(255 255 255 / 0.035) 1px, transparent 1px);
-  background-size: 32px 32px;
-  mask-image: linear-gradient(to bottom, black, transparent 82%);
+    linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black 30%, transparent 100%);
 }
-.auth-showcase-logo {
-  display: block;
-  object-fit: contain;
+
+.auth-ambient-glow {
+  position: absolute;
+  top: -120px;
+  left: -80px;
+  width: 480px;
+  height: 480px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(61, 122, 85, 0.12) 0%, transparent 70%);
+  filter: blur(60px);
+  pointer-events: none;
 }
-.auth-showcase-logo.real-estate-logo {
-  height: 40px;
-  width: auto;
-  max-width: 200px;
-  filter: brightness(0) invert(1);
+
+.auth-gradient-text {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 400;
+  color: #6c8065;
+  letter-spacing: -0.04em;
 }
-.auth-showcase-logo.education-logo {
-  height: 40px;
-  width: auto;
-  max-width: 200px;
-  filter: brightness(0) invert(1);
+
+.auth-pipeline-card {
+  border: 1px solid #e5e5dd;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 16px 40px -12px rgba(33, 60, 49, 0.08);
+  backdrop-filter: blur(14px);
 }
+
+.auth-showcase-logo,
 .auth-mobile-logo {
   display: block;
   object-fit: contain;
 }
-.auth-mobile-logo.auth-logo-re {
-  height: 34px;
-  width: auto;
-  max-width: 175px;
-}
-.auth-mobile-logo.auth-logo-edu {
-  height: 34px;
-  width: auto;
-  max-width: 175px;
-}
-:global(.dark) .auth-mobile-logo.auth-logo-re {
-  filter: brightness(0) invert(1);
-}
-:global(.dark) .auth-mobile-logo.auth-logo-edu {
-  filter: brightness(0) invert(1);
-}
+
+/* Right Form Panel */
 .auth-form-panel {
-  background: radial-gradient(
-    circle at 100% 0%,
-    hsl(var(--accent-100) / 0.55),
-    transparent 22rem
-  );
+  background:
+    radial-gradient(circle at 100% 0%, rgba(37, 78, 59, 0.04) 0%, transparent 26rem),
+    #faf9f6;
 }
-.auth-metric {
-  border: 1px solid rgb(255 255 255 / 0.08);
-  border-radius: 14px;
-  background: rgb(255 255 255 / 0.045);
-  box-shadow: 0 24px 60px rgb(0 0 0 / 0.25);
-  backdrop-filter: blur(18px);
+
+.auth-card {
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 </style>
