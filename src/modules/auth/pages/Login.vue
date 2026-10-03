@@ -43,7 +43,7 @@
             type="text"
             placeholder="e.g. AcmeCorp or Institute name"
             autocomplete="organization"
-            class="w-full h-11 px-3.5 rounded-xl border border-[#dcddd5] bg-[#faf9f6] text-[#213c31] placeholder-[#939c8c] text-sm focus:bg-white focus:border-[#254e3b] focus:ring-2 focus:ring-[#254e3b]/15 outline-none transition-all"
+            class="w-full h-11 px-3.5 rounded-xl border border-[#e2e8f0] bg-[#f8fafc] text-[#0f172a] placeholder-[#94a3b8] text-sm focus:bg-white focus:border-[#0a6ef0] focus:ring-2 focus:ring-[#0a6ef0]/15 outline-none transition-all"
             :class="{ 'border-red-400 focus:border-red-500 focus:ring-red-500/15': errors.organization }"
             :disabled="isPending"
           />
@@ -54,14 +54,14 @@
         >
           {{ errors.organization }}
         </span>
-        <span v-else class="text-[11px] text-[#939c8c] block mt-0.5">
+        <span v-else class="text-[11px] text-[#94a3b8] block mt-0.5">
           Your unique organization workspace slug or identifier.
         </span>
       </div>
 
       <!-- Email Address Input -->
       <div class="space-y-1.5">
-        <label for="email" class="block text-xs font-semibold text-[#213c31]">
+        <label for="email" class="block text-xs font-semibold text-[#0f172a]">
           Work Email <span class="text-red-500">*</span>
         </label>
         <div class="relative">
@@ -71,7 +71,7 @@
             type="email"
             placeholder="name@company.com"
             autocomplete="email"
-            class="w-full h-11 px-3.5 rounded-xl border border-[#dcddd5] bg-[#faf9f6] text-[#213c31] placeholder-[#939c8c] text-sm focus:bg-white focus:border-[#254e3b] focus:ring-2 focus:ring-[#254e3b]/15 outline-none transition-all"
+            class="w-full h-11 px-3.5 rounded-xl border border-[#e2e8f0] bg-[#f8fafc] text-[#0f172a] placeholder-[#94a3b8] text-sm focus:bg-white focus:border-[#0a6ef0] focus:ring-2 focus:ring-[#0a6ef0]/15 outline-none transition-all"
             :class="{ 'border-red-400 focus:border-red-500 focus:ring-red-500/15': errors.email }"
             :disabled="isPending"
           />
@@ -87,12 +87,12 @@
       <!-- Password Input -->
       <div class="space-y-1.5">
         <div class="flex justify-between items-center mb-1">
-          <label for="password" class="block text-xs font-semibold text-[#213c31]">
+          <label for="password" class="block text-xs font-semibold text-[#0f172a]">
             Password <span class="text-red-500">*</span>
           </label>
           <router-link
             to="/forgot-password"
-            class="text-xs font-semibold text-[#254e3b] hover:text-[#153a29] hover:underline"
+            class="text-xs font-semibold text-[#0a6ef0] hover:text-[#0056cc] hover:underline"
             :disabled="isPending"
           >
             Forgot password?
@@ -105,14 +105,14 @@
             :type="showPassword ? 'text' : 'password'"
             placeholder="••••••••"
             autocomplete="current-password"
-            class="w-full h-11 px-3.5 pr-11 rounded-xl border border-[#dcddd5] bg-[#faf9f6] text-[#213c31] placeholder-[#939c8c] text-sm focus:bg-white focus:border-[#254e3b] focus:ring-2 focus:ring-[#254e3b]/15 outline-none transition-all font-mono"
+            class="w-full h-11 px-3.5 pr-11 rounded-xl border border-[#e2e8f0] bg-[#f8fafc] text-[#0f172a] placeholder-[#94a3b8] text-sm focus:bg-white focus:border-[#0a6ef0] focus:ring-2 focus:ring-[#0a6ef0]/15 outline-none transition-all font-mono"
             :class="{ 'border-red-400 focus:border-red-500 focus:ring-red-500/15': errors.password }"
             :disabled="isPending"
           />
           <button
             type="button"
             @click="showPassword = !showPassword"
-            class="absolute right-3 p-1 text-[#70776f] hover:text-[#213c31] focus:outline-none transition-colors"
+            class="absolute right-3 p-1 text-[#64748b] hover:text-[#0f172a] focus:outline-none transition-colors"
             :disabled="isPending"
             aria-label="Toggle password visibility"
           >
@@ -136,17 +136,17 @@
           <input
             type="checkbox"
             v-model="rememberMe"
-            class="rounded border-[#dcddd5] text-[#254e3b] focus:ring-[#254e3b]/20 h-4 w-4 accent-[#254e3b]"
+            class="rounded border-[#e2e8f0] text-[#0a6ef0] focus:ring-[#0a6ef0]/20 h-4 w-4 accent-[#0a6ef0]"
             :disabled="isPending"
           />
-          <span class="text-xs text-[#70776f]">Remember my email</span>
+          <span class="text-xs text-[#64748b]">Remember my email</span>
         </label>
       </div>
 
       <!-- Submit Button -->
       <button
         type="submit"
-        class="w-full h-11 mt-2 bg-[#254e3b] hover:bg-[#153a29] active:scale-[0.99] text-white rounded-xl font-semibold text-sm transition-all duration-200 shadow-[0_3px_8px_rgba(23,51,33,0.18)] hover:shadow-[0_6px_20px_rgba(23,51,33,0.22)] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        class="w-full h-11 mt-2 bg-[#0a6ef0] hover:bg-[#0056cc] active:scale-[0.99] text-white rounded-xl font-semibold text-sm transition-all duration-200 shadow-[0_3px_8px_rgba(10,110,240,0.25)] hover:shadow-[0_6px_20px_rgba(10,110,240,0.32)] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         :disabled="isPending"
       >
         <AppSpinner v-if="isPending" size="xs" color="white" />

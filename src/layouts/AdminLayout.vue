@@ -12,8 +12,8 @@
           class="logo-container"
           title="TrackDeal Platform Admin"
         >
-          <div class="brand-mark-box shrink-0">
-            <PhLightning weight="fill" :size="20" class="text-white" />
+          <div class="brand-mark-box shrink-0 flex items-center justify-center p-1 bg-white border border-slate-200 shadow-sm rounded-lg">
+            <img src="/trackdeal_mark.png" alt="TrackDeal" class="w-6 h-6 object-contain" />
           </div>
           <div class="brand-text flex flex-col min-w-0">
             <div class="flex items-center gap-2">

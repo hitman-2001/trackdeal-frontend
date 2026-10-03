@@ -10,34 +10,34 @@
 
 /* ── CSS Custom Properties ─────────────────────────────────────────────────── */
 :root {
-  /* TrackDeal System Colors */
-  --brand-blue: 201 96% 32%; /* TrackDeal Blue #0284c7 */
-  --brand-blue-50: 204 100% 97%;
-  --brand-blue-100: 204 94% 94%;
+  /* TrackDeal System Colors — matching TrackDeal Brand Logo */
+  --brand-blue: 215 95% 49%; /* #0a6ef0 */
+  --brand-blue-50: 214 100% 97%;
+  --brand-blue-100: 214 95% 93%;
 
-  --accent-50:  138 76% 97%;
-  --accent-100: 141 73% 92%;
-  --accent-200: 141 68% 82%;
-  --accent-500: 142 71% 38%;
-  --accent-600: 142 71% 29%; /* Dark Green #15803d */
-  --accent-700: 142 72% 21%;
+  --accent-50:  214 100% 97%;
+  --accent-100: 214 95% 93%;
+  --accent-200: 213 94% 84%;
+  --accent-500: 215 95% 49%; /* Vibrant Logo Deal Blue #0a6ef0 */
+  --accent-600: 217 91% 45%; /* Deep Vibrant Blue #0a64e6 */
+  --accent-700: 221 84% 39%; /* Active / Hover Blue #074db5 */
   --accent-foreground: 0 0% 100%;
 
   --highlight-100: 39 74% 91%;
   --highlight-500: 36 68% 50%;
 
-  /* Neutral Scale — Light Mode */
-  --neutral-0:   45 25% 97%;
-  --neutral-25:  45 20% 96%;
-  --neutral-50:  42 16% 92%;
-  --neutral-100: 40 13% 87%;
-  --neutral-200: 35  9% 78%;
-  --neutral-300: 32  7% 64%;
-  --neutral-400: 150  5% 48%;
-  --neutral-500: 150  5% 39%;
-  --neutral-700: 150  9% 25%;
-  --neutral-900: 155 18% 15%;
-  --neutral-950: 155 22%  9%;
+  /* Neutral Scale — Clean Modern SaaS Slate matching Logo Navy */
+  --neutral-0:   210 20% 98%;
+  --neutral-25:  210 18% 96%;
+  --neutral-50:  214 15% 93%;
+  --neutral-100: 214 14% 88%;
+  --neutral-200: 215 12% 78%;
+  --neutral-300: 215 10% 64%;
+  --neutral-400: 217 10% 48%;
+  --neutral-500: 217 12% 38%;
+  --neutral-700: 221 25% 20%;
+  --neutral-900: 222 47% 11%; /* Deep Logo Navy #0a1e3c */
+  --neutral-950: 222 55%  7%;
 
   /* Surface Layers */
   --bg-app:      var(--neutral-0);
@@ -98,25 +98,25 @@
 }
 
 .dark {
-  /* Neutral Scale — Dark Mode */
-  --neutral-0:   180 10%  7%;
-  --neutral-25:  180  9% 10%;
-  --neutral-50:  180  8% 13%;
-  --neutral-100: 180  7% 17%;
-  --neutral-200: 175  6% 23%;
-  --neutral-300: 170  5% 37%;
-  --neutral-400: 165  5% 52%;
-  --neutral-500: 155  6% 67%;
-  --neutral-700: 145  7% 81%;
-  --neutral-900: 42 15% 94%;
-  --neutral-950: 180 15%  5%;
+  /* Neutral Scale — Dark Mode Slate */
+  --neutral-0:   222 47%  7%;
+  --neutral-25:  222 40% 10%;
+  --neutral-50:  222 35% 13%;
+  --neutral-100: 220 28% 18%;
+  --neutral-200: 218 20% 25%;
+  --neutral-300: 217 15% 40%;
+  --neutral-400: 215 12% 55%;
+  --neutral-500: 214 14% 70%;
+  --neutral-700: 213 18% 85%;
+  --neutral-900: 210 20% 96%;
+  --neutral-950: 222 55%  5%;
 
   /* Accent shifts slightly lighter in dark */
-  --accent-500: 162 63% 50%;
-  --accent-600: 162 58% 44%;
-  --accent-200: 164 32% 27%;
-  --accent-100: 164 28% 18%;
-  --accent-50:  164 24% 13%;
+  --accent-500: 215 95% 56%;
+  --accent-600: 215 90% 50%;
+  --accent-200: 217 60% 28%;
+  --accent-100: 217 65% 18%;
+  --accent-50:  217 70% 12%;
 
   /* Surface Layers */
   --bg-app:      var(--neutral-0);

@@ -14,16 +14,9 @@
           title="TrackDeal Home"
         >
           <img
-            v-if="isEducationWorkspace"
-            src="/education_logo.png"
-            alt="TrackDeal Education"
-            class="brand-logo-img education-logo"
-          />
-          <img
-            v-else
-            src="/real_estate_black.png"
-            alt="TrackDeal Real Estate"
-            class="brand-logo-img real-estate-logo"
+            :src="isDarkMode ? '/trackdeal_logo_dark.png' : '/trackdeal_logo.png'"
+            alt="TrackDeal"
+            class="brand-logo-img trackdeal-nav-logo"
           />
         </router-link>
       </div>
@@ -1244,6 +1237,12 @@ const vClickOutside = {
   transition: all 0.2s ease;
 }
 
+.trackdeal-nav-logo {
+  height: 34px;
+  width: auto;
+  max-width: 175px;
+}
+
 .real-estate-logo {
   height: 34px;
   width: auto;
@@ -2152,6 +2151,10 @@ const vClickOutside = {
   }
   .logo-container {
     gap: 8px;
+  }
+  .trackdeal-nav-logo {
+    height: 26px !important;
+    max-width: 130px !important;
   }
   .real-estate-logo {
     height: 26px !important;
