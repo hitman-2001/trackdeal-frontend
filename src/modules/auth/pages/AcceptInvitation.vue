@@ -111,6 +111,7 @@ import { toTypedSchema } from '@vee-validate/zod';
 import { PhSpinner, PhWarning } from '@phosphor-icons/vue';
 import { acceptInvitationSchema } from '../schemas/validation';
 import { useAcceptInvitationMutation } from '../queries';
+import { getErrorMessage } from '@/utils/errorHandler';
 import authApi from '../api/endpoints';
 
 const route = useRoute();
@@ -168,7 +169,10 @@ const onSubmit = handleSubmit((values) => {
     { token: token.value, password: values.password },
     {
       onError: (err) => {
-        errorMessage.value = err.data?.message || 'Failed to complete registration. Token may have expired.';
+        errorMessage.value = getErrorMessage(
+          err,
+          'Failed to complete registration. Token may have expired or is invalid.'
+        );
       }
     }
   );

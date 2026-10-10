@@ -1,5 +1,6 @@
 <template>
   <GlobalApiSpinner />
+  <GlobalToastContainer />
   <router-view />
 </template>
 
@@ -7,6 +8,7 @@
 import { onMounted } from 'vue';
 import { useStore } from 'vuex';
 import GlobalApiSpinner from '@/components/GlobalApiSpinner.vue';
+import GlobalToastContainer from '@/components/GlobalToastContainer.vue';
 
 const store = useStore();
 

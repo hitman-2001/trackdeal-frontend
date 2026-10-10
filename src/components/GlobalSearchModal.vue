@@ -1,6 +1,6 @@
 <template>
   <Teleport to="body">
-    <div v-if="isOpen" class="fixed inset-0 z-[1000] overflow-y-auto premium-backdrop flex items-start justify-center pt-20 p-4 animate-fade-in" @click.self="close">
+    <div v-if="isOpen" class="fixed inset-0 z-[1000] overflow-y-auto premium-backdrop flex items-start justify-center pt-10 sm:pt-20 p-3 sm:p-4 animate-fade-in" @click.self="close">
       <div class="section-panel premium-modal max-w-xl w-full overflow-hidden transition-all text-body" role="dialog" aria-modal="true" aria-label="Global search">
       <!-- Search Input Header -->
       <div class="p-4 flex items-center gap-3">

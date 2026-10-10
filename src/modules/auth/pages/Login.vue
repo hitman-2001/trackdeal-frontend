@@ -168,6 +168,7 @@ import { useForm, useField } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
 import { PhEye, PhEyeSlash, PhX } from "@phosphor-icons/vue";
 import AppSpinner from "@/components/AppSpinner.vue";
+import { getErrorMessage } from "@/utils/errorHandler";
 import { loginSchema } from "../schemas/validation";
 import { useLoginMutation } from "../queries";
 
@@ -228,13 +229,11 @@ const onSubmit = handleSubmit((values) => {
     },
     {
       onError: (err) => {
-        // Render server errors
-        errorMessage.value =
-          err.response?.data?.error?.message ||
-          err.response?.data?.message ||
-          err.data?.message ||
-          err.message ||
-          "Invalid credentials. Please verify your organization, email and password.";
+        // Render sanitized, user-friendly error message
+        errorMessage.value = getErrorMessage(
+          err,
+          "Invalid credentials. Please verify your organization, email and password."
+        );
       },
     },
   );

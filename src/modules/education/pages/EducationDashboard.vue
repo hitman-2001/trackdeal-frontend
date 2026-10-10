@@ -1,80 +1,87 @@
 <template>
-  <div class="workspace-page pb-12 w-full max-w-full min-w-0 overflow-x-hidden">
-    <!-- Page Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-2 border-b border-slate-200/80 dark:border-slate-800/80 w-full min-w-0">
-      <div class="min-w-0 w-full sm:w-auto">
-        <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-primary/10 text-primary border border-primary/20 mb-1.5">
-          <PhSparkle :size="12" weight="fill" />
-          <span>Education Workspace</span>
+  <div class="workspace-page pb-16 w-full max-w-full min-w-0 overflow-x-hidden space-y-4 sm:space-y-6">
+    <!-- Page Header (Clean & Uncluttered for Mobile & Desktop) -->
+    <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-200/80 dark:border-neutral-800 w-full min-w-0">
+      <div class="min-w-0 flex-1">
+        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-primary/10 text-primary border border-primary/20 mb-1">
+          <PhSparkle :size="11" weight="fill" />
+          <span>Education CRM</span>
         </div>
-        <h1 class="font-heading text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight break-words">
-          Admissions & Counseling Overview
+        <h1 class="font-heading text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight leading-tight truncate sm:whitespace-normal">
+          Admissions Overview
         </h1>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-          Monitor your prospective inquiries, active counseling stages, and scheduled parent follow-ups in real time.
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed hidden sm:block">
+          Monitor your prospective inquiries, active counseling funnel, and scheduled parent follow-ups in real time.
         </p>
       </div>
-      <div class="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto shrink-0 min-w-0">
-        <!-- Refresh Button -->
+
+      <!-- Action Buttons Row -->
+      <div class="flex items-center gap-2 shrink-0">
+        <!-- Quick Refresh Button -->
         <button
           type="button"
           @click="loadDashboard(true)"
           :disabled="refreshing"
-          class="btn btn-secondary btn-sm text-xs font-semibold gap-1.5 justify-center w-full sm:w-auto min-w-0"
+          class="h-9 w-9 sm:w-auto sm:px-3 rounded-xl bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200/80 dark:hover:bg-neutral-700 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-neutral-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-95"
           title="Refresh dashboard data"
         >
-          <PhArrowsClockwise :size="14" :class="{ 'animate-spin': refreshing }" class="shrink-0" />
-          <span class="truncate">Refresh</span>
+          <PhArrowsClockwise :size="15" :class="{ 'animate-spin': refreshing }" class="shrink-0" />
+          <span class="hidden sm:inline">Refresh</span>
         </button>
 
+        <!-- All Leads Shortcut (Desktop) -->
         <router-link
           to="/app/leads"
-          class="btn btn-secondary btn-sm text-xs font-semibold gap-1.5 justify-center w-full sm:w-auto min-w-0"
+          class="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-xl bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200/80 dark:hover:bg-neutral-700 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-neutral-700 text-xs font-semibold transition-all"
         >
-          <PhUsersThree :size="14" class="shrink-0" />
-          <span class="truncate">All Leads</span>
+          <PhUsersThree :size="15" class="shrink-0" />
+          <span>All Leads</span>
         </router-link>
 
+        <!-- Add Student Lead Primary Button -->
         <router-link
           to="/app/leads?action=create"
-          class="btn btn-primary btn-sm text-xs font-semibold gap-1.5 shadow-sm hover:shadow col-span-2 sm:col-span-1 justify-center w-full sm:w-auto min-w-0"
+          class="h-9 px-3 sm:px-3.5 rounded-xl btn-primary text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-transform"
         >
           <PhPlus :size="14" weight="bold" class="shrink-0" />
-          <span class="truncate">Add Student Lead</span>
+          <span>Add Lead</span>
         </router-link>
       </div>
     </div>
 
     <!-- Loading Skeleton -->
-    <div v-if="loading" class="space-y-6 w-full min-w-0">
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 w-full min-w-0">
-        <div v-for="i in 6" :key="i" class="bg-surface border border-default rounded-xl sm:rounded-2xl p-4 sm:p-5 animate-pulse h-28"></div>
+    <div v-if="loading" class="space-y-4 sm:space-y-6 w-full min-w-0">
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3 w-full min-w-0">
+        <div v-for="i in 6" :key="i" class="bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 rounded-2xl p-4 animate-pulse h-24"></div>
       </div>
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full min-w-0">
-        <div class="lg:col-span-2 bg-surface border border-default rounded-xl sm:rounded-2xl p-5 sm:p-6 animate-pulse h-80"></div>
-        <div class="bg-surface border border-default rounded-xl sm:rounded-2xl p-5 sm:p-6 animate-pulse h-80"></div>
+      <div class="bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 rounded-2xl p-5 animate-pulse h-72"></div>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 w-full min-w-0">
+        <div class="lg:col-span-2 bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 rounded-2xl p-5 animate-pulse h-64"></div>
+        <div class="bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 rounded-2xl p-5 animate-pulse h-64"></div>
       </div>
     </div>
 
     <template v-else>
-      <!-- Top Dynamic KPI Metrics (KokonutUI Glass Style) -->
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 w-full min-w-0">
+      <!-- ═══════════════════════════════════════════════
+           ROW 1: Dynamic KPI Metrics (Mobile-Optimized Bento Cards)
+           ═══════════════════════════════════════════════ -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3 w-full min-w-0">
         <!-- Total Leads -->
         <div
-          class="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-surface border border-slate-200/80 dark:border-slate-800/80 hover:border-blue-400/60 dark:hover:border-blue-500/40 transition-all shadow-xs flex flex-col justify-between group cursor-pointer min-w-0"
+          class="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 hover:border-blue-400/80 dark:hover:border-blue-500/60 shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all active:scale-[0.98] flex flex-col justify-between group cursor-pointer min-w-0"
           @click="navigateToLeads()"
         >
           <div class="flex items-center justify-between gap-1">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">Total Leads</span>
-            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-              <PhUsersThree :size="15" weight="duotone" />
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 truncate">Total Leads</span>
+            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <PhUsersThree :size="16" weight="duotone" />
             </div>
           </div>
-          <div class="mt-1.5 sm:mt-2 min-w-0">
-            <div class="text-lg sm:text-2xl font-black text-slate-900 dark:text-slate-100 tabular-nums">
+          <div class="mt-2 min-w-0">
+            <div class="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tabular-nums">
               {{ summary.totalLeads ?? 0 }}
             </div>
-            <div class="text-[10px] text-blue-600 dark:text-blue-400 font-medium mt-0.5 truncate">
+            <div class="text-[10px] text-blue-600 dark:text-blue-400 font-semibold mt-0.5 truncate">
               {{ summary.newLeadsToday ? `+${summary.newLeadsToday} new today` : 'In database' }}
             </div>
           </div>
@@ -82,34 +89,34 @@
 
         <!-- Follow-Ups Due Today -->
         <div
-          class="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-surface border border-slate-200/80 dark:border-slate-800/80 hover:border-amber-400/60 dark:hover:border-amber-500/40 transition-all shadow-xs flex flex-col justify-between group cursor-pointer min-w-0"
-          @click="setTab('today')"
+          class="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 hover:border-amber-400/80 dark:hover:border-amber-500/60 shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all active:scale-[0.98] flex flex-col justify-between group cursor-pointer min-w-0"
+          @click="setTabAndScroll('today')"
         >
           <div class="flex items-center justify-between gap-1">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">Due Today</span>
-            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-              <PhCalendarCheck :size="15" weight="duotone" />
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 truncate">Due Today</span>
+            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <PhCalendarCheck :size="16" weight="duotone" />
             </div>
           </div>
-          <div class="mt-1.5 sm:mt-2 min-w-0">
-            <div class="text-lg sm:text-2xl font-black text-amber-600 dark:text-amber-400 tabular-nums">
+          <div class="mt-2 min-w-0">
+            <div class="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400 tabular-nums">
               {{ todayCount }}
             </div>
             <div class="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate">
-              Scheduled for today
+              Scheduled today
             </div>
           </div>
         </div>
 
         <!-- Overdue Follow-Ups (Pulsing if > 0) -->
         <div
-          class="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-surface border transition-all shadow-xs flex flex-col justify-between group cursor-pointer min-w-0"
-          :class="overdueCount > 0 ? 'border-rose-300 dark:border-rose-900/60 bg-rose-50/20 dark:bg-rose-950/10' : 'border-slate-200/80 dark:border-slate-800/80 hover:border-rose-400/60'"
-          @click="setTab('overdue')"
+          class="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-neutral-900 border transition-all active:scale-[0.98] shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex flex-col justify-between group cursor-pointer min-w-0"
+          :class="overdueCount > 0 ? 'border-rose-300 dark:border-rose-900/80 bg-rose-50/20 dark:bg-rose-950/15' : 'border-slate-200/80 dark:border-neutral-800 hover:border-rose-400/80'"
+          @click="setTabAndScroll('overdue')"
         >
           <div class="flex items-center justify-between gap-1">
             <div class="flex items-center gap-1.5 min-w-0">
-              <span class="text-[10px] font-bold uppercase tracking-wider truncate" :class="overdueCount > 0 ? 'text-rose-600 dark:text-rose-400 font-extrabold' : 'text-slate-400'">
+              <span class="text-[10px] font-bold uppercase tracking-wider truncate" :class="overdueCount > 0 ? 'text-rose-600 dark:text-rose-400 font-extrabold' : 'text-slate-400 dark:text-slate-500'">
                 Overdue
               </span>
               <span v-if="overdueCount > 0" class="relative flex h-2 w-2 shrink-0">
@@ -117,12 +124,12 @@
                 <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
               </span>
             </div>
-            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-              <PhWarning :size="15" weight="duotone" />
+            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <PhWarning :size="16" weight="duotone" />
             </div>
           </div>
-          <div class="mt-1.5 sm:mt-2 min-w-0">
-            <div class="text-lg sm:text-2xl font-black tabular-nums" :class="overdueCount > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-slate-100'">
+          <div class="mt-2 min-w-0">
+            <div class="text-xl sm:text-2xl font-black tabular-nums" :class="overdueCount > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-slate-100'">
               {{ overdueCount }}
             </div>
             <div class="text-[10px] font-medium mt-0.5 truncate" :class="overdueCount > 0 ? 'text-rose-600 dark:text-rose-400 font-semibold' : 'text-slate-500 dark:text-slate-400'">
@@ -133,59 +140,59 @@
 
         <!-- Active Pipeline Inquiries -->
         <div
-          class="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-surface border border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-400/60 dark:hover:border-indigo-500/40 transition-all shadow-xs flex flex-col justify-between group cursor-pointer min-w-0"
+          class="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 hover:border-indigo-400/80 dark:hover:border-indigo-500/60 shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all active:scale-[0.98] flex flex-col justify-between group cursor-pointer min-w-0"
           @click="navigateToLeads('contacted')"
         >
           <div class="flex items-center justify-between gap-1">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">In Pipeline</span>
-            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-              <PhFunnel :size="15" weight="duotone" />
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 truncate">In Pipeline</span>
+            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <PhFunnel :size="16" weight="duotone" />
             </div>
           </div>
-          <div class="mt-1.5 sm:mt-2 min-w-0">
-            <div class="text-lg sm:text-2xl font-black text-indigo-600 dark:text-indigo-400 tabular-nums">
+          <div class="mt-2 min-w-0">
+            <div class="text-xl sm:text-2xl font-black text-indigo-600 dark:text-indigo-400 tabular-nums">
               {{ activePipelineCount }}
             </div>
             <div class="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate">
-              Contacted & Counseling
+              Counseling active
             </div>
           </div>
         </div>
 
         <!-- Enrolled Students -->
         <div
-          class="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-surface border border-slate-200/80 dark:border-slate-800/80 hover:border-emerald-400/60 dark:hover:border-emerald-500/40 transition-all shadow-xs flex flex-col justify-between group cursor-pointer min-w-0"
+          class="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 hover:border-emerald-400/80 dark:hover:border-emerald-500/60 shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all active:scale-[0.98] flex flex-col justify-between group cursor-pointer min-w-0"
           @click="navigateToStudents()"
         >
           <div class="flex items-center justify-between gap-1">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">Enrolled</span>
-            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-              <PhGraduationCap :size="15" weight="duotone" />
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 truncate">Enrolled</span>
+            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <PhGraduationCap :size="16" weight="duotone" />
             </div>
           </div>
-          <div class="mt-1.5 sm:mt-2 min-w-0">
-            <div class="text-lg sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
+          <div class="mt-2 min-w-0">
+            <div class="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
               {{ (summary.enrolledLeads !== undefined ? summary.enrolledLeads : summary.totalStudents) || 0 }}
             </div>
-            <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5 truncate">
-              {{ conversionRateText }}
+            <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5 truncate">
+              {{ conversionPercentage }}% converted
             </div>
           </div>
         </div>
 
-        <!-- Active Classes -->
+        <!-- Active Batches & Classes -->
         <div
-          class="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-surface border border-slate-200/80 dark:border-slate-800/80 hover:border-purple-400/60 dark:hover:border-purple-500/40 transition-all shadow-xs flex flex-col justify-between group cursor-pointer min-w-0"
+          class="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 hover:border-purple-400/80 dark:hover:border-purple-500/60 shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all active:scale-[0.98] flex flex-col justify-between group cursor-pointer min-w-0"
           @click="navigateToClasses()"
         >
           <div class="flex items-center justify-between gap-1">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">Classes</span>
-            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-              <PhChalkboardTeacher :size="15" weight="duotone" />
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 truncate">Classes</span>
+            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <PhChalkboardTeacher :size="16" weight="duotone" />
             </div>
           </div>
-          <div class="mt-1.5 sm:mt-2 min-w-0">
-            <div class="text-lg sm:text-2xl font-black text-slate-900 dark:text-slate-100 tabular-nums">
+          <div class="mt-2 min-w-0">
+            <div class="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tabular-nums">
               {{ summary.totalClasses ?? 0 }}
             </div>
             <div class="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate">
@@ -195,307 +202,320 @@
         </div>
       </div>
 
-      <!-- Alerts Banner (if any) -->
-      <div v-if="hasAlerts" class="flex flex-col sm:flex-row gap-2 sm:gap-2.5 w-full min-w-0">
+      <!-- Actionable Smart Alerts Banner (Tap to Navigate) -->
+      <div v-if="hasAlerts" class="flex flex-col sm:flex-row gap-2.5 w-full min-w-0">
         <div
           v-if="overdueCount > 0"
-          @click="setTab('overdue')"
-          class="cursor-pointer flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 text-xs font-semibold text-rose-700 dark:text-rose-400 hover:bg-rose-100/60 transition-colors shadow-xs w-full sm:w-auto"
+          @click="setTabAndScroll('overdue')"
+          class="cursor-pointer flex items-center justify-between gap-2.5 px-4 py-2.5 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/60 text-xs font-semibold text-rose-700 dark:text-rose-400 hover:bg-rose-100/60 dark:hover:bg-rose-950/50 transition-all active:scale-[0.99] shadow-xs w-full sm:w-auto"
         >
-          <PhWarningCircle :size="16" weight="bold" class="shrink-0" />
-          <span class="leading-tight">{{ overdueCount }} follow-up{{ overdueCount > 1 ? 's are' : ' is' }} overdue. Click to review.</span>
-          <PhArrowRight :size="12" class="ml-auto sm:ml-1 shrink-0" />
+          <div class="flex items-center gap-2 min-w-0">
+            <PhWarningCircle :size="16" weight="bold" class="shrink-0 text-rose-600" />
+            <span class="truncate">{{ overdueCount }} follow-up{{ overdueCount > 1 ? 's are' : ' is' }} overdue. Tap to resolve.</span>
+          </div>
+          <PhArrowRight :size="13" class="shrink-0" />
         </div>
+
         <div
           v-if="(summary.unassignedLeads || 0) > 0"
           @click="navigateToLeads('unassigned')"
-          class="cursor-pointer flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:bg-amber-100/60 transition-colors shadow-xs w-full sm:w-auto"
+          class="cursor-pointer flex items-center justify-between gap-2.5 px-4 py-2.5 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:bg-amber-100/60 dark:hover:bg-amber-950/50 transition-all active:scale-[0.99] shadow-xs w-full sm:w-auto"
         >
-          <PhClock :size="16" weight="bold" class="shrink-0" />
-          <span class="leading-tight">{{ summary.unassignedLeads }} unassigned student lead{{ summary.unassignedLeads > 1 ? 's need' : ' needs' }} counselor allocation.</span>
-          <PhArrowRight :size="12" class="ml-auto sm:ml-1 shrink-0" />
+          <div class="flex items-center gap-2 min-w-0">
+            <PhClock :size="16" weight="bold" class="shrink-0 text-amber-600" />
+            <span class="truncate">{{ summary.unassignedLeads }} unassigned student lead{{ summary.unassignedLeads > 1 ? 's need' : ' needs' }} counselor allocation.</span>
+          </div>
+          <PhArrowRight :size="13" class="shrink-0" />
         </div>
       </div>
 
-      <!-- MAIN SECTION: Scheduled Reminders & Follow-Ups (KokonutUI Modern Card System) -->
-      <div class="bg-surface border border-slate-200/80 dark:border-slate-800/80 rounded-xl sm:rounded-2xl p-3.5 sm:p-6 shadow-xs space-y-4 w-full min-w-0">
-        <!-- Section Header & Controls -->
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4 w-full min-w-0">
-          <div class="min-w-0">
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-                <PhBell :size="18" weight="duotone" />
-              </div>
-              <h2 class="font-heading text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 truncate">
-                Scheduled Follow-Ups & Reminders
-              </h2>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 shrink-0">
-                {{ allFollowUps.length }} total
-              </span>
+      <!-- ═══════════════════════════════════════════════
+           ROW 2: Scheduled Reminders & Follow-Ups (De-cluttered Action Center)
+           ═══════════════════════════════════════════════ -->
+      <div id="reminders-section" class="bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 rounded-2xl p-3.5 sm:p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-3 sm:space-y-3.5 w-full min-w-0">
+        <!-- Section Header & Filter Tabs (Clean 1-Row / 2-Row Layout) -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 w-full min-w-0">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+              <PhBell :size="15" weight="duotone" />
             </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-              Directly dial parents, initiate WhatsApp chats, log interaction notes, or reschedule counseling reminders.
-            </p>
+            <h2 class="font-heading text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100">
+              Follow-Up Queue
+            </h2>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-slate-300">
+              {{ allFollowUps.length }}
+            </span>
           </div>
 
-          <!-- Interactive Filter Tabs (Skiper UI inspired pill tabs) -->
-          <div class="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 w-full lg:w-auto overflow-x-auto scrollbar-hide max-w-full">
+          <!-- Interactive Filter Tabs (Compact Segmented Strip) -->
+          <div class="flex items-center gap-1 p-1 rounded-xl bg-slate-100/90 dark:bg-neutral-800/80 border border-slate-200/60 dark:border-neutral-700/60 overflow-x-auto scrollbar-none w-full sm:w-auto">
             <button
               type="button"
               @click="reminderFilter = 'all'"
-              class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0"
-              :class="reminderFilter === 'all' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
+              class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap text-center active:scale-95"
+              :class="reminderFilter === 'all' ? 'bg-white dark:bg-neutral-700 text-slate-900 dark:text-slate-100 shadow-xs font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'"
             >
-              <span>All</span>
-              <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold" :class="reminderFilter === 'all' ? 'bg-slate-100 dark:bg-slate-600 text-slate-700 dark:text-slate-200' : 'bg-slate-200/60 dark:bg-slate-800 text-slate-500'">
-                {{ allFollowUps.length }}
-              </span>
+              All ({{ allFollowUps.length }})
             </button>
 
             <button
               type="button"
               @click="reminderFilter = 'overdue'"
-              class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0"
-              :class="reminderFilter === 'overdue' ? 'bg-white dark:bg-slate-700 text-rose-600 dark:text-rose-400 shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-rose-600'"
+              class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap text-center active:scale-95 flex items-center justify-center gap-1"
+              :class="reminderFilter === 'overdue' ? 'bg-white dark:bg-neutral-700 text-rose-600 dark:text-rose-400 shadow-xs font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-rose-600'"
             >
-              <PhWarningCircle :size="13" weight="bold" />
-              <span>Overdue</span>
-              <span
-                class="px-1.5 py-0.2 rounded-full text-[10px] font-bold"
-                :class="overdueCount > 0 ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300' : 'bg-slate-200/60 dark:bg-slate-800 text-slate-500'"
-              >
-                {{ overdueCount }}
-              </span>
+              <span v-if="overdueCount > 0" class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+              <span>Overdue ({{ overdueCount }})</span>
             </button>
 
             <button
               type="button"
               @click="reminderFilter = 'today'"
-              class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0"
-              :class="reminderFilter === 'today' ? 'bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-amber-600'"
+              class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap text-center active:scale-95"
+              :class="reminderFilter === 'today' ? 'bg-white dark:bg-neutral-700 text-amber-600 dark:text-amber-400 shadow-xs font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-amber-600'"
             >
-              <PhCalendarCheck :size="13" weight="bold" />
-              <span>Due Today</span>
-              <span
-                class="px-1.5 py-0.2 rounded-full text-[10px] font-bold"
-                :class="todayCount > 0 ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300' : 'bg-slate-200/60 dark:bg-slate-800 text-slate-500'"
-              >
-                {{ todayCount }}
-              </span>
+              Today ({{ todayCount }})
             </button>
 
             <button
               type="button"
               @click="reminderFilter = 'upcoming'"
-              class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0"
-              :class="reminderFilter === 'upcoming' ? 'bg-white dark:bg-slate-700 text-purple-600 dark:text-purple-400 shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-purple-600'"
+              class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap text-center active:scale-95"
+              :class="reminderFilter === 'upcoming' ? 'bg-white dark:bg-neutral-700 text-purple-600 dark:text-purple-400 shadow-xs font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-purple-600'"
             >
-              <PhClock :size="13" weight="bold" />
-              <span>Upcoming</span>
-              <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-slate-200/60 dark:bg-slate-800 text-slate-500">
-                {{ upcomingCount }}
-              </span>
+              Upcoming ({{ upcomingCount }})
             </button>
           </div>
         </div>
 
-        <!-- Secondary Filters: Search & Channel Type -->
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-1 border-t border-slate-100 dark:border-slate-800/60 w-full min-w-0">
-          <!-- Search box -->
-          <div class="relative w-full sm:w-72 min-w-0">
+        <!-- Single Streamlined Search & Channel Filter Row -->
+        <div class="flex items-center gap-2 pt-1 border-t border-slate-100 dark:border-neutral-800 w-full min-w-0">
+          <div class="relative flex-1 min-w-0">
             <PhMagnifyingGlass :size="14" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               v-model="reminderSearch"
               type="text"
-              placeholder="Search student, parent, phone..."
-              class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 outline-none focus:border-primary transition-all"
+              placeholder="Search follow-ups..."
+              class="w-full bg-slate-50 dark:bg-neutral-800 border border-slate-200/80 dark:border-neutral-700 rounded-xl pl-8 pr-7 py-2 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 outline-none focus:border-primary transition-all"
             />
+            <button
+              v-if="reminderSearch"
+              type="button"
+              @click="reminderSearch = ''"
+              class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+            >
+              <PhXCircle :size="14" weight="fill" />
+            </button>
           </div>
 
-          <!-- Channel Filter -->
-          <div class="flex items-center gap-1 overflow-x-auto scrollbar-hide pb-1 sm:pb-0 w-full sm:w-auto max-w-full">
-            <span class="text-[10px] font-bold uppercase text-slate-400 tracking-wider mr-1 shrink-0">Type:</span>
-            <button
-              v-for="t in typeFilterOptions"
-              :key="t.value"
-              type="button"
-              @click="reminderTypeFilter = t.value"
-              class="px-2 py-1 rounded-lg text-[11px] font-semibold border transition-all whitespace-nowrap shrink-0"
-              :class="reminderTypeFilter === t.value ? 'bg-primary/10 text-primary border-primary/30 font-bold' : 'border-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'"
+          <!-- Channel Dropdown Selector -->
+          <div class="shrink-0">
+            <select
+              v-model="reminderTypeFilter"
+              class="h-9 bg-slate-50 dark:bg-neutral-800 border border-slate-200/80 dark:border-neutral-700 rounded-xl px-2.5 py-1 text-xs text-slate-700 dark:text-slate-200 outline-none font-medium focus:border-primary cursor-pointer"
             >
-              {{ t.label }}
-            </button>
+              <option value="all">All Channels</option>
+              <option value="call">Phone Calls</option>
+              <option value="whatsapp">WhatsApp</option>
+              <option value="meeting">Counseling</option>
+              <option value="note">General</option>
+            </select>
           </div>
         </div>
 
-        <!-- REMINDERS LIST -->
-        <div v-if="filteredFollowUps.length > 0" class="space-y-2.5 w-full min-w-0">
+        <!-- REMINDERS FEED (De-cluttered, Streamlined Card System) -->
+        <div v-if="filteredFollowUps.length > 0" class="space-y-3 w-full min-w-0">
           <div
-            v-for="fu in filteredFollowUps"
+            v-for="fu in displayedFollowUps"
             :key="fu._id"
-            class="group relative flex flex-col gap-0 bg-white dark:bg-neutral-900 border rounded-xl overflow-hidden transition-all duration-150 hover:shadow-md w-full min-w-0"
-            :class="fu.isOverdue ? 'border-l-[3px] border-l-rose-400 border-t-neutral-200 border-r-neutral-200 border-b-neutral-200 dark:border-l-rose-600 dark:border-t-neutral-800 dark:border-r-neutral-800 dark:border-b-neutral-800' : 'border-neutral-200 dark:border-neutral-800'"
+            class="group relative flex flex-col bg-slate-50/40 dark:bg-neutral-900/90 rounded-2xl border transition-all duration-150 hover:shadow-xs w-full min-w-0 p-3.5 space-y-2.5"
+            :class="[
+              fu.isOverdue
+                ? 'border-l-4 border-l-rose-500 border-slate-200/80 dark:border-neutral-800 bg-rose-50/10 dark:bg-rose-950/10'
+                : fu.isToday
+                  ? 'border-l-4 border-l-amber-500 border-slate-200/80 dark:border-neutral-800 bg-amber-50/10 dark:bg-amber-950/10'
+                  : 'border-l-4 border-l-blue-500 border-slate-200/80 dark:border-neutral-800'
+            ]"
           >
-            <!-- Card Header Row -->
-            <div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 px-3 sm:px-4 pt-3 pb-2.5 border-b border-neutral-100 dark:border-neutral-800 w-full min-w-0">
-              <div class="flex items-center gap-1.5 flex-wrap min-w-0">
+            <!-- Card Header: Clean 1-Row Badges (Left) + Actions (Right) -->
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-1.5 min-w-0 flex-wrap">
                 <!-- Channel Badge -->
                 <span
-                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border shrink-0"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border shrink-0"
                   :class="getChannelMeta(fu.type).badgeClass"
                 >
                   <component :is="getChannelMeta(fu.type).icon" :size="11" weight="bold" />
                   {{ getChannelMeta(fu.type).label }}
                 </span>
 
-                <!-- Status badge -->
+                <!-- Due Date & Time Badge -->
                 <span
-                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border shrink-0"
-                  :class="getRelativeBadgeMeta(fu).class"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-semibold border shrink-0"
+                  :class="getScheduleBadgeMeta(fu).class"
                 >
-                  <PhClock :size="10" weight="bold" />
-                  {{ getRelativeBadgeMeta(fu).text }}
+                  <component :is="getScheduleBadgeMeta(fu).icon" :size="10" weight="bold" />
+                  <span>{{ getScheduleBadgeMeta(fu).text }}</span>
                 </span>
               </div>
 
-              <!-- Timestamp + View -->
-              <div class="flex items-center gap-2 shrink-0 ml-auto sm:ml-0">
-                <span class="text-[11px] text-neutral-400 tabular-nums font-mono">
-                  {{ formatFollowUpDate(fu.scheduledAt) }}
-                </span>
+              <!-- Quick Header Actions: Reschedule & Profile -->
+              <div class="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  @click="openReminder(fu)"
+                  class="h-7 w-7 rounded-lg bg-white dark:bg-neutral-800 hover:bg-amber-50 dark:hover:bg-amber-950/40 text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 border border-slate-200/70 dark:border-neutral-700 flex items-center justify-center transition-colors active:scale-95"
+                  title="Reschedule reminder"
+                >
+                  <PhCalendarCheck :size="13" weight="bold" />
+                </button>
                 <button
                   type="button"
                   @click="openDetails(fu.leadId)"
-                  class="w-6 h-6 rounded-md flex items-center justify-center text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                  title="View full student profile"
+                  class="h-7 w-7 rounded-lg bg-white dark:bg-neutral-800 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-200/70 dark:border-neutral-700 flex items-center justify-center transition-colors active:scale-95"
+                  title="View student profile"
                 >
-                  <PhEye :size="13" />
+                  <PhEye :size="13" weight="bold" />
                 </button>
               </div>
             </div>
 
-            <!-- Card Body -->
-            <div class="px-3 sm:px-4 py-3 space-y-2 w-full min-w-0">
-              <!-- Student name + tags -->
-              <div class="flex items-center gap-2 flex-wrap">
-                <button
-                  type="button"
-                  @click="openDetails(fu.leadId)"
-                  class="font-heading font-bold text-sm text-neutral-900 dark:text-neutral-100 hover:text-primary transition-colors text-left"
-                >
-                  {{ fu.studentName }}
-                </button>
-                <span
-                  v-if="fu.className"
-                  class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40"
-                >
-                  {{ fu.className }}
-                </span>
-                <span
-                  v-if="fu.lead?.status"
-                  class="px-1.5 py-0.5 rounded text-[10px] font-medium capitalize bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300"
-                >
-                  {{ formatStageName(fu.lead.status) }}
-                </span>
-                <!-- Counselor pill -->
-                <div v-if="fu.assignedTo" class="ml-auto inline-flex items-center gap-1 text-[11px] text-neutral-400">
-                  <span class="w-4 h-4 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-[8px] font-bold text-neutral-600 dark:text-neutral-300 uppercase">
+            <!-- Card Body: Student & Contact Details -->
+            <div class="space-y-1.5">
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <button
+                      type="button"
+                      @click="openDetails(fu.leadId)"
+                      class="font-heading font-bold text-base text-slate-900 dark:text-slate-100 hover:text-primary transition-colors text-left break-words"
+                    >
+                      {{ fu.studentName }}
+                    </button>
+                    <span
+                      v-if="fu.className"
+                      class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/40 shrink-0"
+                    >
+                      {{ fu.className }}
+                    </span>
+                    <span
+                      v-if="fu.lead?.status"
+                      class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium capitalize bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-neutral-700 shrink-0"
+                    >
+                      {{ formatStageName(fu.lead.status) }}
+                    </span>
+                  </div>
+
+                  <!-- Contact Row -->
+                  <div class="flex items-center gap-2 mt-1 text-xs text-slate-600 dark:text-slate-400 flex-wrap">
+                    <a
+                      v-if="fu.contactNumber"
+                      :href="'tel:' + fu.contactNumber"
+                      class="inline-flex items-center gap-1 font-mono font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
+                    >
+                      <PhPhone :size="12" weight="bold" />
+                      <span>{{ fu.contactNumber }}</span>
+                    </a>
+                    <span v-if="fu.parentName" class="text-slate-400 dark:text-slate-500 text-[11px]">
+                      · Parent: <span class="text-slate-700 dark:text-slate-300 font-medium">{{ fu.parentName }}</span>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Assigned Counselor Pill -->
+                <div v-if="fu.assignedTo" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-slate-300 text-[11px] shrink-0">
+                  <span class="w-4 h-4 rounded-full bg-slate-200 dark:bg-neutral-700 flex items-center justify-center text-[8px] font-bold text-slate-700 dark:text-slate-200 uppercase">
                     {{ (fu.assignedTo.firstName || 'C').charAt(0) }}
                   </span>
-                  <span class="truncate max-w-[90px]">{{ fu.assignedTo.firstName }}</span>
+                  <span class="font-medium truncate max-w-[80px]">{{ fu.assignedTo.firstName }}</span>
                 </div>
               </div>
 
-              <!-- Parent & contact row -->
-              <div class="flex items-center gap-3 text-xs text-neutral-500 flex-wrap">
-                <span v-if="fu.parentName">
-                  <span class="text-neutral-400 font-semibold uppercase text-[9px] mr-1">Parent</span>
-                  <span class="font-medium text-neutral-700 dark:text-neutral-300">{{ fu.parentName }}</span>
-                </span>
-                <a
-                  v-if="fu.contactNumber"
-                  :href="'tel:' + fu.contactNumber"
-                  class="font-mono text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1 hover:underline"
-                >
-                  <PhPhone :size="11" />
-                  {{ fu.contactNumber }}
-                </a>
-              </div>
-
-              <!-- Notes -->
+              <!-- Notes Snippet (if any) -->
               <div
                 v-if="fu.notes"
-                class="flex items-start gap-2 text-[11px] text-neutral-500 dark:text-neutral-400 italic break-words"
+                class="flex items-start gap-2 p-2 rounded-xl bg-white dark:bg-neutral-800/60 border border-slate-100 dark:border-neutral-800 text-[11px] text-slate-600 dark:text-slate-400 italic break-words"
               >
-                <PhNotePencil :size="12" class="shrink-0 mt-0.5 text-neutral-400" />
+                <PhNotePencil :size="13" class="shrink-0 mt-0.5 text-slate-400" />
                 <span class="line-clamp-2">{{ fu.notes }}</span>
               </div>
             </div>
 
-            <!-- Card Actions -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 sm:px-4 py-2.5 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 w-full min-w-0">
-              <div class="flex items-center gap-1.5 flex-wrap w-full sm:w-auto">
-                <a
-                  v-if="fu.contactNumber"
-                  :href="'tel:' + fu.contactNumber"
-                  class="action-btn action-btn--success"
-                  title="Call directly"
-                >
-                  <PhPhoneCall :size="12" weight="bold" />
-                  <span>Call</span>
-                </a>
-                <a
-                  v-if="fu.contactNumber"
-                  :href="getWhatsAppUrl(fu.contactNumber)"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="action-btn action-btn--whatsapp"
-                  title="Open WhatsApp"
-                >
-                  <PhWhatsappLogo :size="12" weight="bold" />
-                  <span>WhatsApp</span>
-                </a>
-                <button
-                  type="button"
-                  @click="openLog(fu)"
-                  class="action-btn action-btn--neutral"
-                  title="Log interaction"
-                >
-                  <PhCheckCircle :size="12" weight="bold" class="text-blue-500" />
-                  <span>Log Update</span>
-                </button>
+            <!-- Standardized 4-Touch Action Row (No Truncation) -->
+            <div class="grid grid-cols-4 gap-2 pt-2 border-t border-slate-200/60 dark:border-neutral-800" @click.stop>
+              <!-- Call -->
+              <a
+                v-if="fu.contactNumber"
+                :href="'tel:' + fu.contactNumber"
+                class="h-9 rounded-xl bg-white dark:bg-neutral-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-700 dark:text-slate-200 hover:text-emerald-700 dark:hover:text-emerald-400 border border-slate-200/80 dark:border-neutral-700 flex items-center justify-center gap-1.5 text-xs font-semibold transition-all active:scale-[0.98]"
+                title="Call directly"
+              >
+                <PhPhoneCall :size="14" weight="bold" class="text-emerald-600 dark:text-emerald-400" />
+                <span>Call</span>
+              </a>
+              <div v-else class="h-9 rounded-xl bg-slate-100/50 dark:bg-neutral-800/40 text-slate-400 border border-slate-200/40 dark:border-neutral-800 flex items-center justify-center text-xs opacity-50">
+                <PhPhone :size="14" />
               </div>
 
-              <div class="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-end pt-1.5 sm:pt-0 border-t sm:border-t-0 border-neutral-200/60 dark:border-neutral-800">
-                <button
-                  type="button"
-                  @click="markCompleted(fu)"
-                  class="action-btn action-btn--complete"
-                  title="Mark this reminder as completed"
-                  :disabled="completingId === fu._id"
-                >
-                  <PhCheckCircle :size="12" weight="fill" class="text-emerald-600 dark:text-emerald-400" />
-                  <span>{{ completingId === fu._id ? 'Completing...' : 'Mark Completed' }}</span>
-                </button>
-
-                <button
-                  type="button"
-                  @click="openReminder(fu)"
-                  class="action-btn action-btn--ghost"
-                  title="Reschedule this reminder"
-                >
-                  <PhCalendarCheck :size="12" />
-                  <span>Reschedule</span>
-                </button>
+              <!-- WhatsApp / Chat -->
+              <a
+                v-if="fu.contactNumber"
+                :href="getWhatsAppUrl(fu.contactNumber)"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="h-9 rounded-xl bg-white dark:bg-neutral-800 hover:bg-teal-50 dark:hover:bg-teal-950/40 text-slate-700 dark:text-slate-200 hover:text-teal-700 dark:hover:text-teal-400 border border-slate-200/80 dark:border-neutral-700 flex items-center justify-center gap-1.5 text-xs font-semibold transition-all active:scale-[0.98]"
+                title="Open WhatsApp chat"
+              >
+                <PhWhatsappLogo :size="15" weight="fill" class="text-teal-600 dark:text-teal-400" />
+                <span class="hidden sm:inline">WhatsApp</span>
+                <span class="sm:hidden">Chat</span>
+              </a>
+              <div v-else class="h-9 rounded-xl bg-slate-100/50 dark:bg-neutral-800/40 text-slate-400 border border-slate-200/40 dark:border-neutral-800 flex items-center justify-center text-xs opacity-50">
+                <PhWhatsappLogo :size="15" />
               </div>
+
+              <!-- Log Update -->
+              <button
+                type="button"
+                @click="openLog(fu)"
+                class="h-9 rounded-xl btn-primary flex items-center justify-center gap-1.5 text-xs font-bold transition-all shadow-xs active:scale-[0.98]"
+                title="Log conversation update"
+              >
+                <PhNotePencil :size="14" weight="bold" />
+                <span>Log</span>
+              </button>
+
+              <!-- Mark Completed -->
+              <button
+                type="button"
+                @click="markCompleted(fu)"
+                :disabled="completingId === fu._id"
+                class="h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/70 flex items-center justify-center gap-1.5 text-xs font-bold transition-all active:scale-[0.98] disabled:opacity-50"
+                title="Mark this reminder completed"
+              >
+                <PhCheckCircle :size="14" weight="fill" class="text-emerald-600 dark:text-emerald-400" />
+                <span>Done</span>
+              </button>
             </div>
           </div>
-        </div><!-- /space-y-2 (reminders list) -->
 
-        <!-- Modern Empty State -->
+          <!-- Pagination / Limit Toggle Button (Avoid Infinite Mobile Scrolling) -->
+          <div v-if="filteredFollowUps.length > 8" class="pt-2 text-center">
+            <button
+              type="button"
+              @click="showAllReminders = !showAllReminders"
+              class="h-9 px-4 rounded-xl bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200/80 dark:hover:bg-neutral-700 text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-neutral-700 text-xs font-semibold inline-flex items-center gap-1.5 transition-all active:scale-95"
+            >
+              <span>{{ showAllReminders ? 'Show Less' : `Show All ${filteredFollowUps.length} Reminders` }}</span>
+              <PhArrowRight :size="12" :class="{ 'rotate-90': showAllReminders }" class="transition-transform" />
+            </button>
+          </div>
+        </div>
+
+        <!-- Clean Empty State -->
         <div
           v-else
-          class="py-10 sm:py-12 px-4 text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 flex flex-col items-center justify-center gap-3 w-full min-w-0"
+          class="py-12 sm:py-14 px-4 text-center rounded-2xl border border-dashed border-slate-200 dark:border-neutral-800 bg-slate-50/50 dark:bg-neutral-900/40 flex flex-col items-center justify-center gap-3 w-full min-w-0"
         >
           <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
             <PhBell :size="24" weight="duotone" />
@@ -505,7 +525,7 @@
               {{ reminderFilter === 'overdue' ? 'No overdue follow-ups!' : 'No follow-up reminders in this view' }}
             </h3>
             <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              {{ reminderFilter === 'overdue' ? 'Great job! All counseling touchpoints are on schedule.' : 'Schedule reminders from student lead profiles to keep track of upcoming inquiries.' }}
+              {{ reminderFilter === 'overdue' ? 'Great job! All counseling touchpoints are currently on schedule.' : 'Schedule reminders from student lead profiles to keep track of upcoming inquiries.' }}
             </p>
           </div>
           <div class="flex items-center gap-2 mt-2 flex-wrap justify-center">
@@ -513,11 +533,14 @@
               v-if="reminderFilter !== 'all'"
               type="button"
               @click="reminderFilter = 'all'"
-              class="btn btn-secondary btn-sm text-xs font-semibold"
+              class="h-8 px-3 rounded-xl bg-slate-100 dark:bg-neutral-800 text-xs font-semibold text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-neutral-700 hover:bg-slate-200/80"
             >
               Show All Reminders
             </button>
-            <router-link to="/app/leads" class="btn btn-primary btn-sm text-xs font-semibold gap-1">
+            <router-link
+              to="/app/leads"
+              class="h-8 px-3 rounded-xl btn-primary text-xs font-semibold inline-flex items-center gap-1.5 shadow-sm"
+            >
               <PhUsersThree :size="14" />
               <span>Browse All Leads</span>
             </router-link>
@@ -525,33 +548,35 @@
         </div>
       </div>
 
-      <!-- Pipeline & Performance Row -->
+      <!-- ═══════════════════════════════════════════════
+           ROW 3: Admission Progression Funnel & Performance Row
+           ═══════════════════════════════════════════════ -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 w-full min-w-0">
         <!-- Stage Pipeline Funnel (Left 2 cols) -->
-        <div class="lg:col-span-2 bg-surface border border-slate-200/80 dark:border-slate-800/80 rounded-xl sm:rounded-2xl p-3.5 sm:p-6 space-y-4 shadow-xs w-full min-w-0">
+        <div class="lg:col-span-2 bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 rounded-2xl p-4 sm:p-6 space-y-4 shadow-[0_2px_10px_rgba(0,0,0,0.02)] w-full min-w-0">
           <!-- Funnel Header -->
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full min-w-0">
             <div>
               <div class="flex items-center gap-2">
-                <div class="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                <div class="w-7 h-7 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
                   <PhFunnel :size="15" weight="duotone" />
                 </div>
-                <span class="eyebrow">Admissions Pipeline</span>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Admissions Pipeline</span>
               </div>
-              <h3 class="font-heading text-base font-bold text-slate-800 dark:text-slate-100 mt-0.5">
+              <h3 class="font-heading text-base font-bold text-slate-800 dark:text-slate-100 mt-1">
                 Admission Progression Funnel
               </h3>
               <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-                Student counseling flow · Click any stage card to filter inquiries
+                Tap any stage card to filter student inquiries directly.
               </p>
             </div>
             <div class="flex items-center gap-2 self-start sm:self-auto">
-              <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 tabular-nums">
+              <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-slate-300 tabular-nums">
                 {{ totalPipelineLeads }} total
               </span>
               <router-link
                 to="/app/leads"
-                class="btn btn-secondary btn-sm text-xs font-semibold gap-1"
+                class="h-8 px-2.5 rounded-xl bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200/80 dark:hover:bg-neutral-700 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-neutral-700 text-xs font-semibold inline-flex items-center gap-1 transition-all"
               >
                 <span>View All</span>
                 <PhArrowRight :size="12" />
@@ -559,8 +584,8 @@
             </div>
           </div>
 
-          <!-- Segmented Proportional Flow Stream (Linear/KokonutUI style) -->
-          <div class="space-y-1.5 p-3 rounded-xl bg-slate-50/80 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 w-full min-w-0">
+          <!-- Segmented Proportional Flow Stream -->
+          <div class="space-y-1.5 p-3 rounded-xl bg-slate-50/80 dark:bg-neutral-800/40 border border-slate-200/60 dark:border-neutral-700/60 w-full min-w-0">
             <div class="flex flex-wrap items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-medium gap-1">
               <span>Pipeline Stage Proportions</span>
               <span class="font-semibold text-slate-700 dark:text-slate-300">
@@ -568,7 +593,7 @@
               </span>
             </div>
             <!-- Continuous flow track -->
-            <div class="h-2 w-full bg-slate-200/70 dark:bg-slate-800 rounded-full overflow-hidden flex gap-0.5">
+            <div class="h-2.5 w-full bg-slate-200/70 dark:bg-neutral-800 rounded-full overflow-hidden flex gap-0.5">
               <template v-if="totalPipelineLeads > 0">
                 <div
                   v-for="stage in pipelineStages"
@@ -580,21 +605,21 @@
                   :title="`${stage.label}: ${stage.count} (${getStagePercent(stage.count)})`"
                 ></div>
               </template>
-              <div v-else class="h-full w-full bg-slate-200/60 dark:bg-slate-800 rounded-full"></div>
+              <div v-else class="h-full w-full bg-slate-200/60 dark:bg-neutral-800 rounded-full"></div>
             </div>
           </div>
 
-          <!-- 8-Stage Minimalist Bento Grid (4 cols on lg, 2 cols on mobile/tablet) -->
+          <!-- 8-Stage Bento Grid (2 cols on mobile, 4 cols on tablet/desktop) -->
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 w-full min-w-0">
             <div
               v-for="(stage, idx) in pipelineStages"
               :key="stage.key"
               @click="navigateToLeads(stage.key)"
-              class="group relative p-3 rounded-xl border transition-all duration-150 cursor-pointer flex flex-col justify-between min-h-[96px] min-w-0"
+              class="group relative p-3 rounded-2xl border transition-all duration-150 cursor-pointer flex flex-col justify-between min-h-[96px] min-w-0 active:scale-95"
               :class="[
                 stage.count > 0
-                  ? 'bg-surface border-slate-200 dark:border-slate-700 hover:border-primary/50 shadow-xs'
-                  : 'bg-slate-50/40 dark:bg-slate-900/30 border-slate-100 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 opacity-80 hover:opacity-100'
+                  ? 'bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 hover:border-primary/50 shadow-xs'
+                  : 'bg-slate-50/40 dark:bg-neutral-900/30 border-slate-100 dark:border-neutral-800/80 hover:border-slate-300 dark:hover:border-neutral-700 opacity-80 hover:opacity-100'
               ]"
             >
               <!-- Card Top: Index + Status Dot -->
@@ -604,19 +629,19 @@
                 </span>
                 <span
                   class="w-2 h-2 rounded-full transition-transform group-hover:scale-125 shrink-0"
-                  :class="stage.count > 0 ? stage.barBg : 'bg-slate-300 dark:bg-slate-700'"
+                  :class="stage.count > 0 ? stage.barBg : 'bg-slate-300 dark:bg-neutral-700'"
                 ></span>
               </div>
 
               <!-- Card Middle: Stage Label -->
-              <div class="my-1 min-w-0">
+              <div class="my-1.5 min-w-0">
                 <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-primary transition-colors line-clamp-1 truncate">
                   {{ stage.label }}
                 </p>
               </div>
 
               <!-- Card Bottom: Count & Percentage -->
-              <div class="flex items-baseline justify-between pt-1 border-t border-slate-100 dark:border-slate-800/60 gap-1 min-w-0">
+              <div class="flex items-baseline justify-between pt-1 border-t border-slate-100 dark:border-neutral-800/60 gap-1 min-w-0">
                 <span
                   class="text-lg font-bold font-heading tabular-nums shrink-0"
                   :class="stage.count > 0 ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-600'"
@@ -631,10 +656,10 @@
           </div>
         </div>
 
-        <!-- Right Column: Conversion & Quick Counts -->
+        <!-- Right Column: Conversion Performance & Quick Navigation -->
         <div class="space-y-4 min-w-0 w-full">
           <!-- Conversion Performance Card -->
-          <div class="p-3.5 sm:p-5 rounded-xl sm:rounded-2xl bg-surface border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-4 w-full min-w-0">
+          <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-4 w-full min-w-0">
             <div class="flex items-center justify-between gap-2">
               <span class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">Conversion Snapshot</span>
               <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap">
@@ -656,11 +681,11 @@
 
             <!-- Mini Indicators -->
             <div class="space-y-2 text-xs">
-              <div class="flex items-center justify-between gap-2 py-1.5 border-b border-slate-100 dark:border-slate-800/60">
+              <div class="flex items-center justify-between gap-2 py-1.5 border-b border-slate-100 dark:border-neutral-800">
                 <span class="text-slate-500 dark:text-slate-400 truncate">Calls Scheduled Today</span>
                 <span class="font-bold text-slate-800 dark:text-slate-200 tabular-nums shrink-0">{{ summary.callsScheduled || 0 }}</span>
               </div>
-              <div class="flex items-center justify-between gap-2 py-1.5 border-b border-slate-100 dark:border-slate-800/60">
+              <div class="flex items-center justify-between gap-2 py-1.5 border-b border-slate-100 dark:border-neutral-800">
                 <span class="text-slate-500 dark:text-slate-400 truncate">Demo / Counseling Sessions</span>
                 <span class="font-bold text-slate-800 dark:text-slate-200 tabular-nums shrink-0">{{ summary.meetingsToday || 0 }}</span>
               </div>
@@ -672,15 +697,17 @@
           </div>
 
           <!-- Quick Navigation Card -->
-          <div class="p-3.5 sm:p-5 rounded-xl sm:rounded-2xl bg-surface border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-3 w-full min-w-0">
+          <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-3 w-full min-w-0">
             <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Workspace Actions</span>
             <div class="grid grid-cols-1 gap-2">
               <router-link
                 to="/app/leads?action=create"
-                class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 text-xs font-semibold text-slate-800 dark:text-slate-200 transition-colors"
+                class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-neutral-800/50 hover:bg-slate-100 dark:hover:bg-neutral-800 border border-slate-200/60 dark:border-neutral-700/60 text-xs font-semibold text-slate-800 dark:text-slate-200 transition-all active:scale-[0.98]"
               >
-                <div class="flex items-center gap-2">
-                  <PhPlus :size="15" weight="bold" class="text-primary" />
+                <div class="flex items-center gap-2.5">
+                  <div class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-primary flex items-center justify-center shrink-0">
+                    <PhPlus :size="15" weight="bold" />
+                  </div>
                   <span>Register New Inquiry</span>
                 </div>
                 <PhArrowRight :size="12" class="text-slate-400" />
@@ -688,10 +715,12 @@
 
               <router-link
                 to="/app/students"
-                class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 text-xs font-semibold text-slate-800 dark:text-slate-200 transition-colors"
+                class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-neutral-800/50 hover:bg-slate-100 dark:hover:bg-neutral-800 border border-slate-200/60 dark:border-neutral-700/60 text-xs font-semibold text-slate-800 dark:text-slate-200 transition-all active:scale-[0.98]"
               >
-                <div class="flex items-center gap-2">
-                  <PhGraduationCap :size="15" weight="bold" class="text-emerald-500" />
+                <div class="flex items-center gap-2.5">
+                  <div class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <PhGraduationCap :size="15" weight="bold" />
+                  </div>
                   <span>Enrolled Student Roster</span>
                 </div>
                 <PhArrowRight :size="12" class="text-slate-400" />
@@ -699,10 +728,12 @@
 
               <router-link
                 to="/app/classes"
-                class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 text-xs font-semibold text-slate-800 dark:text-slate-200 transition-colors"
+                class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-neutral-800/50 hover:bg-slate-100 dark:hover:bg-neutral-800 border border-slate-200/60 dark:border-neutral-700/60 text-xs font-semibold text-slate-800 dark:text-slate-200 transition-all active:scale-[0.98]"
               >
-                <div class="flex items-center gap-2">
-                  <PhChalkboardTeacher :size="15" weight="bold" class="text-purple-500" />
+                <div class="flex items-center gap-2.5">
+                  <div class="w-7 h-7 rounded-lg bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                    <PhChalkboardTeacher :size="15" weight="bold" />
+                  </div>
                   <span>Manage Batches & Classes</span>
                 </div>
                 <PhArrowRight :size="12" class="text-slate-400" />
@@ -713,14 +744,14 @@
       </div>
     </template>
 
-    <!-- Student Details Drawer (Purely Read-Only View) -->
+    <!-- Student Details Drawer (Read-Only View) -->
     <EducationLeadDrawer
       :isOpen="isDetailsOpen"
       :leadId="activeLeadId"
       @close="isDetailsOpen = false"
     />
 
-    <!-- Log Update / Conversation Drawer (Strictly Logging Updates) -->
+    <!-- Log Update / Conversation Drawer -->
     <EducationLeadLogDrawer
       :isOpen="isLogOpen"
       :leadId="activeLogLeadId"
@@ -729,7 +760,7 @@
       @success="handleActionSuccess"
     />
 
-    <!-- Set Follow-up Reminder Modal (Strictly Rescheduling / Setting Reminder) -->
+    <!-- Follow-up Reminder Modal (Rescheduling / Reminder Update) -->
     <EducationLeadReminderModal
       :isOpen="isReminderOpen"
       :lead="activeReminderLead"
@@ -765,10 +796,11 @@ import {
   PhNotePencil,
   PhArrowsClockwise,
   PhMagnifyingGlass,
-  PhCaretRight,
+  PhXCircle,
 } from '@phosphor-icons/vue';
 import { fetchEducationSummary } from '../api/endpoints';
 import { updateLeadFollowUp } from '@/modules/leads/api/endpoints';
+import { getErrorMessage } from '@/utils/errorHandler';
 
 // Modals and Drawers
 import EducationLeadDrawer from '../components/EducationLeadDrawer.vue';
@@ -782,6 +814,7 @@ const loading = ref(true);
 const refreshing = ref(false);
 const completingId = ref(null);
 const summary = ref({});
+const showAllReminders = ref(false);
 
 // Reminder Filtering
 const reminderFilter = ref('all'); // 'all' | 'overdue' | 'today' | 'upcoming'
@@ -792,7 +825,7 @@ const typeFilterOptions = [
   { value: 'all', label: 'All' },
   { value: 'call', label: 'Calls' },
   { value: 'whatsapp', label: 'WhatsApp' },
-  { value: 'meeting', label: 'Meetings' },
+  { value: 'meeting', label: 'Counseling' },
   { value: 'note', label: 'General' },
 ];
 
@@ -807,24 +840,34 @@ const isLogOpen = ref(false);
 const activeReminderLead = ref(null);
 const isReminderOpen = ref(false);
 
-// Follow-Ups extraction with timezone-safe normalization
+// Follow-Ups extraction with timezone-safe normalization & priority sorting
 const allFollowUps = computed(() => {
   const items = summary.value.followUps || [];
   const now = new Date();
   const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
   const endToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
 
-  return items.map((f) => {
+  const mapped = items.map((f) => {
     const sched = f.scheduledAt ? new Date(f.scheduledAt) : null;
-    const isOverdue = f.isOverdue !== undefined ? f.isOverdue : (sched && sched < now && f.status === 'scheduled');
-    const isToday = f.isToday !== undefined ? f.isToday : (sched && sched >= startToday && sched <= endToday);
-    const isUpcoming = f.isUpcoming !== undefined ? f.isUpcoming : (sched && sched > endToday);
+    const isOverdue = f.isOverdue !== undefined ? f.isOverdue : Boolean(sched && sched < now && f.status === 'scheduled');
+    const isToday = f.isToday !== undefined ? f.isToday : Boolean(sched && sched >= startToday && sched <= endToday);
+    const isUpcoming = f.isUpcoming !== undefined ? f.isUpcoming : Boolean(sched && sched > endToday);
     return {
       ...f,
       isOverdue,
       isToday,
       isUpcoming,
+      _time: sched ? sched.getTime() : 0,
     };
+  });
+
+  // Sort by priority: Overdue first (oldest first), then Today (earliest first), then Upcoming
+  return mapped.sort((a, b) => {
+    if (a.isOverdue && !b.isOverdue) return -1;
+    if (!a.isOverdue && b.isOverdue) return 1;
+    if (a.isToday && !b.isToday) return -1;
+    if (!a.isToday && b.isToday) return 1;
+    return a._time - b._time;
   });
 });
 
@@ -863,7 +906,7 @@ const filteredFollowUps = computed(() => {
     });
   }
 
-  // Search filter
+  // Search query filter
   if (reminderSearch.value.trim()) {
     const q = reminderSearch.value.toLowerCase().trim();
     list = list.filter((f) => {
@@ -880,7 +923,15 @@ const filteredFollowUps = computed(() => {
   return list;
 });
 
-// Pipeline Stages & Funnel
+// Avoid infinite scroll on mobile devices by paginating/limiting view
+const displayedFollowUps = computed(() => {
+  if (showAllReminders.value || filteredFollowUps.value.length <= 8) {
+    return filteredFollowUps.value;
+  }
+  return filteredFollowUps.value.slice(0, 8);
+});
+
+// Pipeline Stages & Funnel Breakdown
 const pipelineStages = computed(() => {
   const stageCounts = summary.value.stageBreakdown || {};
   return [
@@ -890,7 +941,7 @@ const pipelineStages = computed(() => {
       count: stageCounts.new || 0,
       color: 'from-slate-400 to-slate-500',
       barBg: 'bg-slate-400',
-      badgeClass: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+      badgeClass: 'bg-slate-100 text-slate-700 dark:bg-neutral-800 dark:text-slate-300',
     },
     {
       key: 'assigned',
@@ -951,10 +1002,6 @@ const pipelineStages = computed(() => {
   ];
 });
 
-const maxStageCount = computed(() =>
-  Math.max(1, ...pipelineStages.value.map((s) => s.count))
-);
-
 const totalPipelineLeads = computed(() => {
   return pipelineStages.value.reduce((acc, s) => acc + (s.count || 0), 0);
 });
@@ -982,31 +1029,13 @@ const conversionPercentage = computed(() => {
   return Math.min(100, Math.round((enrolled / total) * 100));
 });
 
-const conversionRateText = computed(() => {
-  const total = summary.value.totalLeads || 0;
-  const enrolled = summary.value.enrolledLeads !== undefined ? summary.value.enrolledLeads : (summary.value.totalStudents || 0);
-  if (!total) return '0% conversion rate';
-  const pct = Math.min(100, Math.round((enrolled / total) * 100));
-  return `${pct}% conversion rate`;
-});
-
 const hasAlerts = computed(() =>
   overdueCount.value > 0 ||
   (summary.value.unassignedLeads || 0) > 0 ||
   (summary.value.staleLeads || 0) > 0
 );
 
-// Helpers for Reminders Cards
-function getCardBorderClass(fu) {
-  if (fu.isOverdue) {
-    return 'border-rose-300/80 dark:border-rose-900/60 hover:border-rose-400 border-l-4 border-l-rose-500 bg-rose-50/15 dark:bg-rose-950/10';
-  }
-  if (fu.isToday) {
-    return 'border-amber-300/80 dark:border-amber-900/60 hover:border-amber-400 border-l-4 border-l-amber-500 bg-amber-50/10 dark:bg-amber-950/10';
-  }
-  return 'border-slate-200/80 dark:border-slate-800/80 hover:border-primary/50 border-l-4 border-l-primary/60';
-}
-
+// Channel & Timing Helpers
 function getChannelMeta(type) {
   switch (type) {
     case 'call':
@@ -1038,92 +1067,50 @@ function getChannelMeta(type) {
   }
 }
 
-function getRelativeBadgeMeta(fu) {
+function getScheduleBadgeMeta(fu) {
   if (!fu.scheduledAt) {
-    return { text: 'Scheduled', class: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400' };
+    return {
+      text: 'Scheduled',
+      class: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-neutral-800 dark:text-slate-400',
+      icon: PhClock,
+    };
   }
   const d = new Date(fu.scheduledAt);
   const now = new Date();
-  const diffMs = d - now;
-  const diffMins = Math.round(diffMs / (1000 * 60));
-  const diffHours = Math.round(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+  const timeStr = isNaN(d.getTime()) ? '' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfTarget = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diffDays = Math.round((startOfTarget - startOfToday) / (1000 * 60 * 60 * 24));
 
   if (fu.isOverdue) {
-    if (Math.abs(diffHours) < 1) {
-      return {
-        text: `Overdue ${Math.max(1, Math.abs(diffMins))}m`,
-        class: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-900',
-      };
-    }
-    if (Math.abs(diffDays) < 1) {
-      return {
-        text: `Overdue ${Math.abs(diffHours)}h`,
-        class: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-900',
-      };
-    }
     return {
-      text: `Overdue ${Math.abs(diffDays)}d`,
-      class: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-900',
+      text: diffDays === 0 ? `Overdue (${timeStr})` : `Overdue ${Math.abs(diffDays)}d (${timeStr})`,
+      class: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-900 font-bold',
+      icon: PhWarningCircle,
     };
   }
 
   if (fu.isToday) {
-    if (diffHours >= 0 && diffHours <= 1) {
-      return {
-        text: `In ${Math.max(1, diffMins)}m`,
-        class: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-900',
-      };
-    }
-    if (diffHours > 1) {
-      return {
-        text: `Today in ${diffHours}h`,
-        class: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-900',
-      };
-    }
     return {
-      text: 'Today',
-      class: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-900',
+      text: `Today, ${timeStr}`,
+      class: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-900 font-semibold',
+      icon: PhClock,
     };
   }
 
   if (diffDays === 1) {
     return {
-      text: 'Tomorrow',
-      class: 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-900',
-    };
-  }
-
-  if (diffDays > 1) {
-    return {
-      text: `In ${diffDays} days`,
-      class: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+      text: `Tomorrow, ${timeStr}`,
+      class: 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-900 font-semibold',
+      icon: PhClock,
     };
   }
 
   return {
-    text: 'Scheduled',
-    class: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+    text: `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })}, ${timeStr}`,
+    class: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-neutral-800 dark:text-slate-300 dark:border-neutral-700 font-medium',
+    icon: PhClock,
   };
-}
-
-function formatFollowUpDate(dateStr) {
-  if (!dateStr) return '—';
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return '—';
-  const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startOfTarget = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const diffDays = Math.round((startOfTarget - startOfToday) / (1000 * 60 * 60 * 24));
-
-  const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-  if (diffDays === 0) return `Today, ${timeStr}`;
-  if (diffDays === 1) return `Tomorrow, ${timeStr}`;
-  if (diffDays === -1) return `Yesterday, ${timeStr}`;
-  if (diffDays < -1) return `${Math.abs(diffDays)}d ago, ${timeStr}`;
-
-  return `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })}, ${timeStr}`;
 }
 
 function getWhatsAppUrl(mobile) {
@@ -1139,7 +1126,7 @@ function formatStageName(status) {
   return String(status).replace(/_/g, ' ');
 }
 
-// Interactive Actions
+// Interactive Operations & Modals
 function openDetails(leadId) {
   if (!leadId) return;
   activeLeadId.value = String(leadId);
@@ -1182,8 +1169,8 @@ async function markCompleted(fu) {
   if (!fu) return;
 
   const result = await Swal.fire({
-    title: 'Mark Reminder as Completed?',
-    text: `Mark follow-up for "${fu.studentName || 'this student'}" as completed? It will be removed from your pending reminders.`,
+    title: 'Mark Reminder Completed?',
+    text: `Mark follow-up for "${fu.studentName || 'this student'}" as completed?`,
     icon: 'question',
     showCancelButton: true,
     confirmButtonText: 'Yes, mark completed',
@@ -1191,7 +1178,7 @@ async function markCompleted(fu) {
     confirmButtonColor: '#059669',
     cancelButtonColor: '#64748b',
     customClass: {
-      popup: 'dark:bg-slate-900 dark:text-slate-100 rounded-2xl border border-slate-200 dark:border-slate-800',
+      popup: 'dark:bg-neutral-900 dark:text-slate-100 rounded-2xl border border-slate-200 dark:border-neutral-800',
     },
   });
 
@@ -1199,7 +1186,7 @@ async function markCompleted(fu) {
 
   completingId.value = fu._id;
   try {
-    // Optimistic UI update: remove immediately so interaction feels instant
+    // Optimistic UI update: instantly remove from list
     if (summary.value && Array.isArray(summary.value.followUps)) {
       summary.value.followUps = summary.value.followUps.filter((item) => item._id !== fu._id);
     }
@@ -1221,7 +1208,7 @@ async function markCompleted(fu) {
     Swal.fire({
       icon: 'error',
       title: 'Action Failed',
-      text: err.response?.data?.message || err.message || 'Could not mark reminder as completed.',
+      text: getErrorMessage(err, 'Could not mark reminder as completed.'),
     });
   } finally {
     completingId.value = null;
@@ -1234,8 +1221,12 @@ async function handleActionSuccess() {
   await loadDashboard(true);
 }
 
-function setTab(tab) {
+function setTabAndScroll(tab) {
   reminderFilter.value = tab;
+  const el = document.getElementById('reminders-section');
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 }
 
 function navigateToLeads(status) {
@@ -1275,74 +1266,3 @@ onMounted(() => {
   loadDashboard();
 });
 </script>
-
-<style scoped>
-/* ── Action buttons on reminder cards ─────────────────────────── */
-.action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  transition: all 120ms ease;
-  text-decoration: none;
-  cursor: pointer;
-}
-.action-btn--success {
-  background: hsl(var(--success-bg));
-  color: hsl(var(--success-text));
-  border: 1px solid hsl(var(--success-border));
-}
-.action-btn--success:hover { filter: brightness(0.95); }
-
-.action-btn--whatsapp {
-  background: hsl(152 63% 95%);
-  color: hsl(142 71% 27%);
-  border: 1px solid hsl(152 40% 82%);
-}
-.dark .action-btn--whatsapp {
-  background: hsl(152 40% 10%);
-  color: hsl(152 62% 68%);
-  border-color: hsl(152 40% 20%);
-}
-.action-btn--whatsapp:hover { filter: brightness(0.95); }
-
-.action-btn--complete {
-  background: hsl(152 63% 95%);
-  color: hsl(142 71% 27%);
-  border: 1px solid hsl(152 40% 82%);
-}
-.dark .action-btn--complete {
-  background: hsl(152 40% 12%);
-  color: hsl(152 62% 68%);
-  border-color: hsl(152 40% 24%);
-}
-.action-btn--complete:hover:not(:disabled) {
-  background: hsl(152 63% 90%);
-  border-color: hsl(152 40% 70%);
-}
-.action-btn--complete:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.action-btn--neutral {
-  background: hsl(var(--bg-elevated));
-  color: hsl(var(--neutral-700));
-  border: 1px solid hsl(var(--neutral-100));
-}
-.action-btn--neutral:hover { background: hsl(var(--neutral-50)); }
-
-.action-btn--ghost {
-  background: transparent;
-  color: hsl(var(--neutral-500));
-  border: 1px solid transparent;
-}
-.action-btn--ghost:hover {
-  background: hsl(var(--bg-elevated));
-  color: hsl(var(--neutral-900));
-  border-color: hsl(var(--neutral-100));
-}
-</style>

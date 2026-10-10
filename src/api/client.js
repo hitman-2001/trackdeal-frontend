@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { isRef, ref } from 'vue';
+import { getErrorMessage } from '@/utils/errorHandler';
 
 export const activeApiRequests = ref(0);
 
@@ -191,7 +192,7 @@ apiClient.interceptors.response.use(
 
         case 500:
           storeInstance.dispatch('notifications/triggerToast', {
-            message: data.message || 'An unexpected server error occurred. Please contact administrative support.',
+            message: getErrorMessage(error, 'An unexpected server error occurred. Please contact administrative support.'),
             type: 'error'
           });
           break;
@@ -201,6 +202,7 @@ apiClient.interceptors.response.use(
       }
     }
 
+    error.userMessage = getErrorMessage(error);
     return Promise.reject(error);
   }
 );

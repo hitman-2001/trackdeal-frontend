@@ -94,6 +94,7 @@ import { toTypedSchema } from '@vee-validate/zod';
 import { PhSpinner } from '@phosphor-icons/vue';
 import { resetPasswordSchema } from '../schemas/validation';
 import { useResetPasswordMutation } from '../queries';
+import { getErrorMessage } from '@/utils/errorHandler';
 
 const route = useRoute();
 const token = ref('');
@@ -126,7 +127,10 @@ const onSubmit = handleSubmit((values) => {
     { token: token.value, password: values.password },
     {
       onError: (err) => {
-        errorMessage.value = err.data?.message || 'Failed to update password. The link may have expired.';
+        errorMessage.value = getErrorMessage(
+          err,
+          'Failed to update password. The link may have expired or is invalid.'
+        );
       }
     }
   );

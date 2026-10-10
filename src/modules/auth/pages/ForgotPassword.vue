@@ -83,6 +83,7 @@ import { toTypedSchema } from '@vee-validate/zod';
 import { PhEnvelope, PhSpinner } from '@phosphor-icons/vue';
 import { forgotPasswordSchema } from '../schemas/validation';
 import { useForgotPasswordMutation } from '../queries';
+import { getErrorMessage } from '@/utils/errorHandler';
 
 const errorMessage = ref('');
 const isSuccess = ref(false);
@@ -107,7 +108,10 @@ const onSubmit = handleSubmit((values) => {
         isSuccess.value = true;
       },
       onError: (err) => {
-        errorMessage.value = err.data?.message || 'Failed to dispatch password recovery link. Email address not found.';
+        errorMessage.value = getErrorMessage(
+          err,
+          'Failed to dispatch password recovery link. Please verify the email address.'
+        );
       }
     }
   );

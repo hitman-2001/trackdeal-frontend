@@ -46,6 +46,16 @@
           <span class="hidden sm:inline">Add</span>
         </button>
 
+        <!-- Mobile Search Button (Visible only on small mobile where navbar-center search bar is hidden) -->
+        <button
+          @click="globalSearchOpen = true"
+          class="action-btn sm:hidden"
+          title="Search"
+          aria-label="Global search"
+        >
+          <PhMagnifyingGlass :size="20" weight="regular" />
+        </button>
+
         <!-- Theme Toggle Button (Commented out per request) -->
         <!-- <button
           @click="toggleTheme"
@@ -359,6 +369,17 @@
             </div>
           </div>
 
+          <!-- Mobile Menu Quick Search Launcher -->
+          <div class="px-5 pt-1 pb-3 shrink-0">
+            <button
+              @click="mobileMenuOpen = false; globalSearchOpen = true"
+              class="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+            >
+              <PhMagnifyingGlass :size="16" weight="bold" class="text-slate-400" />
+              <span>Search leads, students, courses...</span>
+            </button>
+          </div>
+
           <!-- Divider -->
           <div class="h-px bg-slate-100 dark:bg-slate-800 mx-5"></div>
 
@@ -513,57 +534,7 @@
       </Transition>
     </Teleport>
 
-    <!-- ── Toast Notifications Stack ───────────────────────────────── -->
-    <div
-      class="fixed bottom-4 right-4 z-[9999] flex flex-col gap-2 max-w-[380px] w-full pointer-events-none"
-    >
-      <TransitionGroup name="toast">
-        <div
-          v-for="toast in toasts"
-          :key="toast.id"
-          class="flex items-start gap-3 p-3.5 rounded-xl border-l-[3px] shadow-xl pointer-events-auto bg-neutral-900 text-white"
-          :style="{
-            borderLeftColor:
-              toast.type === 'error'
-                ? '#ef4444'
-                : toast.type === 'warning'
-                  ? '#f59e0b'
-                  : '#10b981',
-          }"
-        >
-          <component
-            :is="
-              toast.type === 'error'
-                ? PhXCircle
-                : toast.type === 'warning'
-                  ? PhWarningCircle
-                  : PhCheckCircle
-            "
-            :size="18"
-            class="shrink-0 mt-0.5"
-            :style="{
-              color:
-                toast.type === 'error'
-                  ? '#ef4444'
-                  : toast.type === 'warning'
-                    ? '#f59e0b'
-                    : '#10b981',
-            }"
-          />
-          <div class="flex-1 min-w-0">
-            <p class="text-xs font-semibold text-slate-100">
-              {{ toast.message }}
-            </p>
-          </div>
-          <button
-            @click="dismissToast(toast.id)"
-            class="shrink-0 w-5 h-5 flex items-center justify-center rounded text-slate-400 hover:text-white"
-          >
-            <PhX :size="12" weight="bold" />
-          </button>
-        </div>
-      </TransitionGroup>
-    </div>
+
 
     <!-- Modals -->
     <GlobalSearchModal
@@ -634,9 +605,6 @@ import {
   PhSun,
   PhMoon,
   PhSignOut,
-  PhCheckCircle,
-  PhXCircle,
-  PhWarningCircle,
   PhHardHat,
   PhReceipt,
   PhPlus,
@@ -647,6 +615,7 @@ import {
   PhBookOpen,
   PhGraduationCap,
   PhChartLineUp,
+  PhMagnifyingGlass,
 } from "@phosphor-icons/vue";
 
 import GlobalSearchModal from "@/components/GlobalSearchModal.vue";
@@ -658,7 +627,6 @@ const router = useRouter();
 
 // ── State ───────────────────────────────────────────────────────────────────
 const sidebarCollapsed = computed(() => store.state.ui.sidebarCollapsed);
-const toasts = computed(() => store.state.notifications.toasts);
 
 const globalSearchOpen = ref(false);
 const quickAddOpen = ref(false);
@@ -1124,9 +1092,6 @@ const markNotificationRead = (id) => {
 };
 const markAllNotificationsRead = () =>
   mockNotifications.value.forEach((n) => (n.read = true));
-
-// ── Toasts ───────────────────────────────────────────────────────────────────
-const dismissToast = (id) => store.commit("notifications/REMOVE_TOAST", id);
 
 // ── Keyboard Shortcuts ───────────────────────────────────────────────────────
 const handleKeyDown = (e) => {
@@ -1944,30 +1909,6 @@ const vClickOutside = {
 .slide-right-enter-from,
 .slide-right-leave-to {
   transform: translateX(100%);
-}
-
-.toast-enter-active {
-  animation: toast-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.toast-leave-active {
-  transition: all 0.2s ease;
-}
-
-.toast-leave-to {
-  opacity: 0;
-  transform: translateX(calc(100% + 16px));
-}
-
-@keyframes toast-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
 }
 
 /* ==========================================================================
