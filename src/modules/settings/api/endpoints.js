@@ -40,6 +40,15 @@ export async function updateOrgSettings(data) {
   return response.data;
 }
 
+export async function fetchOrgBranding() {
+  try {
+    const response = await apiClient.get('/settings/branding');
+    return response.data?.data || response.data;
+  } catch (error) {
+    return null;
+  }
+}
+
 export async function fetchBranches() {
   try {
     const response = await apiClient.get('/settings/branches');

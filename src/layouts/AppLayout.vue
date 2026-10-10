@@ -309,8 +309,7 @@
             class="footer-left flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400"
           >
             <span
-              >&copy; {{ currentYear }} TrackDeal Technologies. All rights
-              reserved.</span
+              >&copy; {{ currentYear }} TrackDeal. All rights reserved.</span
             >
           </div>
           <div
@@ -353,7 +352,7 @@
           <!-- User Profile Card -->
           <div class="px-5 pb-4 pt-2 shrink-0">
             <div class="flex items-center gap-3">
-              <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 text-white flex items-center justify-center font-bold text-sm shadow-md">
+              <div class="user-avatar-themed w-11 h-11 rounded-2xl text-white flex items-center justify-center font-bold text-sm shadow-md" :style="{ backgroundColor: 'hsl(var(--primary, 142 71% 29%))' }">
                 {{ userInitials }}
               </div>
               <div class="flex-1 min-w-0">
@@ -1437,7 +1436,7 @@ const vClickOutside = {
 .user-avatar {
   width: 36px;
   height: 36px;
-  background: linear-gradient(135deg, #0085ff, #004e92);
+  background: hsl(var(--primary, 142 71% 29%));
   color: white;
   border-radius: 10px;
   display: flex;
@@ -1445,8 +1444,9 @@ const vClickOutside = {
   justify-content: center;
   font-weight: 700;
   font-size: 0.8125rem;
-  box-shadow: 0 2px 6px rgba(0, 78, 146, 0.2);
+  box-shadow: 0 2px 6px hsla(var(--primary, 142 71% 29%), 0.25);
   flex-shrink: 0;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
 }
 
 .user-info-brief {

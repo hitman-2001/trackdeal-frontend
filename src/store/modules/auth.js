@@ -70,7 +70,7 @@ export default {
         tenantSlug,
         tenantVertical,
         organizationType,
-        branding: profile?.branding || {},
+        branding: profile?.branding || decoded?.branding || {},
         featuresFlags,
       }, { root: true });
     },
@@ -107,7 +107,7 @@ export default {
           tenantSlug,
           tenantVertical,
           organizationType,
-          branding: payload.user?.branding || {},
+          branding: payload.user?.branding || decoded?.branding || {},
           featuresFlags
         }, { root: true });
         

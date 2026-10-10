@@ -89,6 +89,16 @@ export const applyThemeTokensToDOM = (tokens) => {
       h1, h2, h3, h4, h5, h6, .font-heading { color: ${tokens.fontHex} !important; }
     `;
   }
+  if (tokens.primaryHex) {
+    customCSS += `
+      .user-avatar, .user-avatar-themed {
+        background: ${tokens.primaryHex} !important;
+        background-color: ${tokens.primaryHex} !important;
+        color: #ffffff !important;
+        box-shadow: 0 2px 8px ${tokens.primaryHex}35 !important;
+      }
+    `;
+  }
   if (customCSS) {
     const style = document.createElement('style');
     style.id = 'dynamic-brand-styles';
@@ -120,15 +130,31 @@ export default {
     }
   },
   actions: {
-    initializeTheme({ commit, state }) {
+    initializeTheme({ commit, state, rootState }) {
       commit('SET_THEME_MODE', state.activeThemeMode);
       try {
-        const savedTokens = localStorage.getItem('theme_custom_hsl');
-        if (savedTokens) {
-          applyThemeTokensToDOM(JSON.parse(savedTokens));
+        const orgTokens = rootState.organization?.branding?.themeTokens;
+        if (orgTokens) {
+          applyThemeTokensToDOM(orgTokens);
+        } else {
+          const savedTokens = localStorage.getItem('theme_custom_hsl');
+          if (savedTokens) {
+            applyThemeTokensToDOM(JSON.parse(savedTokens));
+          }
         }
       } catch (e) {
         // ignore parse error
+      }
+    },
+    async syncOrgTheme({ commit }) {
+      try {
+        const { fetchOrgBranding } = await import('@/modules/settings/api/endpoints');
+        const data = await fetchOrgBranding();
+        if (data?.branding) {
+          commit('organization/SET_ORGANIZATION_BRANDING', data.branding, { root: true });
+        }
+      } catch (e) {
+        // Silently catch network errors during background sync
       }
     }
   }

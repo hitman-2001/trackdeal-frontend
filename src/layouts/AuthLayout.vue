@@ -118,7 +118,7 @@
       <div
         class="relative z-10 text-xs text-[#94a3b8] font-medium flex items-center justify-between"
       >
-        <span>© {{ currentYear }} TrackDeal Technologies.</span>
+        <span>© {{ currentYear }} TrackDeal. All rights reserved.</span>
         <span>Thoughtfully built for high-velocity teams.</span>
       </div>
     </div>

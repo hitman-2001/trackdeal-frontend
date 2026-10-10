@@ -266,7 +266,7 @@
           role="contentinfo"
         >
           <div class="footer-left flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-            <span>&copy; {{ currentYear }} TrackDeal Technologies. All rights reserved.</span>
+            <span>&copy; {{ currentYear }} TrackDeal. All rights reserved.</span>
           </div>
           <div class="footer-right flex items-center gap-2 text-[11px] font-medium text-slate-400 dark:text-slate-500">
             <span>TrackDeal Multi-Tenant Cluster Admin</span>
@@ -710,18 +710,20 @@ onUnmounted(() => {
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  background: #e0f2fe;
-  color: #0284c7;
+  background: hsl(var(--primary, 220 85% 45%));
+  color: #ffffff;
   font-weight: 700;
   font-size: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 2px 4px hsla(var(--primary, 220 85% 45%), 0.2);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
 }
 
 .dark .user-avatar {
-  background: rgba(2, 132, 199, 0.2);
-  color: #38bdf8;
+  background: hsl(var(--primary, 220 85% 45%));
+  color: #ffffff;
 }
 
 .user-info-brief {

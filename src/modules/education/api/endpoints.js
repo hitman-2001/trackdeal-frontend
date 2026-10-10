@@ -10,6 +10,11 @@ export async function fetchEducationAnalytics(params = {}) {
   return res.data;
 }
 
+export async function fetchEducationTeamActivity(params = {}) {
+  const res = await apiClient.get('/education/team-activity', { params });
+  return res.data;
+}
+
 export async function fetchEducationClasses(params = {}) {
   const res = await apiClient.get('/education/classes', { params });
   return res.data;

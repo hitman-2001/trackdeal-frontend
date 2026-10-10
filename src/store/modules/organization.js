@@ -1,3 +1,5 @@
+import { applyThemeTokensToDOM } from './ui';
+
 function getStoredJson(key, fallback) {
   try {
     const val = localStorage.getItem(key);
@@ -22,14 +24,17 @@ export default {
       primaryHsl: '220 85% 45%', // Default Deep Indigo
       secondaryHsl: '210 25% 35%', // Default Slate
       logoUrl: '',
-      logoDarkUrl: ''
+      logoDarkUrl: '',
+      themeTokens: null,
     });
 
     const organizationType = localStorage.getItem('org_type') || 'AGENCY';
  
-    // Inject HSL colors dynamic theme tokens to stylesheet root on boot
+    // Inject HSL colors / dynamic theme tokens to stylesheet root on boot
     if (typeof window !== 'undefined' && window.document) {
-      if (branding?.primaryHsl) {
+      if (branding?.themeTokens) {
+        applyThemeTokensToDOM(branding.themeTokens);
+      } else if (branding?.primaryHsl) {
         document.documentElement.style.setProperty('--primary', branding.primaryHsl);
       }
       if (branding?.secondaryHsl) {
@@ -68,11 +73,28 @@ export default {
       localStorage.setItem('featuresFlags', JSON.stringify(state.featuresFlags));
       localStorage.setItem('branding', JSON.stringify(state.branding));
       
-      // Inject HSL colors dynamic theme tokens to stylesheet root
-      if (branding?.primaryHsl) {
+      // Inject HSL colors / dynamic theme tokens to stylesheet root
+      if (branding?.themeTokens) {
+        applyThemeTokensToDOM(branding.themeTokens);
+        localStorage.setItem('theme_custom_hsl', JSON.stringify(branding.themeTokens));
+      } else if (branding?.primaryHsl) {
         document.documentElement.style.setProperty('--primary', branding.primaryHsl);
       }
       if (branding?.secondaryHsl) {
+        document.documentElement.style.setProperty('--secondary', branding.secondaryHsl);
+      }
+    },
+    SET_ORGANIZATION_BRANDING(state, branding) {
+      if (!branding) return;
+      state.branding = { ...state.branding, ...branding };
+      localStorage.setItem('branding', JSON.stringify(state.branding));
+      if (branding.themeTokens) {
+        applyThemeTokensToDOM(branding.themeTokens);
+        localStorage.setItem('theme_custom_hsl', JSON.stringify(branding.themeTokens));
+      } else if (branding.primaryHsl) {
+        document.documentElement.style.setProperty('--primary', branding.primaryHsl);
+      }
+      if (branding.secondaryHsl) {
         document.documentElement.style.setProperty('--secondary', branding.secondaryHsl);
       }
     },

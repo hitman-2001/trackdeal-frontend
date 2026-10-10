@@ -497,6 +497,10 @@ watch(orgSettings, (newVal) => {
       currency: newVal.settings?.currency || newVal.currency || 'INR',
       timezone: newVal.settings?.timezone || newVal.timezone || 'Asia/Kolkata'
     };
+    if (newVal.branding?.themeTokens) {
+      themeConfig.value = { ...defaultTokens, ...newVal.branding.themeTokens };
+      applyThemeTokensToDOM(themeConfig.value);
+    }
   }
 }, { immediate: true });
 
@@ -559,6 +563,8 @@ const presets = [
 
 const getInitialTheme = () => {
   try {
+    const orgTokens = store?.state?.organization?.branding?.themeTokens;
+    if (orgTokens) return { ...defaultTokens, ...orgTokens };
     const saved = localStorage.getItem('theme_custom_hsl');
     if (saved) return { ...defaultTokens, ...JSON.parse(saved) };
   } catch (e) {}
@@ -602,23 +608,61 @@ function updateColorsInRealTime() {
   applyThemeTokensToDOM(themeConfig.value);
 }
 
-function resetBrandingColors() {
+async function resetBrandingColors() {
   themeConfig.value = { ...defaultTokens };
   applyThemeTokensToDOM(null);
   localStorage.removeItem('theme_custom_hsl');
-  store.dispatch('notifications/triggerToast', {
-    message: 'Theme colors restored to defaults.',
-    type: 'info'
-  });
+  try {
+    await updateOrgSettings({
+      branding: {
+        primaryColor: defaultTokens.primaryHex,
+        secondaryColor: defaultTokens.navbarHex,
+        themeTokens: defaultTokens,
+      }
+    });
+    store.commit('organization/SET_ORGANIZATION_BRANDING', {
+      primaryColor: defaultTokens.primaryHex,
+      secondaryColor: defaultTokens.navbarHex,
+      themeTokens: defaultTokens,
+    });
+    store.dispatch('notifications/triggerToast', {
+      message: 'Theme colors restored to defaults for all organization members.',
+      type: 'info'
+    });
+  } catch (err) {
+    store.dispatch('notifications/triggerToast', {
+      message: 'Failed to sync theme reset with organization server.',
+      type: 'error'
+    });
+  }
 }
 
-function saveBrandingColors() {
+async function saveBrandingColors() {
   applyThemeTokensToDOM(themeConfig.value);
   localStorage.setItem('theme_custom_hsl', JSON.stringify(themeConfig.value));
-  store.dispatch('notifications/triggerToast', {
-    message: 'Theme colors applied and saved successfully.',
-    type: 'success'
-  });
+  try {
+    await updateOrgSettings({
+      branding: {
+        primaryColor: themeConfig.value.primaryHex,
+        secondaryColor: themeConfig.value.navbarHex,
+        themeTokens: themeConfig.value,
+      }
+    });
+    store.commit('organization/SET_ORGANIZATION_BRANDING', {
+      primaryColor: themeConfig.value.primaryHex,
+      secondaryColor: themeConfig.value.navbarHex,
+      themeTokens: themeConfig.value,
+    });
+    store.dispatch('notifications/triggerToast', {
+      message: 'Theme colors saved and applied for all organization users.',
+      type: 'success'
+    });
+  } catch (err) {
+    store.dispatch('notifications/triggerToast', {
+      message: 'Theme applied locally, but could not sync to organization server.',
+      type: 'warning'
+    });
+  }
 }
 
 // Save General Profile
