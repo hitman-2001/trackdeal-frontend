@@ -20,7 +20,7 @@
         </div>
       </div>
 
-      <form @submit.prevent="onSubmit" class="space-y-4" autocomplete="off">
+      <form @submit.prevent="triggerSubmit" class="space-y-4" autocomplete="off">
         <!-- Hidden inputs to consume browser password manager autofill -->
         <div
           style="
@@ -72,11 +72,11 @@
                   : 'e.g. Rahul Sharma'
               "
               class="w-full bg-surface border rounded-lg pl-8 pr-3 py-2 text-xs outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 text-slate-800 dark:text-slate-100 transition-all"
-              :class="errors.name ? 'border-red-500' : 'border-default'"
+              :class="hasSubmitted && errors.name ? 'border-red-500' : 'border-default'"
             />
           </div>
           <span
-            v-if="errors.name"
+            v-if="hasSubmitted && errors.name"
             class="text-[10px] text-red-500 mt-1 block"
             >{{ errors.name }}</span
           >
@@ -105,11 +105,11 @@
               @focus="isEmailReadonly = false"
               placeholder="e.g. name@institution.edu or name@company.com"
               class="w-full bg-surface border rounded-lg pl-8 pr-3 py-2 text-xs outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 text-slate-800 dark:text-slate-100 font-mono transition-all"
-              :class="errors.email ? 'border-red-500' : 'border-default'"
+              :class="hasSubmitted && errors.email ? 'border-red-500' : 'border-default'"
             />
           </div>
           <span
-            v-if="errors.email"
+            v-if="hasSubmitted && errors.email"
             class="text-[10px] text-red-500 mt-1 block font-semibold"
             >{{ errors.email }}</span
           >
@@ -143,7 +143,7 @@
             <select
               v-model="role"
               class="w-full bg-surface border rounded-lg pl-8 pr-8 py-2 text-xs outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 text-slate-800 dark:text-slate-100 transition-all appearance-none cursor-pointer"
-              :class="errors.role ? 'border-red-500' : 'border-default'"
+              :class="hasSubmitted && errors.role ? 'border-red-500' : 'border-default'"
             >
               <option value="" disabled selected>
                 {{
@@ -167,7 +167,7 @@
             </span>
           </div>
           <span
-            v-if="errors.role"
+            v-if="hasSubmitted && errors.role"
             class="text-[10px] text-red-500 mt-1 block"
             >{{ errors.role }}</span
           >
@@ -308,7 +308,7 @@
               @focus="isPasswordReadonly = false"
               placeholder="Enter password or click Generate (min 6 characters)"
               class="w-full bg-surface border rounded-lg pl-8 pr-10 py-2 text-xs font-mono outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 text-slate-800 dark:text-slate-100 transition-all"
-              :class="errors.password ? 'border-red-500' : 'border-default'"
+              :class="hasSubmitted && errors.password ? 'border-red-500' : 'border-default'"
             />
             <button
               type="button"
@@ -318,7 +318,7 @@
               <component :is="showPassword ? PhEyeSlash : PhEye" :size="14" />
             </button>
           </div>
-          <span v-if="errors.password" class="text-[10px] text-red-500 block">{{
+          <span v-if="hasSubmitted && errors.password" class="text-[10px] text-red-500 block">{{
             errors.password
           }}</span>
 
@@ -341,7 +341,7 @@
       </button>
       <button
         type="button"
-        @click="onSubmit"
+        @click="triggerSubmit"
         :disabled="isPending"
         class="btn-md btn-primary gap-1.5"
       >
@@ -659,6 +659,8 @@ const { errors, handleSubmit, resetForm, setFieldValue } = useForm({
   },
 });
 
+const hasSubmitted = ref(false);
+
 const { value: name } = useField("name");
 const { value: email } = useField("email");
 const { value: role } = useField("role");
@@ -693,9 +695,12 @@ async function copyPasswordToClipboard() {
 }
 
 function handleClose() {
+  hasSubmitted.value = false;
   resetForm();
-  setFieldValue("email", "");
-  setFieldValue("password", "");
+  setFieldValue("name", "", false);
+  setFieldValue("email", "", false);
+  setFieldValue("password", "", false);
+  setFieldValue("role", "", false);
   showPassword.value = false;
   copied.value = false;
   isEmailReadonly.value = true;
@@ -704,8 +709,12 @@ function handleClose() {
 }
 
 function unlockAndClearInputs() {
-  setFieldValue("email", "");
-  setFieldValue("password", "");
+  hasSubmitted.value = false;
+  resetForm();
+  setFieldValue("name", "", false);
+  setFieldValue("email", "", false);
+  setFieldValue("password", "", false);
+  setFieldValue("role", "", false);
   isEmailReadonly.value = true;
   isPasswordReadonly.value = true;
   // Delay removing readonly to prevent browser autofill injection on initial open
@@ -714,10 +723,15 @@ function unlockAndClearInputs() {
     isPasswordReadonly.value = false;
     // Clear once more in case browser attempted early autofill pass
     if (email.value || password.value) {
-      setFieldValue("email", "");
-      setFieldValue("password", "");
+      setFieldValue("email", "", false);
+      setFieldValue("password", "", false);
     }
   }, 250);
+}
+
+function triggerSubmit() {
+  hasSubmitted.value = true;
+  onSubmit();
 }
 
 watch(
@@ -800,7 +814,11 @@ const onSubmit = handleSubmit(async (values) => {
     emit("success");
   } catch (error) {
     const errMsg =
-      error.response?.data?.message || "Failed to onboard staff member.";
+      error.response?.data?.message ||
+      error.response?.data?.error?.message ||
+      error.response?.data?.error ||
+      error.message ||
+      "Failed to onboard staff member.";
     store.dispatch("notifications/triggerToast", {
       message: errMsg,
       type: "error",

@@ -46,16 +46,6 @@
           <span class="hidden sm:inline">Add</span>
         </button>
 
-        <!-- Mobile Search Button (Visible only on small mobile where navbar-center search bar is hidden) -->
-        <button
-          @click="globalSearchOpen = true"
-          class="action-btn sm:hidden"
-          title="Search"
-          aria-label="Global search"
-        >
-          <PhMagnifyingGlass :size="20" weight="regular" />
-        </button>
-
         <!-- Theme Toggle Button (Commented out per request) -->
         <!-- <button
           @click="toggleTheme"

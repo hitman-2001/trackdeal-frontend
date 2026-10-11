@@ -102,6 +102,9 @@ export async function inviteUser(data) {
       const response = await apiClient.post('/settings/users', payload);
       return response.data;
     } catch (err) {
+      if (err.response && [400, 403, 409, 422].includes(err.response.status)) {
+        throw err;
+      }
       const response = await apiClient.post('/settings/users/invite', payload);
       return response.data;
     }
@@ -136,6 +139,16 @@ export async function transferUserBranch({ id, branchId, leadsReassignment }) {
 export async function changeUserRole({ id, role }) {
   const response = await apiClient.post(`/settings/users/${id}/role`, { roleId: role });
   return response.data;
+}
+
+export async function deleteUser(id) {
+  try {
+    const response = await apiClient.delete(`/settings/users/${id}`);
+    return response.data;
+  } catch (err) {
+    const response = await apiClient.delete(`/users/${id}`);
+    return response.data;
+  }
 }
 
 function convertPermissionsArrayToObject(permissionsArr) {
@@ -331,6 +344,7 @@ export default {
   updateUserPermissions,
   transferUserBranch,
   changeUserRole,
+  deleteUser,
   fetchRoles,
   updateRolePermissions,
   cloneRole,

@@ -132,6 +132,17 @@ export function useChangeUserRoleMutation() {
   });
 }
 
+
+export function useDeleteUserMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: settingsApi.deleteUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['settings', 'users'] });
+      queryClient.invalidateQueries({ queryKey: ['settings', 'audit'] });
+    }
+  });
+}
 // 4. Roles & Permissions
 export function useRolesQuery() {
   return useQuery({

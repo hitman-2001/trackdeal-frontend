@@ -1,7 +1,7 @@
 <template>
   <AppDrawer
     :isOpen="isOpen"
-    :title="`Modify User Access Role: ${user?.name || ''}`"
+    :title="`Modify User Access Role: ${userDisplayName}`"
     width="480px"
     @close="$emit('close')"
   >
@@ -9,9 +9,9 @@
       <!-- Current Status -->
       <div class="bg-slate-50 p-4 border border-default rounded-xl space-y-1">
         <div class="text-[10px] text-slate-400 font-bold uppercase">Current Assignment</div>
-        <div class="text-xs font-bold text-slate-700">Name: <span class="text-slate-900 font-extrabold">{{ user.name }}</span></div>
+        <div class="text-xs font-bold text-slate-700">Name: <span class="text-slate-900 font-extrabold">{{ userDisplayName }}</span></div>
         <div class="text-xs font-semibold text-slate-650">Current Role: <span class="text-primary font-bold capitalize">{{ userRoleDisplayName.replace('_', ' ') }}</span></div>
-        <div class="text-[10px] text-slate-500">Branch: {{ user.branch || user.branchId?.name || '' }}</div>
+        <div class="text-[10px] text-slate-500">Branch: {{ userBranchName || 'None' }}</div>
       </div>
 
       <!-- Role Selector -->
@@ -88,12 +88,29 @@ const store = useStore();
 
 const targetRole = ref('');
 
+const userDisplayName = computed(() => {
+  if (!props.user) return 'Staff';
+  return (
+    props.user.name ||
+    props.user.fullName ||
+    `${props.user.firstName || ''} ${props.user.lastName || ''}`.trim() ||
+    props.user.email ||
+    'Staff'
+  );
+});
+
+const userBranchName = computed(() => {
+  if (!props.user) return '';
+  return props.user.branch || props.user.branchId?.name || '';
+});
+
 const userRoleCode = computed(() => {
-  if (!props.user?.role) return '';
-  if (typeof props.user.role === 'object') {
-    return props.user.role.id || props.user.role._id || props.user.role.code || '';
+  if (!props.user?.role && !props.user?.roleId) return '';
+  const r = props.user.role || props.user.roleId;
+  if (typeof r === 'object') {
+    return r.id || r._id || r.code || '';
   }
-  return String(props.user.role);
+  return String(r);
 });
 
 const isEducationWorkspace = computed(
@@ -115,12 +132,13 @@ function roleDisplayName(roleOption) {
 }
 
 const userRoleDisplayName = computed(() => {
-  if (!props.user?.role) return '';
+  const r = props.user?.role || props.user?.roleId;
+  if (!r) return '';
   let val = '';
-  if (typeof props.user.role === 'object') {
-    val = props.user.role.name || props.user.role.code || '';
+  if (typeof r === 'object') {
+    val = r.name || r.code || '';
   } else {
-    val = String(props.user.role);
+    val = String(r);
   }
   const formatted = val.replace(/_/g, ' ');
   return isEducationWorkspace.value ? formatted.replace(/agent/gi, 'Staff') : formatted;
@@ -179,14 +197,15 @@ async function onUpdateRole() {
   if (!targetRole.value || targetRole.value === userRoleCode.value) return;
 
   const roleName = props.roles.find(r => r.id === targetRole.value)?.name || targetRole.value;
+  const userId = props.user._id || props.user.id;
 
   try {
     await changeRole({
-      id: props.user.id,
+      id: userId,
       role: targetRole.value
     });
     store.dispatch('notifications/triggerToast', {
-      message: `Access role for ${props.user.name} successfully updated to ${roleName}.`,
+      message: `Access role for ${userDisplayName.value} successfully updated to ${roleName}.`,
       type: 'success'
     });
     emit('success');

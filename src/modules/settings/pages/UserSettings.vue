@@ -20,7 +20,11 @@
           }}
         </p>
       </div>
-      <button @click="openInviteDrawer" class="btn-primary h-9 px-3.5 text-xs font-semibold gap-1.5 self-start sm:self-auto shrink-0 shadow-xs rounded-xl flex items-center">
+      <button
+        @click="openInviteDrawer"
+        :title="isUserQuotaReached ? `User limit reached (${users?.length || 0}/${maxUserQuota})` : ''"
+        class="btn-primary h-9 px-3.5 text-xs font-semibold gap-1.5 self-start sm:self-auto shrink-0 shadow-xs rounded-xl flex items-center"
+      >
         <PhPlus :size="14" weight="bold" />
         <span>{{
           isEducationWorkspace ? "Onboard Staff" : "Onboard User"
@@ -87,8 +91,13 @@
               class="w-full bg-slate-50 dark:bg-slate-850 border border-default rounded-xl pl-9 pr-3 py-2 text-xs focus:border-primary outline-none text-slate-800 dark:text-slate-200 placeholder:text-slate-400"
             />
           </div>
-          <div class="text-[11px] font-semibold text-slate-500 font-tabular bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-default/60 shrink-0">
-            {{ filteredUsers.length }} {{ isEducationWorkspace ? (filteredUsers.length === 1 ? 'Staff Member' : 'Staff Members') : (filteredUsers.length === 1 ? 'User' : 'Users') }}
+          <div class="text-[11px] font-semibold text-slate-500 font-tabular bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-default/60 shrink-0 flex items-center gap-1">
+            <span>
+              {{ filteredUsers.length }} {{ isEducationWorkspace ? (filteredUsers.length === 1 ? 'Staff Member' : 'Staff Members') : (filteredUsers.length === 1 ? 'User' : 'Users') }}
+            </span>
+            <span v-if="maxUserQuota" class="text-slate-400 font-normal">
+              / {{ maxUserQuota }} limit
+            </span>
           </div>
         </div>
 
@@ -194,11 +203,14 @@
                     </span>
                   </template>
                   <template v-else>
-                    <div class="space-x-1 flex items-center justify-center">
+                    <div class="flex items-center justify-center gap-1.5">
                       <button
                         v-if="isEnterprise"
                         @click="triggerTransfer(user)"
-                        class="btn btn-sm btn-ghost text-primary text-[10px] h-6 px-1.5 gap-1 font-bold"
+                        type="button"
+                        title="Transfer Office"
+                        aria-label="Transfer Office"
+                        class="w-7 h-7 rounded-lg border border-slate-200 dark:border-slate-750 bg-white dark:bg-slate-800 text-primary hover:bg-primary/10 hover:border-primary/30 flex items-center justify-center transition-all shadow-2xs"
                         :disabled="user.status !== 'active'"
                         :class="
                           user.status !== 'active'
@@ -206,12 +218,14 @@
                             : ''
                         "
                       >
-                        <PhMapPin :size="10" />
-                        <span>Transfer Office</span>
+                        <PhMapPin :size="13" weight="bold" />
                       </button>
                       <button
                         @click="triggerRoleSwap(user)"
-                        class="btn btn-sm btn-ghost text-slate-600 dark:text-slate-400 text-[10px] h-6 px-1.5 gap-1 font-bold"
+                        type="button"
+                        title="Adjust Role"
+                        aria-label="Adjust Role"
+                        class="w-7 h-7 rounded-lg border border-slate-200 dark:border-slate-750 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-primary hover:border-primary/30 hover:bg-primary/10 flex items-center justify-center transition-all shadow-2xs"
                         :disabled="user.status !== 'active'"
                         :class="
                           user.status !== 'active'
@@ -219,8 +233,17 @@
                             : ''
                         "
                       >
-                        <PhKey :size="10" />
-                        <span>Adjust Role</span>
+                        <PhGear :size="13" weight="bold" />
+                      </button>
+                      <button
+                        v-if="isOrgAdmin"
+                        @click="confirmDeleteUser(user)"
+                        type="button"
+                        title="Delete User"
+                        aria-label="Delete User"
+                        class="w-7 h-7 rounded-lg border border-rose-200 dark:border-rose-900/40 bg-rose-50/60 dark:bg-rose-950/20 text-rose-500 hover:text-rose-600 hover:bg-rose-100 dark:hover:bg-rose-900/40 flex items-center justify-center transition-all shadow-2xs"
+                      >
+                        <PhTrash :size="13" weight="bold" />
                       </button>
                     </div>
                   </template>
@@ -355,7 +378,7 @@
                 :disabled="user.status !== 'active'"
                 class="flex-1 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
               >
-                <PhKey :size="13" weight="bold" class="text-slate-500" />
+                <PhGear :size="13" weight="bold" class="text-slate-500" />
                 <span>Adjust Role</span>
               </button>
 
@@ -368,6 +391,16 @@
               >
                 <PhMapPin :size="13" weight="bold" class="text-primary" />
                 <span>Transfer Office</span>
+              </button>
+
+              <button
+                v-if="isOrgAdmin"
+                @click="confirmDeleteUser(user)"
+                type="button"
+                class="h-8 px-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-center justify-center gap-1 transition-all active:scale-[0.98] shadow-2xs hover:bg-rose-100"
+              >
+                <PhTrash :size="12" weight="bold" class="text-rose-500" />
+                <span>Delete</span>
               </button>
             </div>
           </div>
@@ -423,10 +456,11 @@ import { useQueryClient } from "@tanstack/vue-query";
 import {
   PhPlus,
   PhMapPin,
-  PhKey,
+  PhGear,
   PhEnvelopeSimple,
   PhPhone,
   PhMagnifyingGlass,
+  PhTrash,
 } from "@phosphor-icons/vue";
 import Swal from "sweetalert2";
 import {
@@ -434,7 +468,9 @@ import {
   useRolesQuery,
   useBranchesQuery,
   useAuditLogsQuery,
+  useOrgSettingsQuery,
   useUpdateUserStatusMutation,
+  useDeleteUserMutation,
 } from "../queries";
 import UserInviteDrawer from "../components/UserInviteDrawer.vue";
 import BranchTransferDrawer from "../components/BranchTransferDrawer.vue";
@@ -464,16 +500,34 @@ const isEnterprise = computed(
 const isEducationWorkspace = computed(
   () => store.getters["organization/isEducationTenant"],
 );
-const isOrgAdmin = computed(
-  () => store.getters["auth/userRole"] === "org_admin",
-);
+const isOrgAdmin = computed(() => {
+  const role = String(store.getters["auth/userRole"] || "").toLowerCase();
+  return ["super_admin", "system_admin", "org_admin", "organization_admin"].includes(role);
+});
 
 // TanStack queries
 const { data: users } = useUsersQuery();
 const { data: roles } = useRolesQuery();
 const { data: branches } = useBranchesQuery();
 const { data: auditLogs } = useAuditLogsQuery();
+const { data: orgData } = useOrgSettingsQuery();
 const { mutateAsync: updateUserStatus } = useUpdateUserStatusMutation();
+const { mutateAsync: deleteUserMutation } = useDeleteUserMutation();
+
+const maxUserQuota = computed(() => {
+  const org = orgData.value?.data || orgData.value;
+  if (!org) return null;
+  const limits = [];
+  if (typeof org.maxUsers === "number" && org.maxUsers > 0) limits.push(org.maxUsers);
+  if (typeof org.subscription?.maxUsers === "number" && org.subscription.maxUsers > 0) limits.push(org.subscription.maxUsers);
+  return limits.length > 0 ? Math.min(...limits) : null;
+});
+
+const isUserQuotaReached = computed(() => {
+  if (!maxUserQuota.value) return false;
+  const count = users.value?.length || 0;
+  return count >= maxUserQuota.value;
+});
 
 const filteredUsers = computed(() => {
   const list = users.value || [];
@@ -501,6 +555,15 @@ const activeUser = ref(null);
 const updatingUserIds = ref(new Set());
 
 function openInviteDrawer() {
+  if (isUserQuotaReached.value) {
+    Swal.fire({
+      title: "User Quota Reached",
+      text: `Your organization has reached its maximum user limit of ${maxUserQuota.value}. Please upgrade or contact support to increase your user limit.`,
+      icon: "warning",
+      confirmButtonText: "Understood",
+    });
+    return;
+  }
   inviteDrawerOpen.value = true;
 }
 
@@ -643,6 +706,51 @@ function getRoleDisplayName(role, user) {
   return isEducationWorkspace.value
     ? formatted.replace(/agent/gi, "Staff")
     : formatted;
+}
+
+
+async function confirmDeleteUser(user) {
+  if (isSuperAdminSelf(user)) {
+    store.dispatch("notifications/triggerToast", {
+      message: "You cannot delete your own account.",
+      type: "warning",
+    });
+    return;
+  }
+  if (!isOrgAdmin.value) {
+    store.dispatch("notifications/triggerToast", {
+      message: "Only Organization Administrators can delete users.",
+      type: "error",
+    });
+    return;
+  }
+
+  const name = getUserDisplayName(user);
+  const result = await Swal.fire({
+    title: "Delete User Account",
+    text: `Are you sure you want to delete ${name}? This action will revoke their access immediately.`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#e11d48",
+    confirmButtonText: "Yes, Delete User",
+    cancelButtonText: "Cancel",
+  });
+
+  if (!result.isConfirmed) return;
+
+  const userId = getUserId(user);
+  try {
+    await deleteUserMutation(userId);
+    store.dispatch("notifications/triggerToast", {
+      message: `User ${name} has been deleted successfully.`,
+      type: "success",
+    });
+  } catch (err) {
+    store.dispatch("notifications/triggerToast", {
+      message: err.response?.data?.message || "Failed to delete user account.",
+      type: "error",
+    });
+  }
 }
 
 function refetchData() {

@@ -1,7 +1,7 @@
 <template>
   <AppDrawer
     :isOpen="isOpen"
-    :title="`Transfer Branch: ${user?.name || ''}`"
+    :title="`Transfer Branch: ${userDisplayName}`"
     width="480px"
     @close="$emit('close')"
   >
@@ -9,7 +9,8 @@
       <!-- Current Status -->
       <div class="bg-slate-50 p-4 border border-default rounded-xl space-y-1">
         <div class="text-[10px] text-slate-400 font-bold uppercase">Current Assignment</div>
-        <div class="text-xs font-bold text-slate-700">Branch: <span class="text-primary font-extrabold">{{ userBranchName || 'None' }}</span></div>
+        <div class="text-xs font-bold text-slate-700">Staff: <span class="text-slate-900 font-extrabold">{{ userDisplayName }}</span></div>
+        <div class="text-xs font-semibold text-slate-650">Branch: <span class="text-primary font-extrabold">{{ userBranchName || 'None' }}</span></div>
         <div class="text-xs font-semibold text-slate-605">Current Role: <span class="capitalize">{{ userRoleDisplayName.replace('_', ' ') }}</span></div>
       </div>
 
@@ -109,13 +110,25 @@ const isEducationWorkspace = computed(
   () => store.getters['organization/isEducationTenant']
 );
 
+const userDisplayName = computed(() => {
+  if (!props.user) return 'Staff';
+  return (
+    props.user.name ||
+    props.user.fullName ||
+    `${props.user.firstName || ''} ${props.user.lastName || ''}`.trim() ||
+    props.user.email ||
+    'Staff'
+  );
+});
+
 const userRoleDisplayName = computed(() => {
-  if (!props.user?.role) return '';
+  const r = props.user?.role || props.user?.roleId;
+  if (!r) return '';
   let val = '';
-  if (typeof props.user.role === 'object') {
-    val = props.user.role.name || props.user.role.code || '';
+  if (typeof r === 'object') {
+    val = r.name || r.code || '';
   } else {
-    val = String(props.user.role);
+    val = String(r);
   }
   const formatted = val.replace(/_/g, ' ');
   return isEducationWorkspace.value ? formatted.replace(/agent/gi, 'Staff') : formatted;
@@ -151,14 +164,16 @@ async function onTransfer() {
   const selectedBranch = props.branches.find(b => b.id === targetBranchId.value);
   if (!selectedBranch) return;
 
+  const userId = props.user._id || props.user.id;
+
   try {
     await transferBranch({
-      id: props.user.id,
+      id: userId,
       branchId: targetBranchId.value,
       leadsReassignment: leadsReassignment.value
     });
     store.dispatch('notifications/triggerToast', {
-      message: `Successfully transferred ${props.user.name} to ${selectedBranch.name}.`,
+      message: `Successfully transferred ${userDisplayName.value} to ${selectedBranch.name}.`,
       type: 'success'
     });
     emit('success');
