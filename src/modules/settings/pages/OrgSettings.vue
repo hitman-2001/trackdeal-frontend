@@ -460,50 +460,6 @@ const store = useStore();
 
 const isEducation = computed(() => store.getters['organization/isEducationTenant']);
 
-const tabs = computed(() => [
-  { 
-    label: isEducation.value ? 'Institute Profile' : 'Organization Profile', 
-    value: 'profile',
-    icon: PhBuilding
-  },
-  { 
-    label: 'Branding & Colors', 
-    value: 'theme',
-    icon: PhPalette
-  },
-]);
-
-const activeTab = ref('profile');
-
-// Fetch Query Layer
-const { data: orgSettings } = useOrgSettingsQuery();
-const { mutateAsync: updateOrgSettings, isPending: isUpdating } = useUpdateOrgSettingsMutation();
-
-// Local forms state
-const orgForm = ref({
-  companyName: '',
-  spoc: '',
-  gstin: '',
-  currency: 'INR',
-  timezone: 'Asia/Kolkata'
-});
-
-watch(orgSettings, (newVal) => {
-  if (newVal) {
-    orgForm.value = {
-      companyName: newVal.name || newVal.companyName || '',
-      spoc: newVal.spoc || '',
-      gstin: newVal.gstNumber || newVal.gstin || '',
-      currency: newVal.settings?.currency || newVal.currency || 'INR',
-      timezone: newVal.settings?.timezone || newVal.timezone || 'Asia/Kolkata'
-    };
-    if (newVal.branding?.themeTokens) {
-      themeConfig.value = { ...defaultTokens, ...newVal.branding.themeTokens };
-      applyThemeTokensToDOM(themeConfig.value);
-    }
-  }
-}, { immediate: true });
-
 const isOrgAdmin = computed(() => {
   const role = String(store.getters['auth/userRole'] || '').toLowerCase();
   return ['super_admin', 'system_admin', 'org_admin', 'organization_admin'].includes(role);
@@ -517,6 +473,18 @@ const defaultTokens = {
   backgroundHex: '#f8fafc',
   fontHex: '#0f172a'
 };
+
+const getInitialTheme = () => {
+  try {
+    const orgTokens = store?.state?.organization?.branding?.themeTokens;
+    if (orgTokens) return { ...defaultTokens, ...orgTokens };
+    const saved = localStorage.getItem('theme_custom_hsl');
+    if (saved) return { ...defaultTokens, ...JSON.parse(saved) };
+  } catch (e) {}
+  return { ...defaultTokens };
+};
+
+const themeConfig = ref(getInitialTheme());
 
 const presets = [
   {
@@ -561,17 +529,49 @@ const presets = [
   }
 ];
 
-const getInitialTheme = () => {
-  try {
-    const orgTokens = store?.state?.organization?.branding?.themeTokens;
-    if (orgTokens) return { ...defaultTokens, ...orgTokens };
-    const saved = localStorage.getItem('theme_custom_hsl');
-    if (saved) return { ...defaultTokens, ...JSON.parse(saved) };
-  } catch (e) {}
-  return { ...defaultTokens };
-};
+const tabs = computed(() => [
+  { 
+    label: isEducation.value ? 'Institute Profile' : 'Organization Profile', 
+    value: 'profile',
+    icon: PhBuilding
+  },
+  { 
+    label: 'Branding & Colors', 
+    value: 'theme',
+    icon: PhPalette
+  },
+]);
 
-const themeConfig = ref(getInitialTheme());
+const activeTab = ref('profile');
+
+// Local forms state
+const orgForm = ref({
+  companyName: '',
+  spoc: '',
+  gstin: '',
+  currency: 'INR',
+  timezone: 'Asia/Kolkata'
+});
+
+// Fetch Query Layer
+const { data: orgSettings } = useOrgSettingsQuery();
+const { mutateAsync: updateOrgSettings, isPending: isUpdating } = useUpdateOrgSettingsMutation();
+
+watch(orgSettings, (newVal) => {
+  if (newVal) {
+    orgForm.value = {
+      companyName: newVal.name || newVal.companyName || '',
+      spoc: newVal.spoc || '',
+      gstin: newVal.gstNumber || newVal.gstin || '',
+      currency: newVal.settings?.currency || newVal.currency || 'INR',
+      timezone: newVal.settings?.timezone || newVal.timezone || 'Asia/Kolkata'
+    };
+    if (newVal.branding?.themeTokens) {
+      themeConfig.value = { ...defaultTokens, ...newVal.branding.themeTokens };
+      applyThemeTokensToDOM(themeConfig.value);
+    }
+  }
+}, { immediate: true });
 
 function cleanHex(val) {
   return String(val || '').replace('#', '').toUpperCase();
