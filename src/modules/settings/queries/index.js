@@ -72,13 +72,23 @@ export function useUpdateUserStatusMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: settingsApi.updateUserStatus,
-    onSuccess: (updatedUser, { id }) => {
+    onSuccess: (updatedUser, { id, status }) => {
       queryClient.setQueryData(['settings', 'users'], (users) => {
         if (!users) return users;
-        return users.map((user) =>
-          (user._id || user.id) === id ? { ...user, ...updatedUser } : user
-        );
+        return users.map((user) => {
+          if ((user._id || user.id) !== id) return user;
+          const nextRole = (typeof updatedUser?.roleId === 'object' && updatedUser?.roleId) ? updatedUser.roleId : user.roleId;
+          const nextBranch = (typeof updatedUser?.branchId === 'object' && updatedUser?.branchId) ? updatedUser.branchId : user.branchId;
+          return {
+            ...user,
+            ...updatedUser,
+            status: updatedUser?.status || status || user.status,
+            roleId: nextRole,
+            branchId: nextBranch,
+          };
+        });
       });
+      queryClient.invalidateQueries({ queryKey: ['settings', 'users'] });
       queryClient.invalidateQueries({ queryKey: ['settings', 'audit'] });
     }
   });
