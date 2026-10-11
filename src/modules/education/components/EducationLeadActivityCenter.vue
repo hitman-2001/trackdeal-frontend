@@ -562,9 +562,22 @@ function selectChannel(ch) {
 }
 
 function selectOutcome(tag) {
+  const currentRemarks = (logForm.value.remarks || '').trim();
+  const prevOutcome = logForm.value.outcome;
+
+  if (prevOutcome === tag) {
+    logForm.value.outcome = '';
+    if (currentRemarks === tag || currentRemarks === `${tag}:`) {
+      logForm.value.remarks = '';
+    }
+    return;
+  }
+
   logForm.value.outcome = tag;
-  if (!logForm.value.remarks) {
-    logForm.value.remarks = `${tag}: `;
+  if (!currentRemarks || currentRemarks === prevOutcome || currentRemarks === `${prevOutcome}:` || outcomeTags.includes(currentRemarks)) {
+    logForm.value.remarks = tag;
+  } else if (prevOutcome && currentRemarks.startsWith(prevOutcome)) {
+    logForm.value.remarks = currentRemarks.replace(prevOutcome, tag);
   }
 }
 

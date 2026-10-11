@@ -9,7 +9,7 @@
           ref="searchInputRef"
           v-model="searchQuery" 
           type="text" 
-          placeholder="Search leads, properties, projects, deals, contacts... (Press Esc to close)"
+          :placeholder="isEducation ? 'Search student leads, enrolled students, classes... (Press Esc to close)' : 'Search leads, properties, projects, deals, contacts... (Press Esc to close)'"
           class="w-full input-field bg-transparent text-body text-slate-800 dark:text-slate-100 placeholder-slate-400 outline-none font-medium"
           @keydown.esc="close"
           @input="performSearch"
@@ -46,11 +46,11 @@
                 <span>Student Leads</span>
               </router-link>
               <router-link to="/app/students" @click="close" class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 text-slate-700 dark:text-slate-200 font-medium">
-                <AppIcon name="user" :size="16" class="text-accent-600" />
+                <AppIcon name="graduation" :size="16" class="text-accent-600" />
                 <span>Students</span>
               </router-link>
               <router-link to="/app/classes" @click="close" class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 text-slate-700 dark:text-slate-200 font-medium">
-                <AppIcon name="buildings" :size="16" class="text-accent-600" />
+                <AppIcon name="chalkboard" :size="16" class="text-accent-600" />
                 <span>Classes</span>
               </router-link>
               <router-link v-if="hasTasksAccess" to="/app/tasks" @click="close" class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 text-slate-700 dark:text-slate-200 font-medium">
@@ -83,7 +83,7 @@
         <div v-else-if="resultsCount === 0" class="py-8 text-center text-slate-400 space-y-1">
           <AppIcon name="search" :size="26" class="mx-auto" />
           <p class="text-h3 font-semibold text-slate-600 dark:text-slate-300">No results found for "{{ searchQuery }}"</p>
-          <p class="text-micro">Try searching by lead name, phone number, project, or deal ID.</p>
+          <p class="text-micro">{{ isEducation ? 'Try searching by student name, mobile number, parent name, or class.' : 'Try searching by lead name, phone number, project, or deal ID.' }}</p>
         </div>
 
         <div v-else class="space-y-4">
@@ -94,7 +94,7 @@
             </span>
             <router-link 
               v-for="lead in results.leads" 
-              :key="lead._id"
+              :key="lead._id" 
               :to="`/app/leads/${lead._id}`" 
               @click="close"
               class="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-between transition-colors block"
@@ -111,16 +111,85 @@
                   </span>
                 </div>
                 <div class="text-micro text-slate-400">
-                  {{ lead.preferredPropertyType || 'Residential' }} · {{ lead.budgetMax ? '₹' + Number(lead.budgetMax).toLocaleString('en-IN') : 'Budget Flexible' }}
+                  <template v-if="isEducation">
+                    {{ getEducationLeadSubtitle(lead) }}
+                  </template>
+                  <template v-else>
+                    {{ lead.preferredPropertyType || 'Residential' }} · {{ lead.budgetMax ? '₹' + Number(lead.budgetMax).toLocaleString('en-IN') : 'Budget Flexible' }}
+                  </template>
                 </div>
               </div>
               <span class="text-micro font-semibold text-slate-400 capitalize bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
-                {{ (lead.stage || 'new').replace(/_/g, ' ') }}
+                {{ (lead.status || lead.stage || 'new').replace(/_/g, ' ') }}
               </span>
             </router-link>
           </div>
 
-          <!-- 2. Properties & Projects Group -->
+          <!-- 2. Enrolled Students Group (Education Vertical) -->
+          <div v-if="isEducation && results.students?.length > 0" class="space-y-1.5">
+            <span class="text-label text-indigo-600 dark:text-indigo-400 px-2 block">
+              Enrolled Students ({{ results.students.length }})
+            </span>
+            <router-link 
+              v-for="student in results.students" 
+              :key="student._id" 
+              :to="student.leadId ? `/app/leads/${student.leadId}` : '/app/students'" 
+              @click="close"
+              class="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-between transition-colors block"
+            >
+              <div class="space-y-0.5">
+                <div class="font-bold text-slate-800 dark:text-slate-100 text-body flex items-center gap-2">
+                  <span>{{ student.firstName }} {{ student.lastName || '' }}</span>
+                  <span 
+                    v-if="student.studentId" 
+                    class="px-1.5 py-0.5 rounded text-micro font-mono bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                  >
+                    {{ student.studentId }}
+                  </span>
+                </div>
+                <div class="text-micro text-slate-400">
+                  {{ getStudentSubtitle(student) }}
+                </div>
+              </div>
+              <span class="text-micro font-semibold text-emerald-600 capitalize bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md">
+                {{ (student.status || 'Active').replace(/_/g, ' ') }}
+              </span>
+            </router-link>
+          </div>
+
+          <!-- 3. Classes & Batches Group (Education Vertical) -->
+          <div v-if="isEducation && results.classes?.length > 0" class="space-y-1.5">
+            <span class="text-label text-blue-600 dark:text-blue-400 px-2 block">
+              Classes & Batches ({{ results.classes.length }})
+            </span>
+            <router-link 
+              v-for="cls in results.classes" 
+              :key="cls._id" 
+              to="/app/classes" 
+              @click="close"
+              class="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-between transition-colors block"
+            >
+              <div class="space-y-0.5">
+                <div class="font-bold text-slate-800 dark:text-slate-100 text-body flex items-center gap-2">
+                  <span>{{ cls.name }}</span>
+                  <span 
+                    v-if="cls.code" 
+                    class="px-1.5 py-0.5 rounded text-micro font-mono bg-slate-100 dark:bg-slate-800 text-slate-500"
+                  >
+                    {{ cls.code }}
+                  </span>
+                </div>
+                <div class="text-micro text-slate-400">
+                  {{ [cls.grade, cls.subject].filter(Boolean).join(' · ') || 'Class Batch' }}
+                </div>
+              </div>
+              <span class="text-micro font-semibold text-slate-500 capitalize bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
+                {{ cls.capacity ? `${cls.enrolledCount || 0}/${cls.capacity} Enrolled` : (cls.status || 'Active') }}
+              </span>
+            </router-link>
+          </div>
+
+          <!-- 4. Properties & Projects Group (Real Estate) -->
           <div v-if="!isEducation && results.properties?.length > 0" class="space-y-1.5">
             <span class="text-label text-emerald-600 dark:text-emerald-400 px-2 block">
               Properties & Inventory ({{ results.properties.length }})
@@ -146,7 +215,7 @@
             </router-link>
           </div>
 
-          <!-- 3. Deals Group -->
+          <!-- 5. Deals Group (Real Estate) -->
           <div v-if="!isEducation && results.deals?.length > 0" class="space-y-1.5">
             <span class="text-label text-amber-600 dark:text-amber-400 px-2 block">
               Deals & Transactions ({{ results.deals.length }})
@@ -172,7 +241,7 @@
             </router-link>
           </div>
 
-          <!-- 4. Loans Group -->
+          <!-- 6. Loans Group (Real Estate) -->
           <div v-if="!isEducation && results.loans?.length > 0" class="space-y-1.5">
             <span class="text-label text-blue-600 dark:text-blue-400 px-2 block">
               Loan Cases & Applications ({{ results.loans.length }})
@@ -199,14 +268,14 @@
             </router-link>
           </div>
 
-          <!-- 5. Agreements Group -->
+          <!-- 7. Agreements Group (Real Estate) -->
           <div v-if="!isEducation && results.agreements?.length > 0" class="space-y-1.5">
             <span class="text-label text-emerald-600 dark:text-emerald-400 px-2 block">
               Property Agreements ({{ results.agreements.length }})
             </span>
             <router-link 
               v-for="agr in results.agreements" 
-              :key="agr._id"
+              :key="agr._id" 
               :to="`/app/agreements/${agr._id}`" 
               @click="close"
               class="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-between transition-colors block"
@@ -273,6 +342,8 @@ const searchInputRef = ref(null);
 
 const results = ref({
   leads: [],
+  students: [],
+  classes: [],
   properties: [],
   deals: [],
   loans: [],
@@ -281,19 +352,73 @@ const results = ref({
 
 const resultsCount = computed(() => {
   if (isEducation.value) {
-    return results.value.leads?.length || 0;
+    return (
+      (results.value.leads?.length || 0) +
+      (results.value.students?.length || 0) +
+      (results.value.classes?.length || 0)
+    );
   }
-  return (results.value.leads?.length || 0) + 
-         (results.value.properties?.length || 0) + 
-         (results.value.deals?.length || 0) +
-         (results.value.loans?.length || 0) +
-         (results.value.agreements?.length || 0);
+  return (
+    (results.value.leads?.length || 0) + 
+    (results.value.properties?.length || 0) + 
+    (results.value.deals?.length || 0) +
+    (results.value.loans?.length || 0) +
+    (results.value.agreements?.length || 0)
+  );
 });
+
+function getEducationLeadSubtitle(lead) {
+  const parts = [];
+  const courseOrClass = lead?.classInterestId?.name || lead?.className || lead?.courseInterest || lead?.classInterest;
+  if (courseOrClass) {
+    parts.push(courseOrClass);
+  }
+  if (lead?.parentName) {
+    parts.push(`Parent: ${lead.parentName}`);
+  } else if (lead?.mobile) {
+    parts.push(lead.mobile);
+  } else if (lead?.email) {
+    parts.push(lead.email);
+  } else {
+    parts.push('Student Prospect');
+  }
+  return parts.join(' · ');
+}
+
+function getStudentSubtitle(student) {
+  const parts = [];
+  const className = student?.classId?.name || student?.className;
+  if (className) {
+    parts.push(className);
+  }
+  if (student?.parentName) {
+    parts.push(`Parent: ${student.parentName}`);
+  } else if (student?.mobile) {
+    parts.push(student.mobile);
+  } else if (student?.email) {
+    parts.push(student.email);
+  } else {
+    parts.push('Enrolled Student');
+  }
+  return parts.join(' · ');
+}
+
+function clearResults() {
+  results.value = {
+    leads: [],
+    students: [],
+    classes: [],
+    properties: [],
+    deals: [],
+    loans: [],
+    agreements: [],
+  };
+}
 
 watch(() => props.isOpen, (open) => {
   if (open) {
     searchQuery.value = '';
-    results.value = { leads: [], properties: [], deals: [], loans: [], agreements: [] };
+    clearResults();
     nextTick(() => {
       searchInputRef.value?.focus();
     });
@@ -305,26 +430,44 @@ function performSearch() {
   clearTimeout(searchTimer);
   const q = searchQuery.value.trim();
   if (!q) {
-    results.value = { leads: [], properties: [], deals: [], loans: [], agreements: [] };
+    clearResults();
     return;
   }
 
   searchTimer = setTimeout(async () => {
     loading.value = true;
     try {
-      const [leadsRes, propRes, dealsRes, loansRes, agrRes] = await Promise.allSettled([
-        apiClient.get('/leads', { params: { search: q, limit: 5 } }),
-        apiClient.get('/properties', { params: { search: q, limit: 5 } }),
-        apiClient.get('/deals', { params: { search: q, limit: 5 } }),
-        apiClient.get('/loans', { params: { search: q, limit: 5 } }),
-        apiClient.get('/agreements', { params: { search: q, limit: 5 } }),
-      ]);
+      if (isEducation.value) {
+        const [leadsRes, studentsRes, classesRes] = await Promise.allSettled([
+          apiClient.get('/leads', { params: { search: q, limit: 5 } }),
+          apiClient.get('/education/students', { params: { search: q, limit: 5 } }),
+          apiClient.get('/education/classes', { params: { search: q, limit: 5 } }),
+        ]);
 
-      results.value.leads = leadsRes.status === 'fulfilled' ? (leadsRes.value.data?.data || []) : [];
-      results.value.properties = propRes.status === 'fulfilled' ? (propRes.value.data?.data || []) : [];
-      results.value.deals = dealsRes.status === 'fulfilled' ? (dealsRes.value.data?.data || []) : [];
-      results.value.loans = loansRes.status === 'fulfilled' ? (loansRes.value.data?.data || []) : [];
-      results.value.agreements = agrRes.status === 'fulfilled' ? (agrRes.value.data?.data || []) : [];
+        results.value.leads = leadsRes.status === 'fulfilled' ? (leadsRes.value.data?.data || []) : [];
+        results.value.students = studentsRes.status === 'fulfilled' ? (studentsRes.value.data?.data || []) : [];
+        results.value.classes = classesRes.status === 'fulfilled' ? (classesRes.value.data?.data || []) : [];
+        results.value.properties = [];
+        results.value.deals = [];
+        results.value.loans = [];
+        results.value.agreements = [];
+      } else {
+        const [leadsRes, propRes, dealsRes, loansRes, agrRes] = await Promise.allSettled([
+          apiClient.get('/leads', { params: { search: q, limit: 5 } }),
+          apiClient.get('/properties', { params: { search: q, limit: 5 } }),
+          apiClient.get('/deals', { params: { search: q, limit: 5 } }),
+          apiClient.get('/loans', { params: { search: q, limit: 5 } }),
+          apiClient.get('/agreements', { params: { search: q, limit: 5 } }),
+        ]);
+
+        results.value.leads = leadsRes.status === 'fulfilled' ? (leadsRes.value.data?.data || []) : [];
+        results.value.properties = propRes.status === 'fulfilled' ? (propRes.value.data?.data || []) : [];
+        results.value.deals = dealsRes.status === 'fulfilled' ? (dealsRes.value.data?.data || []) : [];
+        results.value.loans = loansRes.status === 'fulfilled' ? (loansRes.value.data?.data || []) : [];
+        results.value.agreements = agrRes.status === 'fulfilled' ? (agrRes.value.data?.data || []) : [];
+        results.value.students = [];
+        results.value.classes = [];
+      }
     } catch (err) {
       console.error('Search error:', err);
     } finally {
