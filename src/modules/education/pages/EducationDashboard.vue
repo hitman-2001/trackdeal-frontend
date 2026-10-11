@@ -72,6 +72,7 @@
 
         <!-- Register Student Lead Primary Button -->
         <router-link
+          v-if="canCreateLead"
           to="/app/leads?action=create"
           class="h-9 px-3 sm:px-3.5 rounded-xl btn-primary text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-transform"
         >
@@ -1059,6 +1060,7 @@ const userRole = computed(() => String(store.getters['auth/userRole'] || '').toL
 const isOrgAdmin = computed(() =>
   ['super_admin', 'system_admin', 'org_admin', 'organization_admin', 'admin', 'manager', 'branch_manager'].includes(userRole.value)
 );
+const canCreateLead = computed(() => Boolean(store.getters['permissions/hasCapability']?.('leads.create')));
 
 // Default to 'team' for admins, 'desk' for counselors
 const viewMode = ref('team');

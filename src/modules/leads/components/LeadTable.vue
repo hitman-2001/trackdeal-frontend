@@ -4,7 +4,7 @@
     <AppTable 
       :columns="columns"
       :rows="rows"
-      :selectable="true"
+      :selectable="canAssignLeads"
       :selectedRows="selectedLeads"
       :isLoading="isLoading"
       :pagination="pagination"
@@ -135,12 +135,17 @@ const props = defineProps({
   selectedLeads: { type: Array, default: () => [] },
   pagination: { type: Object, default: null },
   canDelete: { type: Boolean, default: undefined },
+  canAssign: { type: Boolean, default: undefined },
 });
 
 const store = useStore();
 const canDeleteLeads = computed(() => {
   if (props.canDelete !== undefined) return props.canDelete;
   return Boolean(store?.getters?.['permissions/hasCapability']?.('leads.delete'));
+});
+const canAssignLeads = computed(() => {
+  if (props.canAssign !== undefined) return props.canAssign;
+  return Boolean(store?.getters?.['permissions/hasCapability']?.('leads.assign'));
 });
 
 const emit = defineEmits(['sort', 'selectionChange', 'pageChange', 'pageSizeChange', 'delete']);

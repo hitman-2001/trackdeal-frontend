@@ -7,6 +7,7 @@
           {{ lead.isTransferred ? "Transfer details" : "Contact details" }}
         </h2>
         <button
+          v-if="canEditLead"
           type="button"
           class="btn-sm btn-ghost ml-auto"
           @click="$emit('edit')"
@@ -138,8 +139,11 @@
 
 <script setup>
 import { computed } from "vue";
+import { useStore } from "vuex";
 const props = defineProps({ lead: { type: Object, required: true } });
 defineEmits(["edit"]);
+const store = useStore();
+const canEditLead = computed(() => Boolean(store.getters['permissions/hasCapability']?.('leads.update')));
 const requirement = computed(
   () => props.lead.buyerRequirement || props.lead.requirements || {},
 );

@@ -60,13 +60,18 @@ export default {
         ? normalized.replace(/\.view$/, '.read')
         : null;
 
-      const isReportsOrAnalytics =
-        normalized.startsWith('reports.') ||
-        normalized.startsWith('reports:') ||
-        normalized.startsWith('analytics.') ||
-        normalized.startsWith('analytics:') ||
-        normalized === 'reports' ||
-        normalized === 'analytics';
+      const isReportsOrAnalyticsView = [
+        'reports.view',
+        'reports.read',
+        'reports:view',
+        'reports:read',
+        'analytics.view',
+        'analytics.read',
+        'analytics:view',
+        'analytics:read',
+        'reports',
+        'analytics',
+      ].includes(normalized);
 
       // 2. Check user explicit overrides (removed permissions take precedence)
       const user = rootState?.auth?.currentUser;
@@ -78,7 +83,7 @@ export default {
         removed.includes(colonFormat) ||
         removed.includes(permission.toLowerCase().trim()) ||
         (alternateNormalized && removed.includes(alternateNormalized)) ||
-        (isReportsOrAnalytics && removed.some((r) => r === 'reports' || r === 'analytics' || r.startsWith('reports.') || r.startsWith('analytics.')))
+        (isReportsOrAnalyticsView && removed.some((r) => r === 'reports' || r === 'analytics' || r === 'reports.view' || r === 'reports.read'))
       ) {
         return false;
       }
@@ -120,10 +125,9 @@ export default {
         return true;
       }
 
-      // 7. Special Equivalence: Reports & Analytics
-
-      if (isReportsOrAnalytics) {
-        const reportsKeys = [
+      // 7. Special Equivalence ONLY for viewing/reading Reports & Analytics (NOT for exporting)
+      if (isReportsOrAnalyticsView) {
+        const reportsViewKeys = [
           'reports.view',
           'reports.read',
           'reports:view',
@@ -135,15 +139,18 @@ export default {
           'reports',
           'analytics',
         ];
-        if (reportsKeys.some((k) => allCapabilities.has(k))) {
+        if (reportsViewKeys.some((k) => allCapabilities.has(k))) {
           return true;
         }
       }
 
-      // 8. Module-level permission grant (e.g. granted 'reports' or 'leads' gives access to reports.read)
-      const moduleScope = normalized.split('.')[0];
-      if (moduleScope && allCapabilities.has(moduleScope)) {
-        return true;
+      // 8. Module-level permission grant (e.g. granted 'reports' gives access to reports.read, but NOT to reports.export or delete)
+      const parts = normalized.split('.');
+      if (parts.length === 2) {
+        const [scope, action] = parts;
+        if (['read', 'view'].includes(action) && allCapabilities.has(scope)) {
+          return true;
+        }
       }
 
       // 9. Object-based dictionary structure check

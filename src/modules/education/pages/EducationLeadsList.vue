@@ -180,8 +180,7 @@
         :rows="rows"
         :columns="columns"
         :isLoading="loading"
-        :pagination="pagination"
-        selectable
+        :selectable="canAssignLeads"
         :selectedRows="selectedRows"
         row-actions-label="Actions"
         empty-title="No student leads yet"
@@ -866,34 +865,20 @@ import {
 } from "../api/endpoints";
 
 const store = useStore();
-const isOrgAdmin = computed(() =>
-  ["super_admin", "system_admin", "org_admin", "organization_admin"].includes(
-    String(store.getters["auth/userRole"] || "").toLowerCase(),
-  ),
-);
 const canCreateLead = computed(() => {
-  return isOrgAdmin.value || Boolean(store.getters["permissions/hasCapability"]?.("leads.create"));
+  return Boolean(store.getters["permissions/hasCapability"]?.("leads.create"));
 });
 const canEditLead = computed(() => {
-  return isOrgAdmin.value || Boolean(store.getters["permissions/hasCapability"]?.("leads.update"));
+  return Boolean(store.getters["permissions/hasCapability"]?.("leads.update"));
 });
 const canDeleteLeads = computed(() => {
-  return isOrgAdmin.value || Boolean(store.getters["permissions/hasCapability"]?.("leads.delete"));
+  return Boolean(store.getters["permissions/hasCapability"]?.("leads.delete"));
 });
 const canAssignLeads = computed(() => {
-  return isOrgAdmin.value || Boolean(store.getters["permissions/hasCapability"]?.("leads.assign"));
+  return Boolean(store.getters["permissions/hasCapability"]?.("leads.assign"));
 });
 const canBulkUpload = computed(() => {
-  const role = String(store.getters["auth/userRole"] || "").toLowerCase();
-  const isPrivilegedRole = [
-    "super_admin",
-    "system_admin",
-    "org_admin",
-    "organization_admin",
-    "manager",
-    "branch_manager",
-  ].includes(role);
-  return isPrivilegedRole || Boolean(store.getters["permissions/hasCapability"]?.("leads.bulk_upload"));
+  return Boolean(store.getters["permissions/hasCapability"]?.("leads.bulk_upload"));
 });
 // "All staff" filter dropdown should ONLY be visible to elevated roles (admin/manager) who can manage assignments
 // Regular staff should NEVER see the "All staff" dropdown!

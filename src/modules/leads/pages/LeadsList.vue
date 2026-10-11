@@ -64,6 +64,7 @@
 
         <!-- Create Lead button -->
         <button 
+          v-if="canCreateLead"
           type="button"
           @click="isCreateOpen = true"
           class="btn btn-primary h-[42px] px-4 text-xs font-medium gap-2 shadow-xs"
@@ -97,6 +98,7 @@
             :selectedLeads="selectedRows"
             :pagination="pagination"
             :canDelete="canDeleteLeads"
+            :canAssign="canAssignLeads"
             @selectionChange="handleSelectionChange"
             @sort="handleSort"
             @pageChange="handlePageChange"
@@ -269,10 +271,8 @@ import LeadBulkUploadModal from '../components/LeadBulkUploadModal.vue';
 import { useLeadsQuery, useChangeLeadStageMutation } from '../queries';
 
 const store = useStore();
-const isOrgAdmin = computed(() =>
-  ['super_admin', 'system_admin', 'org_admin', 'organization_admin'].includes(
-    String(store.getters['auth/userRole'] || '').toLowerCase()
-  )
+const canCreateLead = computed(() =>
+  Boolean(store.getters['permissions/hasCapability']?.('leads.create'))
 );
 const canDeleteLeads = computed(() =>
   Boolean(store.getters['permissions/hasCapability']?.('leads.delete'))
@@ -280,18 +280,9 @@ const canDeleteLeads = computed(() =>
 const canAssignLeads = computed(() =>
   Boolean(store.getters['permissions/hasCapability']?.('leads.assign'))
 );
-const canBulkUpload = computed(() => {
-  const role = String(store.getters['auth/userRole'] || '').toLowerCase();
-  const isPrivilegedRole = [
-    'super_admin',
-    'system_admin',
-    'org_admin',
-    'organization_admin',
-    'manager',
-    'branch_manager',
-  ].includes(role);
-  return isPrivilegedRole || Boolean(store.getters['permissions/hasCapability']?.('leads.bulk_upload'));
-});
+const canBulkUpload = computed(() =>
+  Boolean(store.getters['permissions/hasCapability']?.('leads.bulk_upload'))
+);
 const isBulkUploadOpen = ref(false);
 
 const activeFilters = ref({

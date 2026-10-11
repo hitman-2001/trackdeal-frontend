@@ -340,21 +340,16 @@ import {
 } from '../api/endpoints';
 
 const store = useStore();
-const isAdmin = computed(() => {
-  const role = String(store.getters['auth/userRole'] || '').toLowerCase();
-  return ['super_admin', 'system_admin', 'org_admin', 'organization_admin', 'admin'].includes(role);
-});
-
 const canCreateClass = computed(() => {
-  return isAdmin.value || Boolean(store.getters['permissions/hasCapability']?.('classes.create'));
+  return Boolean(store.getters['permissions/hasCapability']?.('classes.create'));
 });
 
 const canEditClass = computed(() => {
-  return isAdmin.value || Boolean(store.getters['permissions/hasCapability']?.('classes.update'));
+  return Boolean(store.getters['permissions/hasCapability']?.('classes.update'));
 });
 
 const canDeleteClass = computed(() => {
-  return isAdmin.value || Boolean(store.getters['permissions/hasCapability']?.('classes.delete'));
+  return Boolean(store.getters['permissions/hasCapability']?.('classes.delete'));
 });
 
 const columns = [

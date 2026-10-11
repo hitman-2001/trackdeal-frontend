@@ -12,6 +12,7 @@
 
       <div class="flex items-center gap-2">
         <button
+          v-if="canEditLead"
           type="button"
           @click="isEditOpen = true"
           class="btn btn-secondary btn-sm h-8 px-3 text-xs font-semibold flex items-center gap-1.5"
@@ -22,7 +23,7 @@
         </button>
 
         <button
-          v-if="lead && lead.status !== 'enrolled' && lead.status !== 'converted'"
+          v-if="canCreateStudent && lead && lead.status !== 'enrolled' && lead.status !== 'converted'"
           type="button"
           @click="openEnrollModal"
           class="btn btn-primary btn-sm h-8 px-3.5 text-xs font-bold flex items-center gap-1.5 shadow-xs"
@@ -578,6 +579,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useStore } from 'vuex';
 import {
   PhArrowLeft,
   PhPhone,
@@ -617,6 +619,10 @@ const props = defineProps({
 
 const route = useRoute();
 const router = useRouter();
+const store = useStore();
+
+const canEditLead = computed(() => Boolean(store.getters['permissions/hasCapability']?.('leads.update')));
+const canCreateStudent = computed(() => Boolean(store.getters['permissions/hasCapability']?.('students.create')));
 
 const lead = ref(props.initialLead || null);
 const loading = ref(true);

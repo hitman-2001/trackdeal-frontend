@@ -74,6 +74,7 @@
             <span>Refresh</span>
           </button>
           <button
+            v-if="canExport"
             @click="exportBriefing"
             type="button"
             class="btn-sm btn-secondary gap-1.5 text-xs font-semibold"
@@ -82,6 +83,7 @@
             <span>Download CSV</span>
           </button>
           <button
+            v-if="canExport"
             @click="printAnalytics"
             type="button"
             class="btn-sm btn-primary gap-1.5 text-xs font-semibold"
@@ -365,6 +367,7 @@
             </router-link>
 
             <router-link
+              v-if="canExport"
               to="/app/reports/export"
               class="bg-surface hover:bg-slate-50 dark:hover:bg-slate-850/60 border border-default hover:border-slate-300 dark:hover:border-slate-700 p-4 rounded-xl shadow-xs transition-all flex flex-col justify-between h-28 text-xs font-semibold text-slate-800 dark:text-slate-200 group"
             >
@@ -501,6 +504,7 @@ import { fetchReportsDashboardStats } from '@/modules/reports/api/endpoints';
 
 const store = useStore();
 const isEducation = computed(() => store.getters['organization/isEducationTenant']);
+const canExport = computed(() => Boolean(store.getters['permissions/hasCapability']('reports.export')));
 
 const activeView = ref('analytics');
 const selectedRange = ref('30d');
