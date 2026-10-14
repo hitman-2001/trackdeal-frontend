@@ -8,7 +8,7 @@
             <span>Enrolled Students</span>
           </h1>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 hidden sm:block">
-            Directory of enrolled students mapped to classes, batches, and parent guardian contacts.
+            Directory of enrolled students and parent guardian contacts.
           </p>
         </div>
         <!-- Compact Add Student Button for Mobile Header -->
@@ -92,16 +92,6 @@
         </button>
 
         <button
-          v-if="classFilter"
-          type="button"
-          @click="classFilter = ''; onFilterChange()"
-          class="h-6 px-2.5 rounded-lg bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 text-[11px] font-semibold text-purple-700 dark:text-purple-300 inline-flex items-center gap-1 active:scale-95 transition-all"
-        >
-          <span>Batch: {{ getClassName(classFilter) }}</span>
-          <PhX :size="11" weight="bold" class="opacity-70 hover:opacity-100" />
-        </button>
-
-        <button
           type="button"
           @click="clearAllFilters"
           class="h-6 px-2 text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline inline-flex items-center"
@@ -124,18 +114,6 @@
             class="w-full bg-slate-50 dark:bg-slate-850 border border-default rounded-xl pl-9 pr-3 py-2 text-xs focus:border-primary outline-none text-slate-800 dark:text-slate-200 placeholder:text-slate-400" 
             @input="handleSearch" 
           />
-        </div>
-
-        <!-- Class Filter -->
-        <div class="flex items-center gap-1.5">
-          <select 
-            v-model="classFilter" 
-            class="bg-slate-50 dark:bg-slate-850 border border-default rounded-xl px-3 py-2 text-xs text-slate-700 dark:text-slate-300 focus:border-primary outline-none"
-            @change="onFilterChange"
-          >
-            <option value="">All Classes & Batches</option>
-            <option v-for="c in classes" :key="c._id" :value="c._id">{{ c.name }}</option>
-          </select>
         </div>
 
         <!-- Status Filter Button / Trigger -->
@@ -208,16 +186,6 @@
           </div>
         </template>
 
-        <!-- Cell: Enrolled Class -->
-        <template #cell(class)="{ row }">
-          <span 
-            v-if="row.classId?.name"
-            class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40 inline-flex items-center gap-1"
-          >
-            {{ row.classId.name }}
-          </span>
-          <span v-else class="text-slate-400 italic text-[11px]">Unassigned</span>
-        </template>
 
         <!-- Cell: Status Badge -->
         <template #cell(status)="{ row }">
@@ -320,13 +288,6 @@
                 <PhPhone :size="12" weight="bold" />
                 <span>{{ row.mobile }}</span>
               </a>
-              <span
-                v-if="row.classId?.name"
-                class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/40"
-              >
-                <PhBookOpen :size="11" weight="bold" />
-                <span>{{ row.classId.name }}</span>
-              </span>
             </div>
           </div>
 
@@ -468,16 +429,6 @@
             <p class="font-bold text-slate-900 dark:text-slate-100 text-xs font-tabular">{{ viewingStudent.parentMobile || '—' }}</p>
           </div>
 
-          <div class="p-3 bg-surface border border-default rounded-xl space-y-1 col-span-2">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Enrolled Batch / Class</span>
-            <p class="font-bold text-indigo-600 dark:text-indigo-400 text-xs">
-              {{ viewingStudent.classId?.name || 'Unassigned / Independent Enrollment' }}
-            </p>
-            <p v-if="viewingStudent.classId?.subject" class="text-[10px] text-slate-500 mt-0.5">
-              {{ viewingStudent.classId.subject }} • Grade {{ viewingStudent.classId.grade || 'General' }}
-            </p>
-          </div>
-
           <div v-if="viewingStudent.schoolName" class="p-3 bg-surface border border-default rounded-xl space-y-1 col-span-2">
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">College / School Name</span>
             <p class="font-bold text-slate-900 dark:text-slate-100 text-xs">{{ viewingStudent.schoolName }}</p>
@@ -507,7 +458,7 @@
     <AppDrawer
       :isOpen="showModal"
       :title="editing ? 'Edit Student Record' : 'Enroll New Student'"
-      :subtitle="editing ? 'Update enrolled student details and batch mappings' : 'Directly register a student and map to a course batch'"
+      :subtitle="editing ? 'Update enrolled student details and contact information' : 'Directly register an enrolled student record'"
       width="520px"
       @close="showModal = false"
     >
@@ -537,13 +488,6 @@
           <div class="modal-form-group">
             <label class="modal-form-label">Parent Mobile</label>
             <input v-model="form.parentMobile" placeholder="Parent mobile number" class="modal-form-input" />
-          </div>
-          <div class="modal-form-group col-span-full">
-            <label class="modal-form-label">Enrolled Batch / Class</label>
-            <select v-model="form.classId" class="modal-form-select">
-              <option value="">Unassigned</option>
-              <option v-for="c in classes" :key="c._id" :value="c._id">{{ c.name }}</option>
-            </select>
           </div>
           <div class="modal-form-group col-span-full">
             <label class="modal-form-label">College / School Name</label>
@@ -576,7 +520,7 @@
     <AppModal
       :isOpen="isFilterModalOpen"
       title="Filter Students"
-      subtitle="Refine by multiple student statuses and enrolled batch"
+      subtitle="Refine by multiple student statuses"
       maxSize="480px"
       @cancel="isFilterModalOpen = false"
     >
@@ -624,33 +568,6 @@
             </label>
           </div>
         </div>
-
-        <!-- Class / Batch Filter -->
-        <div class="pt-2">
-          <div class="flex items-center justify-between pb-2 mb-2.5 border-b border-slate-100 dark:border-neutral-800">
-            <span class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-              Enrolled Class / Batch
-            </span>
-            <button
-              v-if="tempClass"
-              type="button"
-              @click="tempClass = ''"
-              class="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline"
-            >
-              Clear
-            </button>
-          </div>
-
-          <select
-            v-model="tempClass"
-            class="w-full h-11 px-3.5 rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-xs font-medium text-slate-800 dark:text-slate-100 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
-          >
-            <option value="">All Classes & Batches</option>
-            <option v-for="c in classes" :key="c._id" :value="c._id">
-              {{ c.name }} {{ c.subject ? `• ${c.subject}` : '' }}
-            </option>
-          </select>
-        </div>
       </div>
 
       <template #footer>
@@ -697,7 +614,6 @@ import AppDrawer from '@/components/AppDrawer.vue';
 import AppModal from '@/components/AppModal.vue';
 import { 
   createEducationStudent, 
-  fetchEducationClasses, 
   fetchEducationStudents,
   updateEducationStudent,
   deleteEducationStudent
@@ -720,16 +636,13 @@ const columns = [
   { key: 'student', label: 'Student', sortable: true },
   { key: 'contact', label: 'Contact', sortable: false },
   { key: 'parent', label: 'Parent / Guardian', sortable: false },
-  { key: 'class', label: 'Enrolled Class', sortable: false },
   { key: 'status', label: 'Status', sortable: true },
   { key: 'enrollmentDate', label: 'Enrollment Date', sortable: true },
 ];
 
 const rows = ref([]);
-const classes = ref([]);
 const loading = ref(false);
 const search = ref('');
-const classFilter = ref('');
 const statusFilter = ref('');
 
 const availableStatuses = [
@@ -742,28 +655,22 @@ const availableStatuses = [
 const isFilterModalOpen = ref(false);
 const selectedStatuses = ref([]);
 const tempStatuses = ref([]);
-const tempClass = ref('');
 
 const activeFilterCount = computed(() => {
-  let count = selectedStatuses.value.length;
-  if (classFilter.value) count += 1;
-  return count;
+  return selectedStatuses.value.length;
 });
 
 function openFilterModal() {
   tempStatuses.value = [...selectedStatuses.value];
-  tempClass.value = classFilter.value;
   isFilterModalOpen.value = true;
 }
 
 function clearFiltersInModal() {
   tempStatuses.value = [];
-  tempClass.value = '';
 }
 
 function applyFiltersInModal() {
   selectedStatuses.value = [...tempStatuses.value];
-  classFilter.value = tempClass.value;
   statusFilter.value = selectedStatuses.value.length === 1 ? selectedStatuses.value[0] : '';
   isFilterModalOpen.value = false;
   onFilterChange();
@@ -778,7 +685,6 @@ function removeStatusFilter(statusVal) {
 function clearAllFilters() {
   selectedStatuses.value = [];
   statusFilter.value = '';
-  classFilter.value = '';
   search.value = '';
   onFilterChange();
 }
@@ -786,11 +692,6 @@ function clearAllFilters() {
 function getStatusLabel(statusVal) {
   const match = availableStatuses.find((s) => s.value === statusVal);
   return match ? match.label : statusVal;
-}
-
-function getClassName(classId) {
-  const match = classes.value.find((c) => c._id === classId);
-  return match ? match.name : 'Batch';
 }
 
 const pagination = ref({
@@ -823,7 +724,6 @@ function blank() {
     parentName: '', 
     parentMobile: '', 
     schoolName: '',
-    classId: '',
     status: 'active',
     notes: '',
   };
@@ -856,7 +756,6 @@ async function load() {
 
     const res = await fetchEducationStudents({
       search: search.value.trim() || undefined,
-      classId: classFilter.value || undefined,
       status: statusParam,
       page: pagination.value.page,
       limit: pagination.value.limit,
@@ -941,7 +840,6 @@ function openEdit(row) {
     parentName: row.parentName || '',
     parentMobile: row.parentMobile || '',
     schoolName: row.schoolName || '',
-    classId: row.classId?._id || row.classId || '',
     status: row.status || 'active',
     notes: row.notes || '',
   };
@@ -953,7 +851,7 @@ async function save() {
   saving.value = true;
   error.value = '';
   try {
-    const payload = { ...form.value, classId: form.value.classId || undefined };
+    const payload = { ...form.value };
     if (editing.value) {
       await updateEducationStudent(editing.value._id, payload);
     } else {
@@ -1016,8 +914,6 @@ function formatDate(d) {
 }
 
 onMounted(async () => {
-  const res = await fetchEducationClasses({ limit: 100 });
-  classes.value = res.data || [];
   await load();
 });
 </script>

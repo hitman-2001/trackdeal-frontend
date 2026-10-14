@@ -70,10 +70,10 @@ export const applyThemeTokensToDOM = (tokens) => {
   let customCSS = '';
   if (tokens.navbarHex) {
     customCSS += `
-      aside, header, .product-sidebar, .product-topbar { background-color: ${tokens.navbarHex} !important; border-color: transparent !important; }
-      aside .text-slate-800, aside .text-neutral-900, header .text-slate-800, header .text-neutral-900 { color: #ffffff !important; }
-      aside .text-slate-500, aside .text-neutral-500, header .text-slate-500, header .text-neutral-500 { color: rgba(255,255,255,0.7) !important; }
-      aside svg, header svg { fill: currentColor; }
+      .floating-sidebar, .app-navbar, .product-sidebar, .product-topbar { background-color: ${tokens.navbarHex} !important; border-color: transparent !important; }
+      .floating-sidebar .text-slate-800, .floating-sidebar .text-neutral-900, .app-navbar .text-slate-800, .app-navbar .text-neutral-900 { color: #ffffff !important; }
+      .floating-sidebar .text-slate-500, .floating-sidebar .text-neutral-500, .app-navbar .text-slate-500, .app-navbar .text-neutral-500 { color: rgba(255,255,255,0.7) !important; }
+      .floating-sidebar svg, .app-navbar svg { fill: currentColor; }
     `;
   }
   if (tokens.backgroundHex) {

@@ -757,7 +757,7 @@
               <input
                 v-model="reminderSearch"
                 type="text"
-                placeholder="Search by student, parent, phone or batch..."
+                placeholder="Search by student, parent, or phone..."
                 class="w-full h-9 pl-9 pr-3 rounded-xl bg-slate-50 dark:bg-neutral-800 border border-slate-200/80 dark:border-neutral-700 text-xs text-slate-800 dark:text-slate-100 placeholder:text-slate-400 outline-none focus:border-slate-400 focus:bg-white dark:focus:bg-neutral-850 transition-all"
               />
             </div>
@@ -896,15 +896,15 @@
                   <span>Chat</span>
                 </a>
 
-                <!-- Log Note -->
+                <!-- Status -->
                 <button
                   type="button"
-                  @click="openLog(fu)"
+                  @click="openStatusModal(fu)"
                   class="h-8 rounded-lg bg-white dark:bg-neutral-800 hover:bg-slate-100 dark:hover:bg-neutral-750 text-slate-700 dark:text-slate-200 border border-slate-200/90 dark:border-neutral-700 font-bold text-[11px] flex items-center justify-center gap-1 transition-colors cursor-pointer"
-                  title="Log conversation update"
+                  title="Update status"
                 >
-                  <PhNotePencil :size="13" weight="bold" class="text-slate-600 dark:text-slate-300" />
-                  <span>Log</span>
+                  <PhArrowsClockwise :size="13" weight="bold" class="text-blue-600 dark:text-blue-400" />
+                  <span>Status</span>
                 </button>
 
                 <!-- Done -->
@@ -956,12 +956,6 @@
           >
             Enrolled Student Roster
           </router-link>
-          <router-link
-            to="/app/classes"
-            class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-semibold transition-colors"
-          >
-            Manage Classes & Batches
-          </router-link>
         </div>
       </div>
     </template>
@@ -973,11 +967,10 @@
       @close="isDetailsOpen = false"
     />
 
-    <EducationLeadLogDrawer
-      :isOpen="isLogOpen"
-      :leadId="activeLogLeadId"
-      :lead="activeLogLead"
-      @close="isLogOpen = false"
+    <EducationLeadStatusModal
+      :isOpen="isStatusOpen"
+      :lead="activeStatusLead"
+      @close="isStatusOpen = false"
       @success="handleActionSuccess"
     />
 
@@ -1040,7 +1033,7 @@ import { getErrorMessage } from '@/utils/errorHandler';
 
 // Drawers & Modals
 import EducationLeadDrawer from '../components/EducationLeadDrawer.vue';
-import EducationLeadLogDrawer from '../components/EducationLeadLogDrawer.vue';
+import EducationLeadStatusModal from '../components/EducationLeadStatusModal.vue';
 import EducationLeadReminderModal from '../components/EducationLeadReminderModal.vue';
 
 const router = useRouter();
@@ -1088,9 +1081,8 @@ const typeFilterOptions = [
 const activeLeadId = ref(null);
 const isDetailsOpen = ref(false);
 
-const activeLogLead = ref(null);
-const activeLogLeadId = ref(null);
-const isLogOpen = ref(false);
+const activeStatusLead = ref(null);
+const isStatusOpen = ref(false);
 
 const activeReminderLead = ref(null);
 const isReminderOpen = ref(false);
@@ -1390,15 +1382,16 @@ function openLeadDetails(leadId) {
   isDetailsOpen.value = true;
 }
 
-function openLog(fu) {
-  activeLogLeadId.value = fu.leadId;
-  activeLogLead.value = {
+function openStatusModal(fu) {
+  activeStatusLead.value = {
     _id: fu.leadId,
+    id: fu.leadId,
     firstName: fu.studentName,
     parentName: fu.parentName,
     mobile: fu.contactNumber,
+    status: fu.status || 'new',
   };
-  isLogOpen.value = true;
+  isStatusOpen.value = true;
 }
 
 async function markComplete(fu) {
@@ -1433,7 +1426,7 @@ async function markComplete(fu) {
 }
 
 async function handleActionSuccess() {
-  isLogOpen.value = false;
+  isStatusOpen.value = false;
   isReminderOpen.value = false;
   await loadDashboard(true);
 }

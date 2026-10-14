@@ -36,6 +36,11 @@ export async function bulkAssignLeads({ leadIds, assignedTo, reason }) {
   return response.data;
 }
 
+export async function distributeLeadsBatchRoundRobin({ leadIds, staffIds, batchSize = 10, reason }) {
+  const response = await apiClient.post('/leads/distribute-batch-round-robin', { leadIds, staffIds, batchSize, reason });
+  return response.data;
+}
+
 export async function changeLeadStage({ id, status, lostReason, lostNotes }) {
   const response = await apiClient.post(`/leads/${id}/stage`, { status, lostReason, lostNotes });
   return response.data;
@@ -184,6 +189,7 @@ export default {
   deleteLead,
   assignLead,
   bulkAssignLeads,
+  distributeLeadsBatchRoundRobin,
   changeLeadStage,
   addLeadNote,
   updateLeadNote,

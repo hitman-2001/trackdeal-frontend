@@ -4,7 +4,7 @@
     <AppTable 
       :columns="columns"
       :rows="rows"
-      :selectable="canAssignLeads"
+      :selectable="canAssignLeads || canBulkDeleteLeads"
       :selectedRows="selectedLeads"
       :isLoading="isLoading"
       :pagination="pagination"
@@ -22,12 +22,21 @@
             {{ (row.firstName?.charAt(0) || '') + (row.lastName?.charAt(0) || '') }}
           </div>
           <div class="min-w-0">
-            <router-link 
-              :to="`/app/leads/${row._id || row.id}`" 
-              class="font-bold text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 truncate block text-xs"
-            >
-              {{ row.firstName }} {{ row.lastName || '' }}
-            </router-link>
+            <div class="flex items-center gap-1.5">
+              <router-link 
+                :to="`/app/leads/${row._id || row.id}`" 
+                class="font-bold text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 truncate block text-xs"
+              >
+                {{ row.firstName }} {{ row.lastName || '' }}
+              </router-link>
+              <span
+                v-if="!row.isAttended && !row.lastActionAt"
+                class="px-1.5 py-0.2 rounded text-[9px] font-bold tracking-wide uppercase bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/80 dark:border-amber-900/60 shrink-0"
+                title="Unattended: Pending staff contact"
+              >
+                Unattended
+              </span>
+            </div>
             <div class="text-[10px] text-slate-400 font-mono truncate flex items-center gap-1">
               <AppIcon v-if="row.isTransferred" name="lock" :size="10" />
               {{ row.isTransferred ? 'Contact protected' : (row.mobile || row.phone || 'No phone') }}
@@ -135,6 +144,7 @@ const props = defineProps({
   selectedLeads: { type: Array, default: () => [] },
   pagination: { type: Object, default: null },
   canDelete: { type: Boolean, default: undefined },
+  canBulkDelete: { type: Boolean, default: undefined },
   canAssign: { type: Boolean, default: undefined },
 });
 
@@ -142,6 +152,13 @@ const store = useStore();
 const canDeleteLeads = computed(() => {
   if (props.canDelete !== undefined) return props.canDelete;
   return Boolean(store?.getters?.['permissions/hasCapability']?.('leads.delete'));
+});
+const canBulkDeleteLeads = computed(() => {
+  if (props.canBulkDelete !== undefined) return props.canBulkDelete;
+  return Boolean(
+    store?.getters?.['permissions/hasCapability']?.('leads.bulk_delete') ||
+    store?.getters?.['permissions/hasCapability']?.('leads.delete')
+  );
 });
 const canAssignLeads = computed(() => {
   if (props.canAssign !== undefined) return props.canAssign;

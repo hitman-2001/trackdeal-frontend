@@ -10,10 +10,10 @@
       </div>
 
       <!-- CTAs -->
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3 w-full sm:w-auto">
         <button 
           @click="isCreateOpen = true"
-          class="btn btn-sm btn-primary"
+          class="btn btn-sm btn-primary w-full sm:w-auto justify-center"
         >
           + Add Builder
         </button>

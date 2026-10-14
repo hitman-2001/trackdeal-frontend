@@ -49,7 +49,8 @@
     </div>
 
     <div v-else class="bg-surface border border-default rounded-xl shadow-sm overflow-hidden">
-      <div class="overflow-x-auto">
+      <!-- Desktop Projects Table -->
+      <div class="hidden sm:block overflow-x-auto">
         <table class="w-full text-xs text-left">
           <thead>
             <tr class="bg-slate-50/50 dark:bg-slate-900 border-b border-default text-slate-450 uppercase font-bold text-[10px] tracking-wider">
@@ -137,6 +138,107 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Mobile Projects Card Feed -->
+      <div class="sm:hidden divide-y divide-default">
+        <div 
+          v-for="proj in paginatedProjects" 
+          :key="'mob-' + (proj._id || proj.id)" 
+          class="p-4 space-y-3"
+        >
+          <!-- Top Row: Name, Code & Status -->
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0 flex-1">
+              <router-link 
+                :to="`/app/projects/${proj._id || proj.id}`" 
+                class="font-bold text-primary hover:underline text-sm block truncate"
+              >
+                {{ proj.name }}
+              </router-link>
+              <div class="flex items-center gap-2 mt-0.5">
+                <span class="text-[9px] font-mono text-slate-400 uppercase">{{ proj.code }}</span>
+                <span v-if="proj.builderId" class="text-[11px] text-slate-600 dark:text-slate-300 font-medium truncate">
+                  &bull; {{ proj.builderId.name }}
+                </span>
+              </div>
+            </div>
+            <span 
+              class="px-2 py-0.5 rounded-full text-[10px] font-semibold border shrink-0 capitalize"
+              :class="getStatusBadgeClass(proj.status)"
+            >
+              {{ formatStatus(proj.status) }}
+            </span>
+          </div>
+
+          <!-- Location & RERA Info -->
+          <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 flex-wrap gap-2">
+            <div>
+              <span class="font-medium text-slate-700 dark:text-slate-200">{{ proj.locality || '—' }}</span>
+              <span v-if="proj.city" class="text-slate-400">, {{ proj.city }}</span>
+            </div>
+
+            <div v-if="proj.rera" class="flex items-center gap-1.5 shrink-0">
+              <span class="bg-indigo-50 border border-indigo-200 text-indigo-750 dark:bg-indigo-950/20 dark:border-indigo-900 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold">
+                RERA: {{ proj.rera }}
+              </span>
+              <button @click="copyRera(proj.rera)" class="text-primary hover:opacity-80 p-1" title="Copy RERA ID">
+                <PhCopy :size="13" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Units Stats Grid -->
+          <div class="grid grid-cols-4 gap-1.5 bg-slate-50/70 dark:bg-slate-900/40 border border-default rounded-lg p-2 text-center">
+            <div>
+              <div class="text-[9px] uppercase font-bold text-slate-400">Total</div>
+              <div class="font-bold text-xs text-slate-700 dark:text-slate-200">
+                {{ projectUnitsStats[proj._id || proj.id]?.total || 0 }}
+              </div>
+            </div>
+            <div>
+              <div class="text-[9px] uppercase font-bold text-emerald-600">Avail</div>
+              <div class="font-bold text-xs text-emerald-600">
+                {{ projectUnitsStats[proj._id || proj.id]?.available || 0 }}
+              </div>
+            </div>
+            <div>
+              <div class="text-[9px] uppercase font-bold text-amber-500">Hold</div>
+              <div class="font-bold text-xs text-amber-500">
+                {{ projectUnitsStats[proj._id || proj.id]?.reserved || 0 }}
+              </div>
+            </div>
+            <div>
+              <div class="text-[9px] uppercase font-bold text-red-500">Sold</div>
+              <div class="font-bold text-xs text-red-500">
+                {{ projectUnitsStats[proj._id || proj.id]?.sold || 0 }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions Row -->
+          <div class="flex items-center justify-end gap-2 pt-1">
+            <router-link 
+              :to="`/app/projects/${proj._id || proj.id}`" 
+              class="h-8 px-3 rounded-lg border border-default text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5"
+            >
+              <PhEye :size="14" weight="bold" />
+              <span>Details</span>
+            </router-link>
+            <button 
+              @click="openEditProject(proj)" 
+              class="h-8 px-3 rounded-lg border border-default text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5"
+            >
+              <PhPencilSimple :size="14" weight="bold" />
+              <span>Edit</span>
+            </button>
+          </div>
+        </div>
+
+        <div v-if="filteredProjects.length === 0" class="p-8 text-center text-slate-450 italic text-xs">
+          No developmental projects registered. Click "+ Add Project" to create.
+        </div>
+      </div>
+
       <AppPagination v-bind="projectPagination" @page-change="setProjectPage" @page-size-change="setProjectPageSize" />
     </div>
 
@@ -510,5 +612,25 @@ const copyRera = (reraId) => {
     message: 'RERA Registration ID copied to clipboard.',
     type: 'success'
   });
+};
+
+const formatStatus = (status) => {
+  switch (status) {
+    case 'upcoming': return 'Upcoming';
+    case 'under_construction': return 'Under Const.';
+    case 'ready_to_move': return 'Ready to Move';
+    case 'sold_out': return 'Sold Out';
+    default: return status || '—';
+  }
+};
+
+const getStatusBadgeClass = (status) => {
+  switch (status) {
+    case 'ready_to_move': return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800';
+    case 'under_construction': return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800';
+    case 'upcoming': return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800';
+    case 'sold_out': return 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-300 dark:border-red-800';
+    default: return 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700';
+  }
 };
 </script>

@@ -79,9 +79,7 @@ const routes = [
       },
       {
         path: "classes",
-        name: "Classes",
-        component: () => import("@/modules/education/pages/ClassesList.vue"),
-        meta: { module: "classes", vertical: "education" },
+        redirect: "/app/leads",
       },
       {
         path: "agents",

@@ -10,7 +10,7 @@
       </div>
 
       <!-- Action buttons & Views toggle -->
-      <div class="flex items-center gap-3 self-end sm:self-auto shrink-0 flex-wrap">
+      <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-3 w-full sm:w-auto shrink-0 flex-wrap">
         <!-- View Toggle buttons -->
         <div class="border border-default rounded-lg p-0.5 bg-slate-55/50 dark:bg-slate-900 flex space-x-0.5">
           <button 
@@ -53,7 +53,7 @@
 
         <button 
           @click="isCreateOpen = true"
-          class="btn btn-sm btn-primary"
+          class="btn btn-sm btn-primary ml-auto sm:ml-0"
         >
           + Add Property
         </button>
@@ -131,13 +131,13 @@
             v-model.number="filterMinPrice" 
             type="number" 
             placeholder="Min Price"
-            class="bg-surface border border-default rounded-lg px-2.5 py-1.5 outline-none w-24"
+            class="bg-surface border border-default rounded-lg px-2.5 py-1.5 outline-none w-full"
           />
           <input 
             v-model.number="filterMaxPrice" 
             type="number" 
             placeholder="Max Price"
-            class="bg-surface border border-default rounded-lg px-2.5 py-1.5 outline-none w-24"
+            class="bg-surface border border-default rounded-lg px-2.5 py-1.5 outline-none w-full"
           />
         </div>
       </div>

@@ -444,6 +444,7 @@ const EDUCATION_ACTIVE_PERMS = [
       { key: "leads.create", label: "Create Student Inquiry" },
       { key: "leads.update", label: "Update Inquiries & Status" },
       { key: "leads.delete", label: "Delete Student Inquiries" },
+      { key: "leads.bulk_delete", label: "Bulk Delete Student Leads" },
       { key: "leads.assign", label: "Assign Leads to Staff" },
       { key: "leads.bulk_upload", label: "Bulk Import Leads (Excel)" },
     ],
@@ -492,7 +493,9 @@ const REAL_ESTATE_ACTIVE_PERMS = [
       { key: "leads.create", label: "Create Sales Lead" },
       { key: "leads.update", label: "Update Lead Details" },
       { key: "leads.delete", label: "Delete Sales Leads" },
+      { key: "leads.bulk_delete", label: "Bulk Delete Sales Leads" },
       { key: "leads.assign", label: "Assign Leads to Agents" },
+      { key: "leads.bulk_upload", label: "Bulk Import Leads (Excel)" },
     ],
   },
   {

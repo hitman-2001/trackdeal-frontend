@@ -60,6 +60,17 @@ export function useBulkAssignLeadsMutation() {
   });
 }
 
+export function useDistributeLeadsBatchRoundRobinMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: leadsApi.distributeLeadsBatchRoundRobin,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      queryClient.invalidateQueries({ queryKey: ['educationLeads'] });
+    }
+  });
+}
+
 export function useChangeLeadStageMutation() {
   const queryClient = useQueryClient();
   return useMutation({

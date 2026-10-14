@@ -9,7 +9,7 @@
           ref="searchInputRef"
           v-model="searchQuery" 
           type="text" 
-          :placeholder="isEducation ? 'Search student leads, enrolled students, classes... (Press Esc to close)' : 'Search leads, properties, projects, deals, contacts... (Press Esc to close)'"
+          :placeholder="isEducation ? 'Search student leads, enrolled students... (Press Esc to close)' : 'Search leads, properties, projects, deals, contacts... (Press Esc to close)'"
           class="w-full input-field bg-transparent text-body text-slate-800 dark:text-slate-100 placeholder-slate-400 outline-none font-medium"
           @keydown.esc="close"
           @input="performSearch"
@@ -48,10 +48,6 @@
               <router-link to="/app/students" @click="close" class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 text-slate-700 dark:text-slate-200 font-medium">
                 <AppIcon name="graduation" :size="16" class="text-accent-600" />
                 <span>Students</span>
-              </router-link>
-              <router-link to="/app/classes" @click="close" class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 text-slate-700 dark:text-slate-200 font-medium">
-                <AppIcon name="chalkboard" :size="16" class="text-accent-600" />
-                <span>Classes</span>
               </router-link>
               <router-link v-if="hasTasksAccess" to="/app/tasks" @click="close" class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 text-slate-700 dark:text-slate-200 font-medium">
                 <AppIcon name="clipboard" :size="16" class="text-accent-600" />
@@ -157,39 +153,7 @@
             </router-link>
           </div>
 
-          <!-- 3. Classes & Batches Group (Education Vertical) -->
-          <div v-if="isEducation && results.classes?.length > 0" class="space-y-1.5">
-            <span class="text-label text-blue-600 dark:text-blue-400 px-2 block">
-              Classes & Batches ({{ results.classes.length }})
-            </span>
-            <router-link 
-              v-for="cls in results.classes" 
-              :key="cls._id" 
-              to="/app/classes" 
-              @click="close"
-              class="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-between transition-colors block"
-            >
-              <div class="space-y-0.5">
-                <div class="font-bold text-slate-800 dark:text-slate-100 text-body flex items-center gap-2">
-                  <span>{{ cls.name }}</span>
-                  <span 
-                    v-if="cls.code" 
-                    class="px-1.5 py-0.5 rounded text-micro font-mono bg-slate-100 dark:bg-slate-800 text-slate-500"
-                  >
-                    {{ cls.code }}
-                  </span>
-                </div>
-                <div class="text-micro text-slate-400">
-                  {{ [cls.grade, cls.subject].filter(Boolean).join(' · ') || 'Class Batch' }}
-                </div>
-              </div>
-              <span class="text-micro font-semibold text-slate-500 capitalize bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
-                {{ cls.capacity ? `${cls.enrolledCount || 0}/${cls.capacity} Enrolled` : (cls.status || 'Active') }}
-              </span>
-            </router-link>
-          </div>
-
-          <!-- 4. Properties & Projects Group (Real Estate) -->
+          <!-- 3. Properties & Projects Group (Real Estate) -->
           <div v-if="!isEducation && results.properties?.length > 0" class="space-y-1.5">
             <span class="text-label text-emerald-600 dark:text-emerald-400 px-2 block">
               Properties & Inventory ({{ results.properties.length }})
@@ -438,15 +402,14 @@ function performSearch() {
     loading.value = true;
     try {
       if (isEducation.value) {
-        const [leadsRes, studentsRes, classesRes] = await Promise.allSettled([
+        const [leadsRes, studentsRes] = await Promise.allSettled([
           apiClient.get('/leads', { params: { search: q, limit: 5 } }),
           apiClient.get('/education/students', { params: { search: q, limit: 5 } }),
-          apiClient.get('/education/classes', { params: { search: q, limit: 5 } }),
         ]);
 
         results.value.leads = leadsRes.status === 'fulfilled' ? (leadsRes.value.data?.data || []) : [];
         results.value.students = studentsRes.status === 'fulfilled' ? (studentsRes.value.data?.data || []) : [];
-        results.value.classes = classesRes.status === 'fulfilled' ? (classesRes.value.data?.data || []) : [];
+        results.value.classes = [];
         results.value.properties = [];
         results.value.deals = [];
         results.value.loans = [];

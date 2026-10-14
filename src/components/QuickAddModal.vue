@@ -51,8 +51,7 @@ const realEstateActions = [
 
 const educationActions = [
   { title: 'New student lead', description: 'Capture student inquiry, subject and parent details.', to: '/app/leads', icon: 'user', tone: 'tone-accent' },
-  { title: 'Add student', description: 'Directly enroll student into a batch or course.', to: '/app/students', icon: 'user', tone: 'tone-success' },
-  { title: 'Add class', description: 'Configure batch, course, fees, schedule & capacity.', to: '/app/classes', icon: 'buildings', tone: 'tone-highlight' },
+  { title: 'Add student', description: 'Directly enroll student into a course offering.', to: '/app/students', icon: 'user', tone: 'tone-success' },
 ];
 
 const actions = computed(() => {

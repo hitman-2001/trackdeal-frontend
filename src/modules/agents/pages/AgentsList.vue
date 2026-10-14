@@ -13,7 +13,7 @@
 
       <button
         @click="openCreateDrawer"
-        class="h-10 px-4 rounded-lg font-medium text-caption text-white transition-opacity flex items-center gap-2 shrink-0 shadow-sm"
+        class="h-10 px-4 rounded-lg font-medium text-caption text-white transition-opacity flex items-center justify-center gap-2 shrink-0 shadow-sm w-full sm:w-auto"
         style="background-color: hsl(var(--accent-600));"
       >
         <PhUserPlus :size="18" weight="bold" />
@@ -39,11 +39,11 @@
       </div>
 
       <!-- Filter Controls -->
-      <div class="flex flex-wrap items-center gap-2.5">
+      <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2.5">
         <!-- Status Filter -->
         <select
           v-model="filters.status"
-          class="h-9 px-3 rounded-md border text-caption outline-none cursor-pointer"
+          class="h-9 px-3 rounded-md border text-caption outline-none cursor-pointer w-full sm:w-auto"
           style="border-color: hsl(var(--neutral-200)); background-color: hsl(var(--bg-surface)); color: hsl(var(--neutral-700));"
         >
           <option value="">All Statuses</option>
@@ -54,7 +54,7 @@
         <!-- Agent Type Filter -->
         <select
           v-model="filters.agentType"
-          class="h-9 px-3 rounded-md border text-caption outline-none cursor-pointer"
+          class="h-9 px-3 rounded-md border text-caption outline-none cursor-pointer w-full sm:w-auto"
           style="border-color: hsl(var(--neutral-200)); background-color: hsl(var(--bg-surface)); color: hsl(var(--neutral-700));"
         >
           <option value="">All Agent Types</option>
@@ -70,7 +70,7 @@
           v-model="filters.city"
           type="text"
           placeholder="Filter by city..."
-          class="h-9 px-3 w-32 rounded-md border text-caption outline-none"
+          class="h-9 px-3 rounded-md border text-caption outline-none col-span-2 sm:col-span-1 w-full sm:w-32"
           style="border-color: hsl(var(--neutral-200)); background-color: hsl(var(--bg-surface)); color: hsl(var(--neutral-700));"
         />
       </div>
@@ -81,7 +81,8 @@
       class="rounded-xl border overflow-hidden shadow-xs"
       style="background-color: hsl(var(--bg-surface)); border-color: hsl(var(--neutral-100));"
     >
-      <div class="overflow-x-auto">
+      <!-- Desktop Table View -->
+      <div class="hidden sm:block overflow-x-auto">
         <table class="w-full text-left border-collapse">
           <thead>
             <tr
@@ -243,6 +244,159 @@
         </table>
       </div>
 
+      <!-- Mobile Agents Card Feed -->
+      <div class="sm:hidden divide-y divide-default">
+        <!-- Loading skeleton -->
+        <template v-if="isLoading">
+          <div v-for="n in 4" :key="'agent-skel-' + n" class="p-4 space-y-3 animate-pulse">
+            <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-2/3"></div>
+            <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
+            <div class="h-8 bg-slate-200 dark:bg-slate-700 rounded w-full"></div>
+          </div>
+        </template>
+
+        <!-- Empty state -->
+        <template v-else-if="agents.length === 0">
+          <div class="p-8 text-center">
+            <PhUsersThree :size="36" class="mx-auto mb-2" style="color: hsl(var(--neutral-300));" />
+            <p class="font-medium text-body-sm" style="color: hsl(var(--neutral-600));">
+              No Agents or Channel Partners found
+            </p>
+            <p class="text-caption mt-1" style="color: hsl(var(--neutral-400));">
+              Click "+ Add Agent / Channel Partner" to register your first partner
+            </p>
+          </div>
+        </template>
+
+        <!-- Mobile Agent Cards -->
+        <template v-else>
+          <div
+            v-for="agent in agents"
+            :key="'mob-agent-' + agent._id"
+            class="p-4 space-y-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors"
+          >
+            <!-- Header: Agent Name, Office & Status -->
+            <div class="flex items-start justify-between gap-2">
+              <div class="min-w-0 flex-1">
+                <router-link
+                  :to="`/app/agents/${agent._id}`"
+                  class="font-semibold text-body-sm hover:underline block truncate"
+                  style="color: hsl(var(--neutral-900));"
+                >
+                  {{ agent.name }}
+                </router-link>
+                <div class="flex items-center gap-1.5 mt-0.5 text-micro text-slate-500 truncate">
+                  <AppIcon name="buildings" :size="12" />
+                  <span class="truncate">{{ agent.officeName || 'Direct' }}</span>
+                </div>
+              </div>
+
+              <!-- Status Badge -->
+              <span
+                class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-micro font-semibold capitalize shrink-0"
+                :style="{
+                  backgroundColor: agent.status === 'active' ? 'hsl(var(--success-50))' : 'hsl(var(--neutral-100))',
+                  color: agent.status === 'active' ? 'hsl(var(--success-700))' : 'hsl(var(--neutral-600))'
+                }"
+              >
+                <span
+                  class="w-1.5 h-1.5 rounded-full"
+                  :style="{ backgroundColor: agent.status === 'active' ? 'hsl(var(--success-500))' : 'hsl(var(--neutral-400))' }"
+                ></span>
+                {{ agent.status }}
+              </span>
+            </div>
+
+            <!-- Chips Row: Type, City, Leads Count -->
+            <div class="flex items-center flex-wrap gap-2 text-micro">
+              <span
+                class="px-2 py-0.5 rounded-full font-medium capitalize"
+                style="background-color: hsl(var(--accent-50)); color: hsl(var(--accent-700));"
+              >
+                {{ formatAgentType(agent.agentType) }}
+              </span>
+
+              <span v-if="agent.city" class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium">
+                {{ agent.city }}
+              </span>
+
+              <span class="px-2 py-0.5 rounded border border-indigo-100 dark:border-indigo-900/40 bg-indigo-50/60 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-300 font-medium">
+                <b>{{ agent.totalLeadsAssigned || 0 }}</b> leads
+              </span>
+
+              <span v-if="agent.reraNumber" class="font-mono px-1.5 py-0.5 rounded border text-[10px] bg-slate-50 dark:bg-slate-850 text-slate-600 dark:text-slate-300">
+                RERA: {{ agent.reraNumber }}
+              </span>
+            </div>
+
+            <!-- Contact Row with Direct Call Button -->
+            <div class="flex items-center justify-between gap-2 p-2 rounded-lg bg-slate-50/70 dark:bg-slate-900/40 border border-default text-xs">
+              <div class="min-w-0 flex-1">
+                <div class="font-medium text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <AppIcon name="phone" :size="12" />
+                  <span>{{ agent.phone }}</span>
+                </div>
+                <div v-if="agent.email" class="text-[11px] text-slate-400 truncate flex items-center gap-1 mt-0.5">
+                  <AppIcon name="email" :size="11" />
+                  <span class="truncate">{{ agent.email }}</span>
+                </div>
+              </div>
+
+              <a
+                v-if="agent.phone"
+                :href="'tel:' + agent.phone"
+                class="h-8 px-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-semibold text-xs flex items-center gap-1.5 shrink-0 hover:bg-emerald-100 transition-colors"
+                title="Call Agent"
+              >
+                <PhPhone :size="13" weight="bold" />
+                <span>Call</span>
+              </a>
+            </div>
+
+            <!-- Actions Row -->
+            <div class="flex items-center justify-between pt-1 border-t border-default/50">
+              <router-link
+                :to="`/app/agents/${agent._id}`"
+                class="h-8 px-3 rounded-lg border border-default text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5"
+              >
+                <PhEye :size="14" weight="bold" />
+                <span>View Details</span>
+              </router-link>
+
+              <div class="flex items-center gap-1">
+                <button
+                  @click="openEditDrawer(agent)"
+                  class="w-8 h-8 rounded-lg border border-default flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  title="Edit Agent"
+                  aria-label="Edit Agent"
+                >
+                  <PhPencilSimple :size="15" />
+                </button>
+
+                <button
+                  @click="toggleAgentStatus(agent)"
+                  class="w-8 h-8 rounded-lg border border-default flex items-center justify-center transition-colors"
+                  :class="agent.status === 'active' ? 'text-amber-600 hover:bg-amber-50' : 'text-emerald-600 hover:bg-emerald-50'"
+                  :title="agent.status === 'active' ? 'Deactivate Agent' : 'Activate Agent'"
+                  aria-label="Toggle Status"
+                >
+                  <PhPower :size="15" />
+                </button>
+
+                <button
+                  @click="confirmDeleteAgent(agent)"
+                  class="w-8 h-8 rounded-lg border border-default flex items-center justify-center text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                  title="Delete Agent"
+                  aria-label="Delete Agent"
+                >
+                  <PhTrash :size="15" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+
       <AppPagination
         :page="pagination.page"
         :page-size="filters.limit"
@@ -273,6 +427,7 @@ import {
   PhPencilSimple,
   PhPower,
   PhTrash,
+  PhPhone,
 } from '@phosphor-icons/vue';
 import { useAgentsQuery, useAgentStatusMutation, useDeleteAgentMutation } from '../queries';
 import AgentCreateDrawer from '../components/AgentCreateDrawer.vue';

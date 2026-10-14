@@ -6,14 +6,14 @@
         <h1>Deals workspace</h1>
         <p>Track property transactions from reservation through registration, commission eligibility, and closure.</p>
       </div>
-      <div class="workspace-action-cluster">
-        <div class="workspace-segmented" aria-label="Deal view">
+      <div class="workspace-action-cluster flex flex-wrap items-center gap-2 w-full sm:w-auto">
+        <div class="workspace-segmented overflow-x-auto scrollbar-none" aria-label="Deal view">
           <button type="button" :class="{ 'is-active': viewMode === 'table' }" @click="viewMode = 'table'"><PhTable :size="13" /> Table</button>
           <button type="button" :class="{ 'is-active': viewMode === 'kanban' }" @click="viewMode = 'kanban'"><PhColumns :size="13" /> Pipeline</button>
           <button type="button" :class="{ 'is-active': viewMode === 'lifecycle' }" @click="viewMode = 'lifecycle'"><PhTrendUp :size="13" /> Lifecycle</button>
         </div>
-        <button type="button" class="btn-md btn-secondary" @click="openConvertReservation"><AppIcon name="key" :size="15" /> Convert hold</button>
-        <button type="button" class="btn-md btn-primary" @click="isCreateOpen = true"><AppIcon name="add" :size="15" /> Create deal</button>
+        <button type="button" class="btn-md btn-secondary flex-1 sm:flex-initial text-center justify-center" @click="openConvertReservation"><AppIcon name="key" :size="15" /> Convert hold</button>
+        <button type="button" class="btn-md btn-primary flex-1 sm:flex-initial text-center justify-center" @click="isCreateOpen = true"><AppIcon name="add" :size="15" /> Create deal</button>
       </div>
     </header>
 
@@ -46,23 +46,23 @@
 
     <section class="financial-panel" aria-label="Deal filters">
       <div class="financial-panel__header"><div><p class="eyebrow">Pipeline</p><h2>Transaction stages</h2></div><span class="financial-panel__meta">{{ dealsList.length }} total records</span></div>
-      <div class="workspace-state-strip">
+      <div class="workspace-state-strip overflow-x-auto flex-nowrap scrollbar-none pb-1" style="-webkit-overflow-scrolling: touch;">
         <button v-for="state in stageStates" :key="state.key" type="button" :class="{ 'is-active': filters.status === state.key }" @click="filters.status = state.key"><span>{{ state.label }}</span><strong>{{ state.count }}</strong></button>
       </div>
       <div class="financial-table-toolbar">
         <div><p class="eyebrow">Deal register</p><h2>Transaction files</h2><p>Search by deal, customer, project, unit, stage, or owner.</p></div>
-        <div class="financial-filter-row">
-          <div class="relative min-w-0 sm:min-w-[260px]">
+        <div class="financial-filter-row flex flex-col sm:flex-row gap-2.5 w-full sm:w-auto">
+          <div class="relative w-full sm:w-auto min-w-0 sm:min-w-[260px]">
             <AppIcon name="search" :size="15" class="absolute left-3 top-1/2 -translate-y-1/2" style="color: hsl(var(--neutral-400));" />
-            <input v-model="filters.search" class="filter-control !pl-9" type="search" placeholder="Search deals or customers…" />
+            <input v-model="filters.search" class="filter-control !pl-9 w-full" type="search" placeholder="Search deals or customers…" />
           </div>
-          <select v-model="filters.status" class="filter-control sm:max-w-[190px]" aria-label="Filter by transaction stage">
+          <select v-model="filters.status" class="filter-control w-full sm:w-auto sm:max-w-[190px]" aria-label="Filter by transaction stage">
             <option value="">All stages</option><option v-for="status in dealStages" :key="status" :value="status">{{ formatStageName(status) }}</option>
           </select>
-          <select v-model="filters.assignedTo" class="filter-control sm:max-w-[180px]" aria-label="Filter by assigned agent">
+          <select v-model="filters.assignedTo" class="filter-control w-full sm:w-auto sm:max-w-[180px]" aria-label="Filter by assigned agent">
             <option value="">All owners</option><option v-for="agent in agents" :key="agent._id" :value="agent._id">{{ [agent.firstName, agent.lastName].filter(Boolean).join(' ') }}</option>
           </select>
-          <button v-if="hasFilters" type="button" class="btn-md btn-ghost" @click="resetFilters">Clear</button>
+          <button v-if="hasFilters" type="button" class="btn-md btn-ghost w-full sm:w-auto text-center" @click="resetFilters">Clear</button>
         </div>
       </div>
     </section>
@@ -71,26 +71,110 @@
       <AppIcon name="warning" :size="18" /><div><strong>Deals could not be loaded</strong><p>Retry to restore the transaction workspace.</p></div><button type="button" class="btn-sm btn-secondary" @click="refetch">Retry</button>
     </div>
 
-    <AppTable
-      v-if="viewMode === 'table'"
-      class="financial-table"
-      :rows="filteredDeals"
-      :columns="columns"
-      :is-loading="isLoading"
-      :page-size="15"
-      empty-title="No deals in this view"
-      empty-subtext="Clear the current filters or create a deal to begin tracking its transaction lifecycle."
-      @row-click="openDeal"
-    >
-      <template #cell(deal)="{ row }"><div class="workspace-record"><span class="workspace-code">{{ row.dealNumber || 'Unnumbered deal' }}</span><small>{{ formatDate(row.createdAt) }}</small></div></template>
-      <template #cell(customer)="{ row }"><div class="workspace-record max-w-[180px]"><strong>{{ customerName(row) }}</strong><small>{{ row.customer?.mobile || 'Mobile not available' }}</small></div></template>
-      <template #cell(asset)="{ row }"><div class="workspace-record max-w-[190px]"><strong>{{ row.project?.name || row.projectTitle || 'Project not linked' }}</strong><small>{{ row.unit?.unitNumber || row.unitCode ? `Unit ${row.unit?.unitNumber || row.unitCode}` : 'Unit not assigned' }}</small></div></template>
-      <template #cell(value)="{ row }"><span class="financial-amount">{{ formatCurrency(row.dealValue ?? row.askingPrice) }}</span></template>
-      <template #cell(stage)="{ row }"><WorkspaceStatusBadge :label="formatStageName(row.status)" :tone="stageTone(row.status)" /></template>
-      <template #cell(closeDate)="{ row }"><div class="workspace-record"><strong>{{ formatDate(row.closeDate) }}</strong><small>{{ row.closeDate ? 'Expected close' : 'Not scheduled' }}</small></div></template>
-      <template #cell(owner)="{ row }"><div class="workspace-record"><strong>{{ ownerName(row) }}</strong><small>Deal owner</small></div></template>
-      <template #cell(actions)="{ row }"><router-link :to="`/app/deals/${row._id || row.id}`" class="financial-action financial-action--primary" aria-label="Open deal" @click.stop><AppIcon name="arrowRight" :size="14" /></router-link></template>
-    </AppTable>
+    <!-- 1. TABLE VIEW -->
+    <div v-if="viewMode === 'table'" class="space-y-4">
+      <!-- Desktop Table View (sm and above) -->
+      <div class="hidden sm:block">
+        <AppTable
+          class="financial-table"
+          :rows="filteredDeals"
+          :columns="columns"
+          :is-loading="isLoading"
+          :page-size="15"
+          empty-title="No deals in this view"
+          empty-subtext="Clear the current filters or create a deal to begin tracking its transaction lifecycle."
+          @row-click="openDeal"
+        >
+          <template #cell(deal)="{ row }"><div class="workspace-record"><span class="workspace-code">{{ row.dealNumber || 'Unnumbered deal' }}</span><small>{{ formatDate(row.createdAt) }}</small></div></template>
+          <template #cell(customer)="{ row }"><div class="workspace-record max-w-[180px]"><strong>{{ customerName(row) }}</strong><small>{{ row.customer?.mobile || 'Mobile not available' }}</small></div></template>
+          <template #cell(asset)="{ row }"><div class="workspace-record max-w-[190px]"><strong>{{ row.project?.name || row.projectTitle || 'Project not linked' }}</strong><small>{{ row.unit?.unitNumber || row.unitCode ? `Unit ${row.unit?.unitNumber || row.unitCode}` : 'Unit not assigned' }}</small></div></template>
+          <template #cell(value)="{ row }"><span class="financial-amount">{{ formatCurrency(row.dealValue ?? row.askingPrice) }}</span></template>
+          <template #cell(stage)="{ row }"><WorkspaceStatusBadge :label="formatStageName(row.status)" :tone="stageTone(row.status)" /></template>
+          <template #cell(closeDate)="{ row }"><div class="workspace-record"><strong>{{ formatDate(row.closeDate) }}</strong><small>{{ row.closeDate ? 'Expected close' : 'Not scheduled' }}</small></div></template>
+          <template #cell(owner)="{ row }"><div class="workspace-record"><strong>{{ ownerName(row) }}</strong><small>Deal owner</small></div></template>
+          <template #cell(actions)="{ row }"><router-link :to="`/app/deals/${row._id || row.id}`" class="financial-action financial-action--primary" aria-label="Open deal" @click.stop><AppIcon name="arrowRight" :size="14" /></router-link></template>
+        </AppTable>
+      </div>
+
+      <!-- Mobile Deal Cards Feed (< 640px) -->
+      <div class="block sm:hidden space-y-3">
+        <!-- Empty State -->
+        <div v-if="filteredDeals.length === 0" class="py-12 text-center text-slate-400 bg-surface border border-default rounded-2xl p-6">
+          <p class="font-bold text-slate-800 dark:text-slate-200 text-sm">No deals in this view</p>
+          <p class="text-xs text-slate-400 mt-1">Clear filters or create a new deal to get started.</p>
+        </div>
+
+        <!-- Deal Cards Feed -->
+        <div
+          v-else
+          v-for="deal in filteredDeals"
+          :key="deal._id || deal.id"
+          class="bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 rounded-2xl p-4 shadow-[0_2px_10px_rgba(0,0,0,0.03)] space-y-3 active:scale-[0.99] transition-all cursor-pointer"
+          @click="openDeal(deal)"
+        >
+          <!-- Header: Deal Number + Status Badge -->
+          <div class="flex items-start justify-between gap-2.5">
+            <div class="min-w-0 flex-1">
+              <span class="inline-block font-mono text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-neutral-800 text-slate-700 dark:text-slate-300">
+                {{ deal.dealNumber || 'Unnumbered deal' }}
+              </span>
+              <h3 class="font-bold text-base text-slate-900 dark:text-slate-100 tracking-tight mt-1 truncate">
+                {{ customerName(deal) }}
+              </h3>
+              <div v-if="deal.customer?.mobile" class="text-xs text-slate-500 font-mono mt-0.5">
+                {{ deal.customer.mobile }}
+              </div>
+            </div>
+            <div class="shrink-0" @click.stop>
+              <WorkspaceStatusBadge :label="formatStageName(deal.status)" :tone="stageTone(deal.status)" />
+            </div>
+          </div>
+
+          <!-- Project & Asset Info -->
+          <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-neutral-850 border border-slate-100 dark:border-neutral-800/80 text-xs flex items-center justify-between">
+            <div class="min-w-0 pr-2">
+              <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Project & Unit</span>
+              <span class="font-semibold text-slate-800 dark:text-slate-200 truncate block text-xs mt-0.5">
+                {{ deal.project?.name || deal.projectTitle || 'Project not linked' }}
+              </span>
+            </div>
+            <span v-if="deal.unit?.unitNumber || deal.unitCode" class="shrink-0 text-[11px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/60">
+              Unit {{ deal.unit?.unitNumber || deal.unitCode }}
+            </span>
+          </div>
+
+          <!-- Financial Value & Owner Grid -->
+          <div class="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100 dark:border-neutral-800">
+            <div>
+              <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Deal Value</span>
+              <span class="font-extrabold text-sm text-emerald-600 dark:text-emerald-400 mt-0.5 block">
+                {{ formatCurrency(deal.dealValue ?? deal.askingPrice) }}
+              </span>
+            </div>
+            <div>
+              <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Owner / Agent</span>
+              <span class="font-semibold text-slate-700 dark:text-slate-200 truncate block mt-0.5">
+                {{ ownerName(deal) }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Action Footer -->
+          <div class="flex items-center justify-between pt-2.5 border-t border-slate-100 dark:border-neutral-800 text-xs" @click.stop>
+            <span class="text-[11px] text-slate-400">
+              {{ deal.closeDate ? `Close: ${formatDate(deal.closeDate)}` : `Created: ${formatDate(deal.createdAt)}` }}
+            </span>
+            <router-link
+              :to="`/app/deals/${deal._id || deal.id}`"
+              class="h-8 px-3 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 font-bold text-xs inline-flex items-center gap-1.5 hover:bg-blue-100 transition-colors"
+            >
+              <span>View Deal</span>
+              <AppIcon name="arrowRight" :size="12" />
+            </router-link>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <DealPipelineBoard v-else-if="viewMode === 'kanban'" :deals="filteredDeals" @stageChange="handleStageChange" @cancelDeal="triggerCancel" @startWizard="triggerWizard" />
 

@@ -111,3 +111,8 @@ export async function addEducationLeadFollowUp(leadId, data) {
   return res.data;
 }
 
+export async function distributeEducationLeadsBatchRoundRobin(data) {
+  const res = await apiClient.post('/education/leads/distribute-batch-round-robin', data);
+  return res.data;
+}
+

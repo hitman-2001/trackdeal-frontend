@@ -19,18 +19,6 @@
           title="Edit student lead"
         >
           <PhPencilSimple :size="14" weight="bold" />
-          <span>Edit Lead</span>
-        </button>
-
-        <button
-          v-if="canCreateStudent && lead && lead.status !== 'enrolled' && lead.status !== 'converted'"
-          type="button"
-          @click="openEnrollModal"
-          class="btn btn-primary btn-sm h-8 px-3.5 text-xs font-bold flex items-center gap-1.5 shadow-xs"
-          title="Convert lead to enrolled student"
-        >
-          <PhCheckCircle :size="15" weight="bold" />
-          <span>Convert to Student</span>
         </button>
       </div>
     </div>
@@ -78,12 +66,6 @@
                 <PhEnvelopeSimple :size="13" />
                 <span>{{ lead.email }}</span>
               </span>
-              <span
-                v-if="lead.classInterestId?.name || lead.className"
-                class="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 font-semibold text-[11px] border border-blue-200/60 dark:border-blue-800/60"
-              >
-                {{ lead.classInterestId?.name || lead.className }}
-              </span>
             </div>
           </div>
 
@@ -114,11 +96,11 @@
             <button
               type="button"
               @click="isStatusOpen = true"
-              class="h-9 px-3 rounded-xl border border-default bg-slate-50 dark:bg-slate-800/70 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 dark:hover:bg-blue-950/30 text-slate-700 dark:text-slate-200 font-semibold text-xs inline-flex items-center gap-1.5 transition-all shadow-2xs active:scale-95"
+              class="h-9 px-3.5 rounded-xl bg-primary text-white hover:opacity-95 font-bold text-xs inline-flex items-center gap-1.5 shadow-xs transition-all active:scale-95"
               title="Update status & disposition"
             >
-              <PhArrowsClockwise :size="15" weight="bold" class="text-blue-600" />
-              <span>Status</span>
+              <PhArrowsClockwise :size="15" weight="bold" />
+              <span>Update Status</span>
             </button>
 
             <button
@@ -129,16 +111,6 @@
             >
               <PhBell :size="15" weight="bold" class="text-amber-600" />
               <span>Reminder</span>
-            </button>
-
-            <button
-              type="button"
-              @click="isLogOpen = true"
-              class="h-9 px-3.5 rounded-xl bg-primary text-white hover:opacity-95 font-bold text-xs inline-flex items-center gap-1.5 shadow-xs transition-all active:scale-95"
-              title="Log interaction or remark"
-            >
-              <PhNotePencil :size="15" weight="bold" />
-              <span>Log Remark</span>
             </button>
           </div>
         </div>
@@ -206,13 +178,6 @@
                 </div>
               </div>
 
-              <!-- Interested Class -->
-              <div class="space-y-0.5">
-                <span class="text-[10px] uppercase font-bold text-slate-400 block">Interested Class / Batch</span>
-                <span class="font-medium text-slate-800 dark:text-slate-200">
-                  {{ lead.classInterestId?.name || lead.className || '—' }}
-                </span>
-              </div>
 
               <!-- Assigned Staff -->
               <div class="space-y-0.5">
@@ -511,14 +476,6 @@
       @success="handleReminderSuccess"
     />
 
-    <EducationLeadLogDrawer
-      :isOpen="isLogOpen"
-      :leadId="lead?._id"
-      :lead="lead"
-      @close="isLogOpen = false"
-      @success="handleLogSuccess"
-    />
-
     <EducationLeadStatusModal
       :isOpen="isStatusOpen"
       :lead="lead"
@@ -526,53 +483,6 @@
       @success="handleStatusSuccess"
     />
 
-    <!-- Enroll Drawer -->
-    <AppDrawer
-      :isOpen="showEnroll"
-      :title="lead ? `Enroll ${lead.firstName} ${lead.lastName || ''}` : 'Enroll Student'"
-      subtitle="Select the batch or class to complete enrollment"
-      width="440px"
-      @close="showEnroll = false"
-    >
-      <form id="enroll-page-form" class="space-y-4 text-xs" @submit.prevent="confirmEnroll">
-        <p
-          v-if="enrollError"
-          class="text-xs text-red-500 bg-red-50 dark:bg-red-950/40 p-2.5 rounded-lg border border-red-200"
-        >
-          {{ enrollError }}
-        </p>
-        <label class="space-y-1 text-xs block font-medium text-slate-700 dark:text-slate-300">
-          <span>Class *</span>
-          <select
-            v-model="enrollClassId"
-            required
-            class="w-full border border-default rounded-xl px-3 py-2 bg-surface text-xs focus:border-primary outline-none"
-          >
-            <option value="" disabled>Select class to enroll into</option>
-            <option v-for="c in classes" :key="c._id" :value="c._id">
-              {{ c.name }} ({{ c.code }})
-            </option>
-          </select>
-        </label>
-      </form>
-      <template #footer>
-        <button
-          type="button"
-          class="btn btn-secondary btn-sm"
-          @click="showEnroll = false"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          form="enroll-page-form"
-          class="btn btn-primary btn-sm"
-          :disabled="enrolling"
-        >
-          {{ enrolling ? "Enrolling..." : "Confirm Enrollment" }}
-        </button>
-      </template>
-    </AppDrawer>
   </div>
 </template>
 
@@ -602,15 +512,12 @@ import StatusBadge from '@/components/StatusBadge.vue';
 import AppDrawer from '@/components/AppDrawer.vue';
 import EducationLeadEditDrawer from '../components/EducationLeadEditDrawer.vue';
 import EducationLeadReminderModal from '../components/EducationLeadReminderModal.vue';
-import EducationLeadLogDrawer from '../components/EducationLeadLogDrawer.vue';
 import EducationLeadStatusModal from '../components/EducationLeadStatusModal.vue';
 
 import {
   fetchEducationLead,
   fetchEducationLeadActivityCenter,
   logEducationLeadActivity,
-  enrollEducationLead,
-  fetchEducationClasses,
 } from '../api/endpoints';
 
 const props = defineProps({
@@ -622,22 +529,15 @@ const router = useRouter();
 const store = useStore();
 
 const canEditLead = computed(() => Boolean(store.getters['permissions/hasCapability']?.('leads.update')));
-const canCreateStudent = computed(() => Boolean(store.getters['permissions/hasCapability']?.('students.create')));
 
 const lead = ref(props.initialLead || null);
 const loading = ref(true);
 const activityData = ref({ activities: [], notes: [], followUps: [] });
-const classes = ref([]);
 
 // Modals / Drawers state
 const isEditOpen = ref(false);
 const isReminderOpen = ref(false);
-const isLogOpen = ref(false);
 const isStatusOpen = ref(false);
-const showEnroll = ref(false);
-const enrollClassId = ref('');
-const enrolling = ref(false);
-const enrollError = ref('');
 
 // Quick inline logger state
 const quickLogging = ref(false);
@@ -811,17 +711,8 @@ async function loadLeadDetails() {
   }
 }
 
-async function loadClasses() {
-  try {
-    const res = await fetchEducationClasses({ limit: 100 });
-    classes.value = res.data || [];
-  } catch {
-    classes.value = [];
-  }
-}
-
 onMounted(async () => {
-  await Promise.all([loadLeadDetails(), loadClasses()]);
+  await loadLeadDetails();
 });
 
 async function saveQuickRemark() {
@@ -861,37 +752,9 @@ function handleReminderSuccess() {
   loadLeadDetails();
 }
 
-function handleLogSuccess() {
-  isLogOpen.value = false;
-  loadLeadDetails();
-}
-
 function handleStatusSuccess() {
   isStatusOpen.value = false;
   loadLeadDetails();
-}
-
-function openEnrollModal() {
-  enrollClassId.value = lead.value?.classInterestId?._id || lead.value?.classInterestId || '';
-  enrollError.value = '';
-  showEnroll.value = true;
-}
-
-async function confirmEnroll() {
-  if (!lead.value || !enrollClassId.value) return;
-  enrolling.value = true;
-  enrollError.value = '';
-  try {
-    await enrollEducationLead(lead.value._id, {
-      classId: enrollClassId.value,
-    });
-    showEnroll.value = false;
-    router.push('/app/students');
-  } catch (err) {
-    enrollError.value = err.data?.message || err.message || 'Unable to enroll.';
-  } finally {
-    enrolling.value = false;
-  }
 }
 
 // Helpers

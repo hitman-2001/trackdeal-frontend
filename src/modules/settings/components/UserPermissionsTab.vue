@@ -391,6 +391,7 @@ const EDUCATION_ACTIVE_CATEGORIES = [
       { key: 'leads.create', label: 'Create Student Inquiry', description: 'Register new admission inquiries and student leads' },
       { key: 'leads.update', label: 'Update Inquiries & Status', description: 'Edit inquiry details and update status & sub-status' },
       { key: 'leads.delete', label: 'Delete Student Inquiries', description: 'Remove inactive or cancelled student inquiry records' },
+      { key: 'leads.bulk_delete', label: 'Bulk Delete Student Leads', description: 'Select and delete multiple student leads simultaneously from list view' },
       { key: 'leads.assign', label: 'Assign Leads to Staff', description: 'Assign student inquiries to counselors and staff members' },
       { key: 'leads.bulk_upload', label: 'Bulk Import Leads (Excel)', description: 'Import student inquiries in bulk via Excel or CSV file' },
     ]
@@ -454,7 +455,9 @@ const REAL_ESTATE_ACTIVE_CATEGORIES = [
       { key: 'leads.create', label: 'Create Sales Lead', description: 'Capture new property buyer and investor leads' },
       { key: 'leads.update', label: 'Update Lead Details', description: 'Edit requirements, budget, follow-up notes, and stages' },
       { key: 'leads.delete', label: 'Delete Sales Leads', description: 'Remove invalid or spam lead records' },
+      { key: 'leads.bulk_delete', label: 'Bulk Delete Sales Leads', description: 'Select and delete multiple sales leads simultaneously from list view' },
       { key: 'leads.assign', label: 'Assign Leads to Agents', description: 'Transfer or assign leads to sales agents and consultants' },
+      { key: 'leads.bulk_upload', label: 'Bulk Import Leads (Excel)', description: 'Import property leads in bulk via Excel or CSV file' },
     ]
   },
   {

@@ -30,7 +30,7 @@
             </th>
             <th
               v-if="$slots.rowActions"
-              class="app-data-table__actions-cell text-right select-none"
+              class="app-data-table__actions-cell text-center select-none"
             >
               {{ rowActionsLabel }}
             </th>
@@ -42,7 +42,7 @@
             <tr v-for="i in skeletonRows" :key="`sk-${i}`">
               <td v-if="selectable" class="app-data-table__select-cell"><div class="skeleton w-4 h-4 rounded mx-auto" /></td>
               <td v-for="col in columns" :key="col.key"><div class="skeleton h-3.5 rounded" :style="{ width: `${50 + (i * 13) % 40}%` }" /></td>
-              <td v-if="$slots.rowActions" class="app-data-table__actions-cell"><div class="skeleton h-3.5 w-12 rounded ml-auto" /></td>
+              <td v-if="$slots.rowActions" class="app-data-table__actions-cell"><div class="skeleton h-3.5 w-8 rounded mx-auto" /></td>
             </tr>
           </template>
 
@@ -81,7 +81,7 @@
                 </slot>
               </td>
               <td v-if="$slots.rowActions" class="app-data-table__actions-cell" @click.stop>
-                <div class="flex items-center justify-end gap-1">
+                <div class="flex items-center justify-center gap-1">
                   <slot name="rowActions" :row="row" />
                 </div>
               </td>

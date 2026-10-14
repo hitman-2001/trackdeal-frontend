@@ -102,7 +102,7 @@
         <!-- Incomplete Rows Notice -->
         <div v-if="invalidRowsCount > 0" class="p-3 bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 rounded-xl text-amber-800 dark:text-amber-300 text-[11px] flex items-start gap-2">
           <PhWarningCircle :size="16" class="shrink-0 mt-0.5 text-amber-600" />
-          <span>{{ invalidRowsCount }} row(s) are missing required student/lead Name or Mobile number and will be skipped during import.</span>
+          <span>{{ invalidRowsCount }} row(s) are missing required {{ isEducation ? 'Student Name, Primary Mobile, or School Name' : 'Name or Mobile' }} and will be skipped during import.</span>
         </div>
 
         <!-- Progress Bar when uploading -->
@@ -129,7 +129,8 @@
                   <th class="py-2 px-3">Status</th>
                   <th class="py-2 px-3">Name</th>
                   <th class="py-2 px-3">Mobile</th>
-                  <th class="py-2 px-3">{{ isEducation ? 'Class / Interest' : 'Property / Budget' }}</th>
+                  <th v-if="isEducation" class="py-2 px-3">School Name</th>
+                  <th class="py-2 px-3">{{ isEducation ? 'Class / Standard' : 'Property / Budget' }}</th>
                   <th class="py-2 px-3">Notes</th>
                 </tr>
               </thead>
@@ -156,8 +157,13 @@
                   </td>
                   <td class="py-2 px-3 font-semibold">{{ row.firstName }} {{ row.lastName }}</td>
                   <td class="py-2 px-3 font-mono text-[11px]">{{ row.mobile || '—' }}</td>
+                  <td v-if="isEducation" class="py-2 px-3 font-medium text-slate-700 dark:text-slate-200">
+                    {{ row.schoolName || '—' }}
+                  </td>
                   <td class="py-2 px-3">
-                    <span v-if="isEducation" class="text-slate-600 dark:text-slate-300">{{ row.classInterest || row.grade || '—' }}</span>
+                    <span v-if="isEducation" class="text-slate-600 dark:text-slate-300">
+                      {{ row.standard || row.classInterest || row.grade || '—' }}
+                    </span>
                     <span v-else class="text-slate-600 dark:text-slate-300">{{ row.propertyType || row.budget || '—' }}</span>
                   </td>
                   <td class="py-2 px-3 text-slate-400 truncate max-w-[140px]">{{ row.notes || '—' }}</td>
@@ -328,8 +334,16 @@ function normalizeRow(row) {
 
   const firstName = findVal(['firstname', 'studentname', 'name', 'first']) || 'Unknown';
   const lastName = findVal(['lastname', 'surname', 'last']);
-  const rawMobile = findVal(['mobile', 'phone', 'contact', 'cell', 'tel']);
+  const rawMobile = findVal(['mobile', 'phone', 'contact', 'cell', 'tel', 'primaryphone', 'primarymobile']);
   const mobile = cleanMobileNumber(rawMobile);
+  const rawAltMobile = findVal(['altmobile', 'alternatemobile', 'altphone', 'alternatephone', 'secondarymobile', 'secondaryphone', 'otherphone']);
+  const alternativeMobile = cleanMobileNumber(rawAltMobile);
+  const schoolName = findVal(['schoolname', 'school', 'institute', 'institution', 'college', 'collegename']);
+  const institutionType = findVal(['institutiontype', 'insttype', 'type']);
+  const educationBoard = findVal(['educationboard', 'board', 'boardname']);
+  const standard = findVal(['standard', 'grade', 'standardgrade', 'class']);
+  const academicStream = findVal(['academicstream', 'stream']);
+  const currentCoaching = findVal(['currentcoaching', 'coaching', 'privateclasses', 'classes', 'tuition']);
   const email = findVal(['email', 'mail']);
   const classInterest = findVal(['class', 'grade', 'batch', 'course']);
   const parentName = findVal(['parent', 'guardian', 'father', 'mother']);
@@ -338,20 +352,45 @@ function normalizeRow(row) {
   const notes = findVal(['note', 'inquiry', 'remarks', 'comment']);
   const status = findVal(['status']) || 'new';
 
-  const isValid = Boolean(firstName && firstName !== 'Unknown' && mobile && mobile.length >= 7);
-  const errorReason = !mobile
-    ? 'Missing mobile number'
-    : mobile.length < 7
-    ? 'Mobile number too short (minimum 7 digits)'
-    : (!firstName || firstName === 'Unknown')
-    ? 'Missing name'
-    : '';
+  let isValid = false;
+  let errorReason = '';
+
+  if (isEducation.value) {
+    if (!mobile) {
+      errorReason = 'Missing primary phone number';
+    } else if (mobile.length < 7) {
+      errorReason = 'Primary phone number too short (minimum 7 digits)';
+    } else if (!firstName || firstName === 'Unknown') {
+      errorReason = 'Missing student name';
+    } else if (!schoolName) {
+      errorReason = 'Missing school name (mandatory)';
+    } else {
+      isValid = true;
+    }
+  } else {
+    if (!mobile) {
+      errorReason = 'Missing mobile number';
+    } else if (mobile.length < 7) {
+      errorReason = 'Mobile number too short (minimum 7 digits)';
+    } else if (!firstName || firstName === 'Unknown') {
+      errorReason = 'Missing name';
+    } else {
+      isValid = true;
+    }
+  }
 
   return {
     firstName,
     lastName,
     mobile,
     rawMobile,
+    alternativeMobile,
+    schoolName,
+    institutionType,
+    educationBoard,
+    standard,
+    academicStream,
+    currentCoaching,
     email,
     classInterest,
     parentName,
@@ -368,10 +407,86 @@ async function downloadTemplate() {
   const XLSX = await import('xlsx');
   const templateData = isEducation.value
     ? [
-        ['First Name', 'Last Name', 'Mobile', 'Email', 'Class Interest', 'Parent Name', 'Status', 'Notes'],
-        ['Aarav', 'Sharma', '9876543210', 'aarav.parent@gmail.com', '12th JEE', 'Rajesh Sharma', 'new', 'Interested in weekend batch'],
-        ['Priya', 'Verma', '9876543211', 'priya.v@gmail.com', '10th Foundation', 'Sunita Verma', 'contacted', 'Requested fee details'],
-        ['Rohan', 'Iyer', '9876543212', 'rohan.iyer@gmail.com', 'NEET Batch 2026', 'Venkat Iyer', 'new', 'Hostel requirement'],
+        [
+          'Student Name',
+          'Last Name',
+          'Primary Phone',
+          'Alternate Phone',
+          'School Name',
+          'Institution Type',
+          'Education Board',
+          'Standard',
+          'Academic Stream',
+          'Current Coaching',
+          'Class Interest',
+          'Parent Name',
+          'Status',
+          'Notes',
+        ],
+        [
+          'Aarav',
+          'Sharma',
+          '9876543210',
+          '9876543299',
+          'Delhi Public School',
+          'School',
+          'CBSE',
+          '10th CBSE',
+          '',
+          'Allen Career Institute',
+          '10th Foundation',
+          'Rajesh Sharma',
+          'new',
+          'Interested in weekend batch',
+        ],
+        [
+          'Priya',
+          'Verma',
+          '9876543211',
+          '',
+          'St. Xavier High School',
+          'School',
+          'ICSE',
+          '8th ICSE',
+          '',
+          '',
+          '8th ICSE All Subjects',
+          'Sunita Verma',
+          'contacted',
+          'Requested fee details',
+        ],
+        [
+          'Rohan',
+          'Patil',
+          '9876543212',
+          '9812345678',
+          'Balmohan Vidyamandir',
+          'Private Classes',
+          'State Board',
+          '10th SSC',
+          '',
+          'Mahesh Tutorials',
+          '10th SSC Booster',
+          'Suresh Patil',
+          'new',
+          'Morning timings preferred',
+        ],
+        [
+          'Ananya',
+          'Deshmukh',
+          '9876543213',
+          '',
+          'Podar International School',
+          'School',
+          'CBSE',
+          'Class 11',
+          'Science',
+          '',
+          '11th Science PCM',
+          'Nitin Deshmukh',
+          'follow_up',
+          'JEE Advanced aspirant',
+        ],
       ]
     : [
         ['First Name', 'Last Name', 'Mobile', 'Email', 'Property Type', 'Budget', 'Source', 'Notes'],
@@ -443,6 +558,13 @@ async function executeImport() {
           firstName: row.firstName,
           lastName: row.lastName || '',
           mobile: row.mobile,
+          alternativeMobile: row.alternativeMobile || undefined,
+          schoolName: row.schoolName,
+          institutionType: row.institutionType || undefined,
+          educationBoard: row.educationBoard || undefined,
+          standard: row.standard || undefined,
+          academicStream: row.academicStream || undefined,
+          currentCoaching: row.currentCoaching || undefined,
           email: row.email || undefined,
           parentName: row.parentName || undefined,
           classInterestId: classInterestId || undefined,

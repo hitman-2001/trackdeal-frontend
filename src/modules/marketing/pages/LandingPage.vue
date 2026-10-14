@@ -21,18 +21,47 @@
           </router-link>
         </div>
 
-        <button class="lp-hamburger" :aria-expanded="mobileOpen" @click="mobileOpen = !mobileOpen" type="button" aria-label="Toggle navigation">
-          <span :class="['lp-hamburger-line', mobileOpen && 'open-1']"></span>
-          <span :class="['lp-hamburger-line', mobileOpen && 'open-2']"></span>
+        <button
+          class="lp-hamburger"
+          :class="{ 'is-active': mobileOpen }"
+          :aria-expanded="mobileOpen"
+          @click="mobileOpen = !mobileOpen"
+          type="button"
+          aria-label="Toggle navigation"
+        >
+          <span class="lp-hamburger-line"></span>
+          <span class="lp-hamburger-line"></span>
+          <span class="lp-hamburger-line"></span>
         </button>
       </div>
 
-      <nav v-if="mobileOpen" class="lp-mobile-menu" @click="mobileOpen = false">
-        <a href="#features">Platform</a>
-        <a href="#workflow">How it works</a>
-        <a href="#faq">FAQ</a>
-        <router-link to="/login" class="lp-btn-primary" style="width: 100%; justify-content: center;">Get started →</router-link>
-      </nav>
+      <!-- Backdrop for mobile menu -->
+      <Transition name="lp-fade">
+        <div
+          v-if="mobileOpen"
+          class="lp-mobile-backdrop"
+          @click="mobileOpen = false"
+          aria-hidden="true"
+        ></div>
+      </Transition>
+
+      <!-- Slide down mobile menu -->
+      <Transition name="lp-slide">
+        <nav v-if="mobileOpen" class="lp-mobile-menu" @click="mobileOpen = false">
+          <div class="lp-mobile-links">
+            <a href="#features" class="lp-mobile-nav-link">Platform</a>
+            <a href="#workflow" class="lp-mobile-nav-link">How it works</a>
+            <a href="#faq" class="lp-mobile-nav-link">FAQ</a>
+          </div>
+          <div class="lp-mobile-actions">
+            <router-link to="/login" class="lp-btn-ghost lp-mobile-btn-ghost">Sign in</router-link>
+            <router-link to="/login" class="lp-btn-primary lp-mobile-btn-primary">
+              Get started
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </router-link>
+          </div>
+        </nav>
+      </Transition>
     </header>
 
     <main>
@@ -593,48 +622,126 @@ onUnmounted(() => {
 .lp-hamburger {
   display: none;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
   gap: 5px;
+  width: 38px;
+  height: 38px;
   padding: 8px;
   background: none;
   border: none;
   cursor: pointer;
   margin-left: auto;
+  border-radius: 8px;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s;
+}
+.lp-hamburger:active {
+  background: rgba(15, 23, 42, 0.06);
 }
 .lp-hamburger-line {
-  width: 22px;
+  width: 20px;
   height: 2px;
   background: var(--lp-text);
   border-radius: 2px;
-  transition: transform 0.25s, opacity 0.25s;
+  transition: transform 0.25s ease, opacity 0.2s ease;
+  transform-origin: center;
 }
-.lp-hamburger-line.open-1 {
+.lp-hamburger.is-active .lp-hamburger-line:nth-child(1) {
   transform: translateY(7px) rotate(45deg);
 }
-.lp-hamburger-line.open-2 {
+.lp-hamburger.is-active .lp-hamburger-line:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+.lp-hamburger.is-active .lp-hamburger-line:nth-child(3) {
   transform: translateY(-7px) rotate(-45deg);
 }
 
+.lp-mobile-backdrop {
+  position: fixed;
+  inset: 60px 0 0 0;
+  background: rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 98;
+}
+
 .lp-mobile-menu {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  z-index: 99;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 8px 24px 20px;
-  background: rgba(250, 249, 246, 0.98);
+  gap: 12px;
+  padding: 16px 20px 24px;
+  background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(20px);
-  border-bottom: 1px solid #e5e5dd;
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.12);
 }
-.lp-mobile-menu a {
+.lp-mobile-links {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.lp-mobile-nav-link {
   color: var(--lp-text);
   text-decoration: none;
   font-size: 15px;
   font-weight: 500;
-  padding: 12px 8px;
+  padding: 10px 12px;
   border-radius: 8px;
-  transition: background 0.2s;
-  display: block;
+  transition: background 0.15s, color 0.15s;
 }
-.lp-mobile-menu a:hover {
-  background: rgba(0, 0, 0, 0.04);
+.lp-mobile-nav-link:hover,
+.lp-mobile-nav-link:active {
+  background: rgba(10, 110, 240, 0.08);
+  color: #0a6ef0;
+}
+.lp-mobile-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid #e2e8f0;
+}
+.lp-mobile-btn-ghost {
+  width: 100%;
+  justify-content: center;
+  padding: 11px;
+  font-size: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+.lp-mobile-btn-primary {
+  width: 100%;
+  justify-content: center;
+  padding: 12px;
+  font-size: 14px;
+  border-radius: 10px;
+}
+
+/* Mobile Nav Transitions */
+.lp-fade-enter-active,
+.lp-fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.lp-fade-enter-from,
+.lp-fade-leave-to {
+  opacity: 0;
+}
+.lp-slide-enter-active,
+.lp-slide-leave-active {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+}
+.lp-slide-enter-from,
+.lp-slide-leave-to {
+  transform: translateY(-8px);
+  opacity: 0;
 }
 
 /* ─── HERO ──────────────────────────────────── */
@@ -1531,15 +1638,348 @@ onUnmounted(() => {
   .lp-mockup-body { grid-template-columns: 1fr; }
   .lp-mock-sidebar { display: none; }
 }
+
 @media (max-width: 640px) {
-  .lp-hero { padding: 100px 20px 60px; }
-  .lp-bento { grid-template-columns: 1fr; }
-  .bento-wide, .bento-narrow, .bento-mid { grid-column: span 1; }
-  .mock-stats { grid-template-columns: 1fr 1fr; }
-  .mock-cards-row .mock-card:last-child { display: none; }
-  .lp-cta-card { padding: 50px 24px; }
-  .lp-footer-inner { flex-direction: column; align-items: flex-start; gap: 20px; }
-  .lp-footer-links { margin-left: 0; flex-wrap: wrap; }
+  .lp-container {
+    padding: 0 16px;
+  }
+
+  /* Nav */
+  .lp-nav-inner {
+    height: 60px;
+    padding: 0 16px;
+  }
+  .lp-brand-logo {
+    height: 28px;
+    max-width: 140px;
+  }
+
+  /* Hero */
+  .lp-hero {
+    padding: 84px 16px 44px;
+    min-height: auto;
+  }
+  .lp-hero-content {
+    gap: 16px;
+  }
+  .lp-badge {
+    font-size: 11px;
+    padding: 4px 10px;
+    max-width: 100%;
+    line-height: 1.4;
+    text-align: left;
+  }
+  .lp-hero-h1 {
+    font-size: clamp(28px, 8vw, 40px);
+    line-height: 1.15;
+    letter-spacing: -0.035em;
+  }
+  .lp-hero-sub {
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 0 4px;
+  }
+  .lp-hero-cta {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+  .lp-hero-cta .lp-btn-primary,
+  .lp-hero-cta .lp-btn-ghost {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 18px;
+    font-size: 14px;
+  }
+  .lp-hero-footnote {
+    font-size: 10.5px;
+    padding: 0 8px;
+    line-height: 1.4;
+  }
+
+  /* Mockup */
+  .lp-mockup-wrap {
+    margin-top: 14px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px -8px rgba(33, 60, 49, 0.15);
+  }
+  .lp-mockup-chrome {
+    padding: 7px 12px;
+  }
+  .lp-mock-main {
+    padding: 12px;
+    gap: 12px;
+  }
+  .mock-topbar {
+    align-items: center;
+  }
+  .mock-title-line {
+    width: 100px;
+    height: 10px;
+  }
+  .mock-sub-line {
+    width: 65px;
+    height: 6px;
+    margin-top: 5px;
+  }
+  .mock-badge-pill {
+    font-size: 9px;
+    padding: 3px 8px;
+  }
+  .mock-stats {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .mock-stat {
+    padding: 8px 6px;
+    border-radius: 8px;
+  }
+  .mock-stat span {
+    font-size: 8.5px;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mock-stat strong {
+    font-size: 15px;
+    margin-bottom: 4px;
+    letter-spacing: -0.03em;
+  }
+  .stat-bar {
+    height: 2px;
+  }
+  .mock-cards-row {
+    gap: 6px;
+  }
+  .mock-card {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+  .mock-cards-row .mock-card:last-child {
+    display: none;
+  }
+  .mc-avatar {
+    width: 24px;
+    height: 24px;
+    font-size: 8px;
+  }
+  .mc-info strong {
+    font-size: 11px;
+  }
+  .mc-info span {
+    font-size: 9.5px;
+  }
+  .mc-status {
+    font-size: 8.5px;
+    padding: 2px 6px;
+  }
+
+  /* Features */
+  .lp-features {
+    padding: 56px 16px;
+  }
+  .lp-section-header {
+    margin: 0 auto 32px;
+  }
+  .lp-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+  }
+  .lp-section-h2 {
+    font-size: clamp(24px, 7vw, 34px);
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+  .lp-section-sub {
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+  .lp-bento {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .bento-wide, .bento-narrow, .bento-mid {
+    grid-column: span 1;
+  }
+  .bento-card {
+    padding: 20px 16px;
+    border-radius: 16px;
+  }
+  .bento-card h3 {
+    font-size: 17px;
+    margin: 12px 0 8px;
+  }
+  .bento-card p {
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .bld-card {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+  .bld-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 9px;
+  }
+  .bld-meta strong {
+    font-size: 11px;
+  }
+  .bld-meta span {
+    font-size: 10px;
+  }
+  .bld-followup {
+    font-size: 10px;
+    padding: 7px 10px;
+    line-height: 1.4;
+  }
+  .bento-mobile-demo {
+    gap: 6px;
+  }
+  .bmd-btn {
+    font-size: 10px;
+    padding: 7px 4px;
+    gap: 4px;
+  }
+
+  /* Workflow */
+  .lp-workflow {
+    padding: 56px 16px;
+  }
+  .lp-steps {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-top: 28px;
+  }
+  .lp-step {
+    padding: 16px;
+    border-radius: 16px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  }
+  .step-number {
+    font-size: 10px;
+    margin-bottom: 12px;
+    display: inline-block;
+    padding: 2px 6px;
+    background: rgba(10, 110, 240, 0.08);
+    border-radius: 4px;
+  }
+  .step-body {
+    gap: 10px;
+  }
+  .step-icon-wrap {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+  .step-body h3 {
+    font-size: 16px;
+  }
+  .step-body p {
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  /* FAQ */
+  .lp-faq {
+    padding: 56px 16px;
+  }
+  .faq-q {
+    padding: 16px 0;
+    font-size: 13.5px;
+    gap: 12px;
+  }
+  .faq-a {
+    font-size: 12.5px;
+    line-height: 1.65;
+    padding: 0 0 16px;
+  }
+
+  /* CTA */
+  .lp-cta {
+    padding: 32px 16px 56px;
+  }
+  .lp-cta-card {
+    padding: 36px 18px;
+    border-radius: 20px;
+  }
+  .lp-cta-h2 {
+    font-size: clamp(22px, 6.5vw, 32px);
+    line-height: 1.2;
+    margin: 10px 0 12px;
+  }
+  .lp-cta-card > .cta-content > p {
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+  .cta-actions {
+    width: 100%;
+  }
+  .cta-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 13px 20px;
+    font-size: 14px;
+    border-radius: 12px;
+  }
+  .cta-footnote {
+    font-size: 11px;
+    text-align: center;
+  }
+
+  /* Footer */
+  .lp-footer {
+    padding: 36px 16px 28px;
+  }
+  .lp-footer-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+  .lp-footer-brand p {
+    font-size: 12px;
+  }
+  .lp-footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    margin-left: 0;
+    width: 100%;
+  }
+  .lp-footer-links a {
+    padding: 4px 0;
+    font-size: 12.5px;
+  }
+  .lp-footer-copy {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    gap: 12px;
+    padding-top: 16px;
+  }
+}
+
+@media (max-width: 380px) {
+  .lp-hero-h1 {
+    font-size: 26px;
+  }
+  .mock-stats {
+    gap: 4px;
+  }
+  .mock-stat {
+    padding: 6px 4px;
+  }
+  .mock-stat strong {
+    font-size: 13px;
+  }
+  .bmd-btn {
+    font-size: 9px;
+    padding: 6px 2px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

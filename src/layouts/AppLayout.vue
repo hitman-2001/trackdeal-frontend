@@ -329,13 +329,16 @@
         />
       </Transition>
       <Transition name="bottom-sheet">
-        <aside
+        <div
           v-if="mobileMenuOpen"
-          class="fixed bottom-0 left-0 right-0 z-[1010] flex flex-col bg-white dark:bg-neutral-900 shadow-2xl lg:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Navigation Menu"
+          class="mobile-menu-drawer fixed bottom-0 left-0 right-0 z-[1010] flex flex-col bg-white dark:bg-neutral-900 shadow-2xl lg:hidden"
           style="border-radius: 20px 20px 0 0; max-height: 85vh;"
         >
           <!-- Drag Handle -->
-          <div class="flex justify-center pt-3 pb-1 shrink-0" @click="mobileMenuOpen = false">
+          <div class="flex justify-center pt-3 pb-1 shrink-0 cursor-pointer" @click="mobileMenuOpen = false">
             <div class="w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></div>
           </div>
 
@@ -351,7 +354,8 @@
               </div>
               <button
                 @click="mobileMenuOpen = false"
-                class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
+                aria-label="Close menu"
               >
                 <PhX :size="16" weight="bold" />
               </button>
@@ -362,9 +366,9 @@
           <div class="px-5 pt-1 pb-3 shrink-0">
             <button
               @click="mobileMenuOpen = false; globalSearchOpen = true"
-              class="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              class="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
             >
-              <PhMagnifyingGlass :size="16" weight="bold" class="text-slate-400" />
+              <PhMagnifyingGlass :size="16" weight="bold" class="text-slate-500 dark:text-slate-400 shrink-0" />
               <span>Search leads, students, courses...</span>
             </button>
           </div>
@@ -386,18 +390,20 @@
                 class="flex items-center h-12 px-3 gap-3.5 rounded-2xl text-[13px] font-semibold transition-all"
                 :class="isActiveRoute(item)
                   ? 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300'
-                  : 'text-slate-600 dark:text-slate-300 active:bg-slate-50 dark:active:bg-slate-800'"
+                  : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/60 active:bg-slate-100 dark:active:bg-slate-800'"
               >
                 <div
-                  class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors"
+                  class="mobile-nav-icon-box w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors"
                   :class="isActiveRoute(item)
-                    ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'"
+                    ? 'active bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'"
                 >
                   <component
                     :is="item.icon"
                     :size="18"
-                    :weight="isActiveRoute(item) ? 'bold' : 'regular'"
+                    weight="bold"
+                    class="shrink-0"
+                    style="color: inherit;"
                   />
                 </div>
                 <span class="truncate">{{ item.name }}</span>
@@ -405,7 +411,7 @@
                   v-if="isActiveRoute(item)"
                   :size="14"
                   weight="bold"
-                  class="ml-auto text-blue-400 dark:text-blue-500"
+                  class="ml-auto text-blue-500 dark:text-blue-400 shrink-0"
                 />
               </router-link>
             </template>
@@ -421,7 +427,7 @@
               <span>Sign Out</span>
             </button>
           </div>
-        </aside>
+        </div>
       </Transition>
     </Teleport>
 
@@ -439,9 +445,11 @@
         />
       </Transition>
       <Transition name="slide-right">
-        <aside
+        <div
           v-if="notificationsOpen"
-          class="fixed right-0 top-0 h-full w-80 z-[1010] border-l border-slate-200 dark:border-neutral-800 flex flex-col shadow-2xl bg-white dark:bg-neutral-900"
+          role="region"
+          aria-label="Notifications"
+          class="notifications-drawer fixed right-0 top-0 h-full w-80 z-[1010] border-l border-slate-200 dark:border-neutral-800 flex flex-col shadow-2xl bg-white dark:bg-neutral-900"
         >
           <header
             class="h-16 px-4 border-b border-slate-200 dark:border-neutral-800 flex items-center justify-between shrink-0"
@@ -519,7 +527,7 @@
               </p>
             </div>
           </div>
-        </aside>
+        </div>
       </Transition>
     </Teleport>
 
@@ -600,7 +608,6 @@ import {
   PhBank,
   PhScroll,
   PhStudent,
-  PhChalkboardTeacher,
   PhBookOpen,
   PhGraduationCap,
   PhChartLineUp,
@@ -937,13 +944,6 @@ const educationMenuGroups = [
         icon: PhStudent,
         permission: "leads:read",
         module: "students",
-      },
-      {
-        name: "Classes & Batches",
-        to: "/app/classes",
-        icon: PhChalkboardTeacher,
-        permission: "leads:read",
-        module: "classes",
       },
     ],
   },
@@ -2135,5 +2135,44 @@ const vClickOutside = {
   .dark .content {
     background-color: #0a0f1a !important;
   }
+}
+
+/* Mobile Bottom Sheet Menu Items & Icons High Contrast */
+.mobile-menu-drawer .mobile-nav-icon-box {
+  background-color: #f1f5f9;
+  color: #334155 !important;
+}
+.mobile-menu-drawer .mobile-nav-icon-box svg {
+  color: #334155 !important;
+  fill: currentColor !important;
+  opacity: 1 !important;
+}
+.dark .mobile-menu-drawer .mobile-nav-icon-box {
+  background-color: #1e293b;
+  color: #cbd5e1 !important;
+}
+.dark .mobile-menu-drawer .mobile-nav-icon-box svg {
+  color: #cbd5e1 !important;
+  fill: currentColor !important;
+  opacity: 1 !important;
+}
+
+.mobile-menu-drawer .mobile-nav-icon-box.active {
+  background-color: #dbeafe !important;
+  color: #2563eb !important;
+}
+.mobile-menu-drawer .mobile-nav-icon-box.active svg {
+  color: #2563eb !important;
+  fill: currentColor !important;
+  opacity: 1 !important;
+}
+.dark .mobile-menu-drawer .mobile-nav-icon-box.active {
+  background-color: rgba(30, 58, 138, 0.45) !important;
+  color: #60a5fa !important;
+}
+.dark .mobile-menu-drawer .mobile-nav-icon-box.active svg {
+  color: #60a5fa !important;
+  fill: currentColor !important;
+  opacity: 1 !important;
 }
 </style>

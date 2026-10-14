@@ -30,16 +30,51 @@
                 v-if="lead.mobile"
                 :href="'tel:' + lead.mobile"
                 class="font-mono text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-semibold flex items-center gap-1 hover:underline"
-                title="Click to call"
+                title="Click to call primary mobile"
               >
                 <PhPhone :size="13" weight="bold" />
                 <span>{{ lead.mobile }}</span>
+              </a>
+              <a
+                v-if="lead.alternativeMobile"
+                :href="'tel:' + lead.alternativeMobile"
+                class="font-mono text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-medium flex items-center gap-1 hover:underline"
+                title="Click to call alternate mobile"
+              >
+                <span class="text-[10px] text-slate-400">Alt:</span>
+                <span>{{ lead.alternativeMobile }}</span>
               </a>
               <span
                 v-if="lead.classInterestId?.name"
                 class="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 font-semibold text-[11px] border border-blue-200/60 dark:border-blue-800/60"
               >
                 {{ lead.classInterestId.name }}
+              </span>
+            </div>
+
+            <!-- School & Standard Meta -->
+            <div v-if="lead.schoolName || lead.standard || lead.educationBoard" class="flex items-center gap-2 text-xs pt-1 flex-wrap">
+              <div v-if="lead.schoolName" class="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <PhGraduationCap :size="14" class="text-blue-600 dark:text-blue-400 shrink-0" />
+                <span>{{ lead.schoolName }}</span>
+              </div>
+              <span
+                v-if="lead.standard"
+                class="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 font-semibold text-[10px] border border-purple-200/60 dark:border-purple-800/60"
+              >
+                {{ lead.standard }}
+              </span>
+              <span
+                v-if="lead.educationBoard"
+                class="px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 font-semibold text-[10px] border border-amber-200/60 dark:border-amber-800/60"
+              >
+                {{ lead.educationBoard }}
+              </span>
+              <span
+                v-if="lead.academicStream"
+                class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 font-semibold text-[10px] border border-emerald-200/60 dark:border-emerald-800/60"
+              >
+                {{ lead.academicStream }}
               </span>
             </div>
           </div>
@@ -194,6 +229,54 @@
             </span>
           </div>
 
+          <!-- School Name -->
+          <div v-if="lead.schoolName" class="flex flex-col gap-0.5">
+            <span class="text-[11px] text-slate-400 font-medium">School / College</span>
+            <span class="font-medium text-slate-800 dark:text-slate-200">
+              {{ lead.schoolName }}
+            </span>
+          </div>
+
+          <!-- Institution Type -->
+          <div v-if="lead.institutionType" class="flex flex-col gap-0.5">
+            <span class="text-[11px] text-slate-400 font-medium">Institution Type</span>
+            <span class="font-medium text-slate-800 dark:text-slate-200">
+              {{ lead.institutionType }}
+            </span>
+          </div>
+
+          <!-- Education Board -->
+          <div v-if="lead.educationBoard" class="flex flex-col gap-0.5">
+            <span class="text-[11px] text-slate-400 font-medium">Education Board</span>
+            <span class="font-medium text-slate-800 dark:text-slate-200">
+              {{ lead.educationBoard }}
+            </span>
+          </div>
+
+          <!-- Standard / Grade -->
+          <div v-if="lead.standard" class="flex flex-col gap-0.5">
+            <span class="text-[11px] text-slate-400 font-medium">Standard / Grade</span>
+            <span class="font-medium text-slate-800 dark:text-slate-200">
+              {{ lead.standard }}
+            </span>
+          </div>
+
+          <!-- Academic Stream -->
+          <div v-if="lead.academicStream" class="flex flex-col gap-0.5">
+            <span class="text-[11px] text-slate-400 font-medium">Academic Stream</span>
+            <span class="font-medium text-slate-800 dark:text-slate-200">
+              {{ lead.academicStream }}
+            </span>
+          </div>
+
+          <!-- Current Coaching -->
+          <div v-if="lead.currentCoaching" class="flex flex-col gap-0.5 col-span-full">
+            <span class="text-[11px] text-slate-400 font-medium">Current Coaching / Private Classes</span>
+            <span class="font-medium text-slate-800 dark:text-slate-200">
+              {{ lead.currentCoaching }}
+            </span>
+          </div>
+
           <!-- Email if present -->
           <div v-if="lead.email" class="flex flex-col gap-0.5">
             <span class="text-[11px] text-slate-400 font-medium">Email Address</span>
@@ -262,11 +345,11 @@
           </p>
           <button
             type="button"
-            @click="triggerLogUpdate"
+            @click="showStatusModal = true"
             class="btn btn-primary btn-sm inline-flex items-center gap-1.5"
           >
-            <PhPlus :size="13" weight="bold" />
-            <span>Log First Interaction</span>
+            <PhArrowsClockwise :size="13" weight="bold" />
+            <span>Update Status</span>
           </button>
         </div>
 
@@ -404,6 +487,7 @@ import {
   PhChatCircleDots,
   PhPlus,
   PhArrowsClockwise,
+  PhGraduationCap,
 } from '@phosphor-icons/vue';
 import AppDrawer from '@/components/AppDrawer.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
@@ -415,7 +499,7 @@ const props = defineProps({
   leadId: { type: String, default: '' },
 });
 
-const emit = defineEmits(['close', 'log-interaction', 'updated']);
+const emit = defineEmits(['close', 'updated']);
 
 const showStatusModal = ref(false);
 
@@ -533,10 +617,6 @@ async function loadData() {
   } finally {
     loading.value = false;
   }
-}
-
-function triggerLogUpdate() {
-  emit('log-interaction', lead.value);
 }
 
 watch(

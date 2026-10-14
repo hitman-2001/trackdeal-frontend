@@ -18,9 +18,6 @@
           </div>
           <div class="text-xs text-slate-500 font-mono flex items-center gap-2 mt-0.5">
             <span>{{ lead.mobile }}</span>
-            <span v-if="lead.classInterestId?.name" class="font-sans text-slate-400">
-              · {{ lead.classInterestId.name }}
-            </span>
           </div>
         </div>
         <div class="flex items-center gap-1.5 shrink-0">

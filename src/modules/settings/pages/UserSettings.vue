@@ -728,7 +728,7 @@ async function confirmDeleteUser(user) {
   const name = getUserDisplayName(user);
   const result = await Swal.fire({
     title: "Delete User Account",
-    text: `Are you sure you want to delete ${name}? This action will revoke their access immediately.`,
+    text: `Are you sure you want to delete ${name}? All leads and pending tasks currently assigned to them will be automatically reassigned to the organization administrator, and their login access will be revoked immediately.`,
     icon: "warning",
     showCancelButton: true,
     confirmButtonColor: "#e11d48",
@@ -742,7 +742,7 @@ async function confirmDeleteUser(user) {
   try {
     await deleteUserMutation(userId);
     store.dispatch("notifications/triggerToast", {
-      message: `User ${name} has been deleted successfully.`,
+      message: `User ${name} has been deleted. Assigned leads and tasks were reassigned to admin.`,
       type: "success",
     });
   } catch (err) {
