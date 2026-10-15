@@ -323,17 +323,31 @@ async function handleSave() {
 
     const updated = await updateEducationLead(leadId, payload);
 
+    const prevStatusLabel = (() => {
+      const norm = normalizeStatus(props.lead?.status);
+      const match = statusOptions.find(s => s.value === norm);
+      return match ? match.label : (props.lead?.status ? String(props.lead.status).replace(/_/g, ' ') : '');
+    })();
+
+    const subText = selectedSubStatus.value ? ` (${selectedSubStatus.value})` : '';
+    const cleanSummary = prevStatusLabel && prevStatusLabel.toLowerCase() !== currentStatusLabel.value.toLowerCase()
+      ? `Status changed from ${prevStatusLabel} to ${currentStatusLabel.value}${subText}`
+      : `Status updated to ${currentStatusLabel.value}${subText}`;
+
+    const cleanDescription = remarks.value.trim() ? remarks.value.trim() : cleanSummary;
+
     // Also record an audit activity log entry
     try {
       const actPayload = {
         type: 'stage_change',
-        summary: `Status updated to ${currentStatusLabel.value} (${selectedSubStatus.value || 'No sub-status'})`,
-        description: remarks.value.trim() || `Status updated to ${currentStatusLabel.value}`,
+        summary: cleanSummary,
+        description: cleanDescription,
         customerResponse: selectedSubStatus.value,
         status: 'completed',
       };
       if (payload.nextFollowUpAt) {
         actPayload.nextFollowUpAt = payload.nextFollowUpAt;
+        actPayload.followUpNotes = remarks.value.trim() || `Follow-up: ${currentStatusLabel.value}${subText}`;
       }
       await logEducationLeadActivity(leadId, actPayload);
     } catch (logErr) {

@@ -194,7 +194,7 @@
             :class="getStatusClass(row.status)"
           >
             <span class="w-1.5 h-1.5 rounded-full" :class="getStatusDotClass(row.status)"></span>
-            {{ row.status }}
+            {{ getStatusLabel(row.status) }}
           </span>
         </template>
 
@@ -297,7 +297,7 @@
             :class="getStatusClass(row.status)"
           >
             <span class="w-1.5 h-1.5 rounded-full" :class="getStatusDotClass(row.status)"></span>
-            {{ row.status }}
+            {{ getStatusLabel(row.status) }}
           </span>
         </div>
 
@@ -382,62 +382,212 @@
     <AppDrawer
       :isOpen="showViewDrawer"
       title="Student Profile"
-      subtitle="Read-only view of enrolled student details and batch assignment"
-      width="520px"
+      subtitle="Read-only view of enrolled student details, academic background, and batch assignment"
+      width="560px"
       @close="showViewDrawer = false"
     >
       <div v-if="viewingStudent" class="space-y-4 text-xs">
         <!-- Header Profile Card -->
-        <div class="bg-slate-50 dark:bg-slate-850/50 p-4 rounded-xl border border-default space-y-2">
-          <div class="flex items-center justify-between">
-            <h3 class="font-heading font-extrabold text-base text-slate-900 dark:text-slate-100">
-              {{ viewingStudent.firstName }} {{ viewingStudent.lastName || '' }}
-            </h3>
+        <div class="bg-slate-50 dark:bg-slate-850/50 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-2.5">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h3 class="font-heading font-extrabold text-base text-slate-900 dark:text-slate-100">
+                {{ viewingStudent.firstName }} {{ viewingStudent.lastName || '' }}
+              </h3>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                {{ getStudentVal('schoolName') || 'Enrolled Student' }}
+              </p>
+            </div>
+            <!-- Status Badge: User requested "just the status will be enrolled" -->
             <span
-              class="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border"
+              class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border inline-flex items-center gap-1 shrink-0"
               :class="getStatusClass(viewingStudent.status)"
             >
-              {{ viewingStudent.status }}
+              <span class="w-1.5 h-1.5 rounded-full" :class="getStatusDotClass(viewingStudent.status)"></span>
+              <span>{{ getStatusLabel(viewingStudent.status) }}</span>
             </span>
           </div>
-          <div class="flex items-center gap-2 text-slate-400 font-mono text-[11px] flex-wrap">
-            <span>Enrolled: <strong class="text-slate-700 dark:text-slate-200">{{ formatDate(viewingStudent.enrollmentDate) }}</strong></span>
-            <span v-if="viewingStudent.leadId">•</span>
-            <span v-if="viewingStudent.leadId" class="text-primary font-semibold">Converted from Lead</span>
+
+          <div class="flex items-center gap-2 pt-2 border-t border-slate-200/70 dark:border-slate-800 text-slate-500 font-mono text-[11px] flex-wrap">
+            <span>Enrolled: <strong class="text-slate-700 dark:text-slate-200 font-sans">{{ formatDate(viewingStudent.enrollmentDate) }}</strong></span>
+            <span v-if="viewingStudent.leadId" class="text-slate-300 dark:text-slate-700">&bull;</span>
+            <span v-if="viewingStudent.leadId" class="text-blue-600 dark:text-blue-400 font-semibold font-sans">
+              Converted from Lead
+            </span>
+            <span v-if="viewingStudent.classId?.name" class="text-slate-300 dark:text-slate-700">&bull;</span>
+            <span v-if="viewingStudent.classId?.name" class="text-purple-600 dark:text-purple-400 font-semibold font-sans">
+              Batch: {{ viewingStudent.classId.name }}
+            </span>
           </div>
         </div>
 
-        <!-- Details Grid -->
-        <div class="grid grid-cols-2 gap-3">
-          <div class="p-3 bg-surface border border-default rounded-xl space-y-1">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Mobile Phone</span>
-            <p class="font-bold text-slate-900 dark:text-slate-100 text-xs font-tabular">{{ viewingStudent.mobile || '—' }}</p>
-          </div>
+        <!-- Section 1: Contact Information (Matching Add Modal) -->
+        <div class="space-y-2">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1">
+            Contact Information
+          </span>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div class="p-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl space-y-1">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                <PhPhone :size="11" /> Primary Mobile
+              </span>
+              <p class="font-bold text-slate-900 dark:text-slate-100 text-xs font-tabular">
+                {{ getStudentVal('mobile') || '—' }}
+              </p>
+            </div>
 
-          <div class="p-3 bg-surface border border-default rounded-xl space-y-1">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Email Address</span>
-            <p class="font-medium text-slate-800 dark:text-slate-200 text-xs truncate" :title="viewingStudent.email">{{ viewingStudent.email || '—' }}</p>
-          </div>
+            <div class="p-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl space-y-1">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                <PhPhone :size="11" /> Alternate Phone
+              </span>
+              <p class="font-bold text-slate-900 dark:text-slate-100 text-xs font-tabular">
+                {{ getStudentVal('alternativeMobile') || '—' }}
+              </p>
+            </div>
 
-          <div class="p-3 bg-surface border border-default rounded-xl space-y-1">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Parent / Guardian</span>
-            <p class="font-bold text-slate-900 dark:text-slate-100 text-xs">{{ viewingStudent.parentName || '—' }}</p>
+            <div class="p-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl space-y-1 col-span-2">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                <PhEnvelopeSimple :size="11" /> Email Address
+              </span>
+              <p class="font-medium text-slate-800 dark:text-slate-200 text-xs truncate" :title="getStudentVal('email')">
+                {{ getStudentVal('email') || '—' }}
+              </p>
+            </div>
           </div>
+        </div>
 
-          <div class="p-3 bg-surface border border-default rounded-xl space-y-1">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Parent Contact</span>
-            <p class="font-bold text-slate-900 dark:text-slate-100 text-xs font-tabular">{{ viewingStudent.parentMobile || '—' }}</p>
-          </div>
+        <!-- Section 2: School & Academic Profile (Matching Add Modal) -->
+        <div class="space-y-2">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1">
+            School & Academic Profile
+          </span>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div class="p-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl space-y-1 col-span-2">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                <PhBuildings :size="11" /> College / School Name
+              </span>
+              <p class="font-bold text-slate-900 dark:text-slate-100 text-xs">
+                {{ getStudentVal('schoolName') || '—' }}
+              </p>
+            </div>
 
-          <div v-if="viewingStudent.schoolName" class="p-3 bg-surface border border-default rounded-xl space-y-1 col-span-2">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">College / School Name</span>
-            <p class="font-bold text-slate-900 dark:text-slate-100 text-xs">{{ viewingStudent.schoolName }}</p>
-          </div>
+            <div class="p-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl space-y-1">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Institution Type</span>
+              <p class="font-bold text-slate-900 dark:text-slate-100 text-xs">
+                {{ getStudentVal('institutionType') || '—' }}
+              </p>
+            </div>
 
-          <div v-if="viewingStudent.notes" class="p-3 bg-surface border border-default rounded-xl space-y-1 col-span-2">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Counselor / Academic Notes</span>
-            <p class="text-slate-600 dark:text-slate-300 text-xs leading-relaxed whitespace-pre-wrap">{{ viewingStudent.notes }}</p>
+            <div class="p-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl space-y-1">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Education Board</span>
+              <p class="font-bold text-slate-900 dark:text-slate-100 text-xs">
+                {{ getStudentVal('educationBoard') || '—' }}
+              </p>
+            </div>
+
+            <div class="p-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl space-y-1">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Standard / Grade</span>
+              <p class="font-bold text-slate-900 dark:text-slate-100 text-xs">
+                {{ getStudentVal('standard') || '—' }}
+              </p>
+            </div>
+
+            <div class="p-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl space-y-1">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Academic Stream</span>
+              <p class="font-bold text-slate-900 dark:text-slate-100 text-xs">
+                {{ getStudentVal('academicStream') || '—' }}
+              </p>
+            </div>
+
+            <div class="p-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl space-y-1 col-span-2">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Current Coaching / Private Classes</span>
+              <p class="font-medium text-slate-800 dark:text-slate-200 text-xs">
+                {{ getStudentVal('currentCoaching') || '—' }}
+              </p>
+            </div>
           </div>
+        </div>
+
+        <!-- Section 3: Guardian & Location Details (Matching Add Modal) -->
+        <div class="space-y-2">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1">
+            Guardian & Admission Details
+          </span>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div class="p-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl space-y-1">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                <PhUser :size="11" /> Parent / Guardian
+              </span>
+              <p class="font-bold text-slate-900 dark:text-slate-100 text-xs">
+                {{ getStudentVal('parentName') || '—' }}
+              </p>
+            </div>
+
+            <div class="p-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl space-y-1">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                <PhPhone :size="11" /> Parent Contact
+              </span>
+              <p class="font-bold text-slate-900 dark:text-slate-100 text-xs font-tabular">
+                {{ getStudentVal('parentMobile') || '—' }}
+              </p>
+            </div>
+
+            <div class="p-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl space-y-1">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Inquiry Source</span>
+              <p class="font-bold text-slate-900 dark:text-slate-100 text-xs capitalize">
+                {{ formatLeadSource(getStudentVal('source')) || '—' }}
+              </p>
+            </div>
+
+            <div class="p-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl space-y-1">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Assigned Batch</span>
+              <p class="font-bold text-slate-900 dark:text-slate-100 text-xs">
+                {{ viewingStudent.classId?.name || 'General Roster' }}
+              </p>
+            </div>
+
+            <div v-if="getStudentVal('city') || getStudentVal('address')" class="p-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl space-y-1 col-span-2">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                <PhMapPin :size="11" /> Location
+              </span>
+              <p class="font-medium text-slate-800 dark:text-slate-200 text-xs">
+                {{ [getStudentVal('city'), getStudentVal('address')].filter(Boolean).join(', ') }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Custom Attributes (Salesforce Object Manager) -->
+        <div v-if="hasCustomFields(viewingStudent)" class="space-y-2">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1">
+            Custom Attributes
+          </span>
+          <div class="grid grid-cols-2 gap-2.5">
+            <template
+              v-for="(val, key) in (viewingStudent.customFields || viewingStudent.leadId?.customFields || {})"
+              :key="key"
+            >
+              <div
+                v-if="val !== undefined && val !== null && String(val).trim() !== ''"
+                class="p-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl space-y-1"
+              >
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 capitalize">
+                  {{ formatCustomFieldLabel(key) }}
+                </span>
+                <p class="font-bold text-slate-900 dark:text-slate-100 text-xs">
+                  {{ val }}
+                </p>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Section 4: Academic Notes -->
+        <div v-if="viewingStudent.notes || getStudentVal('notes')" class="p-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl space-y-1">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Academic Notes</span>
+          <p class="text-slate-600 dark:text-slate-300 text-xs leading-relaxed whitespace-pre-wrap">
+            {{ viewingStudent.notes || getStudentVal('notes') }}
+          </p>
         </div>
       </div>
       <template #footer>
@@ -458,8 +608,8 @@
     <AppDrawer
       :isOpen="showModal"
       :title="editing ? 'Edit Student Record' : 'Enroll New Student'"
-      :subtitle="editing ? 'Update enrolled student details and contact information' : 'Directly register an enrolled student record'"
-      width="520px"
+      :subtitle="editing ? 'Update enrolled student details and academic information' : 'Directly register an enrolled student record'"
+      width="560px"
       @close="showModal = false"
     >
       <form id="student-form" class="space-y-4 text-xs" @submit.prevent="save">
@@ -478,8 +628,82 @@
             <input v-model="form.mobile" required placeholder="10-digit mobile" class="modal-form-input" />
           </div>
           <div class="modal-form-group">
+            <label class="modal-form-label">Alternate Phone</label>
+            <input v-model="form.alternativeMobile" placeholder="Alternate phone" class="modal-form-input" />
+          </div>
+          <div class="modal-form-group col-span-full">
             <label class="modal-form-label">Email Address</label>
             <input v-model="form.email" type="email" placeholder="student@example.com" class="modal-form-input" />
+          </div>
+          <div class="modal-form-group col-span-full">
+            <label class="modal-form-label">College / School Name <span class="required-star">*</span></label>
+            <input v-model="form.schoolName" placeholder="e.g. St. Xavier's College / Delhi Public School" class="modal-form-input" />
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Institution Type</label>
+            <select v-model="form.institutionType" class="modal-form-select">
+              <option value="">Select Institution Type</option>
+              <option value="School">School</option>
+              <option value="Private Classes">Private Classes</option>
+            </select>
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Education Board</label>
+            <select v-model="form.educationBoard" class="modal-form-select">
+              <option value="">Select Board</option>
+              <option value="CBSE">CBSE</option>
+              <option value="ICSE">ICSE</option>
+              <option value="State Board">State Board (SSC)</option>
+            </select>
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Standard / Grade</label>
+            <select v-model="form.standard" class="modal-form-select">
+              <option value="">Select Standard / Grade</option>
+              <option value="8">8</option>
+              <option value="9">9</option>
+              <option value="10">10</option>
+              <option value="11">11</option>
+              <option value="12">12</option>
+              <option
+                v-if="form.standard && !['8', '9', '10', '11', '12'].includes(String(form.standard))"
+                :value="form.standard"
+              >
+                {{ form.standard }}
+              </option>
+            </select>
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Academic Stream</label>
+            <select v-model="form.academicStream" class="modal-form-select">
+              <option value="">Select Stream</option>
+              <option value="Science">Science</option>
+              <option value="Commerce">Commerce</option>
+            </select>
+          </div>
+          <div class="modal-form-group col-span-full">
+            <label class="modal-form-label">Current Coaching / Private Classes</label>
+            <input v-model="form.currentCoaching" placeholder="e.g. Allen, Aakash, Mahesh Tutorials (if enrolled)" class="modal-form-input" />
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Inquiry Source</label>
+            <select v-model="form.source" class="modal-form-select">
+              <option value="walk_in">Walk-in</option>
+              <option value="website">Website</option>
+              <option value="referral">Referral</option>
+              <option value="whatsapp">WhatsApp</option>
+              <option value="campus">Campus</option>
+              <option value="manual_entry">Manual</option>
+            </select>
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-form-label">Student Status</label>
+            <select v-model="form.status" class="modal-form-select">
+              <option value="active">Enrolled (Active)</option>
+              <option value="inactive">Inactive</option>
+              <option value="graduated">Graduated</option>
+              <option value="dropped">Dropped</option>
+            </select>
           </div>
           <div class="modal-form-group">
             <label class="modal-form-label">Parent / Guardian Name</label>
@@ -489,19 +713,52 @@
             <label class="modal-form-label">Parent Mobile</label>
             <input v-model="form.parentMobile" placeholder="Parent mobile number" class="modal-form-input" />
           </div>
-          <div class="modal-form-group col-span-full">
-            <label class="modal-form-label">College / School Name</label>
-            <input v-model="form.schoolName" placeholder="e.g. St. Xavier's College / Delhi Public School" class="modal-form-input" />
+
+          <!-- Dynamic Custom Fields Group (Salesforce Object Manager) -->
+          <div v-if="customFieldsList.length > 0" class="modal-form-group col-span-full pt-2 border-t border-slate-100 dark:border-neutral-800 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Custom Attributes</span>
+              <span class="text-[10px] text-slate-400 font-medium">Object Manager Fields</span>
+            </div>
+            <div class="modal-form-grid">
+              <div
+                v-for="cf in customFieldsList"
+                :key="cf.key"
+                class="modal-form-group"
+              >
+                <label class="modal-form-label">
+                  {{ cf.label }}
+                  <span v-if="cf.required" class="required-star">*</span>
+                </label>
+                <!-- Dropdown Select -->
+                <select
+                  v-if="cf.type === 'select'"
+                  v-model="form.customFields[cf.key]"
+                  :required="cf.required"
+                  class="modal-form-select"
+                >
+                  <option value="">{{ cf.placeholder || `Select ${cf.label}` }}</option>
+                  <option
+                    v-for="(opt, idx) in cf.options"
+                    :key="idx"
+                    :value="opt.value || opt.label || opt"
+                  >
+                    {{ opt.label || opt.value || opt }}
+                  </option>
+                </select>
+                <!-- Text Input -->
+                <input
+                  v-else
+                  v-model="form.customFields[cf.key]"
+                  :required="cf.required"
+                  :placeholder="cf.placeholder || `Enter ${cf.label}`"
+                  class="modal-form-input"
+                />
+                <p v-if="cf.helpText" class="text-[10px] text-slate-400 mt-0.5">{{ cf.helpText }}</p>
+              </div>
+            </div>
           </div>
-          <div v-if="editing" class="modal-form-group col-span-full">
-            <label class="modal-form-label">Student Status</label>
-            <select v-model="form.status" class="modal-form-select">
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="graduated">Graduated</option>
-              <option value="dropped">Dropped</option>
-            </select>
-          </div>
+
           <div class="modal-form-group col-span-full">
             <label class="modal-form-label">Academic Notes</label>
             <textarea v-model="form.notes" rows="3" placeholder="Additional student background, goals, or fees schedule..." class="modal-form-textarea"></textarea>
@@ -607,6 +864,10 @@ import {
   PhBookOpen,
   PhX,
   PhSlidersHorizontal,
+  PhEnvelopeSimple,
+  PhBuildings,
+  PhUser,
+  PhMapPin,
 } from '@phosphor-icons/vue';
 import Swal from 'sweetalert2';
 import AppTable from '@/components/AppTable.vue';
@@ -618,6 +879,8 @@ import {
   updateEducationStudent,
   deleteEducationStudent
 } from '../api/endpoints';
+import { fetchCustomFields } from '@/api/customFields';
+import { formatLeadSource } from '@/utils/formatters';
 
 const store = useStore();
 const canCreateStudent = computed(() => {
@@ -646,7 +909,7 @@ const search = ref('');
 const statusFilter = ref('');
 
 const availableStatuses = [
-  { value: 'active', label: 'Active', badgeClass: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/40' },
+  { value: 'active', label: 'Enrolled', badgeClass: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/40' },
   { value: 'inactive', label: 'Inactive', badgeClass: 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border-amber-200/60 dark:border-amber-800/40' },
   { value: 'graduated', label: 'Graduated', badgeClass: 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border-blue-200/60 dark:border-blue-800/40' },
   { value: 'dropped', label: 'Dropped', badgeClass: 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border-rose-200/60 dark:border-rose-800/40' },
@@ -690,8 +953,17 @@ function clearAllFilters() {
 }
 
 function getStatusLabel(statusVal) {
-  const match = availableStatuses.find((s) => s.value === statusVal);
-  return match ? match.label : statusVal;
+  const s = String(statusVal || '').toLowerCase();
+  if (s === 'active' || s === 'enrolled') return 'Enrolled';
+  if (s === 'inactive') return 'Inactive';
+  if (s === 'graduated') return 'Graduated';
+  if (s === 'dropped') return 'Dropped';
+  return statusVal || 'Enrolled';
+}
+
+function getStudentVal(field) {
+  if (!viewingStudent.value) return '';
+  return viewingStudent.value[field] || viewingStudent.value.leadId?.[field] || '';
 }
 
 const pagination = ref({
@@ -715,27 +987,60 @@ const editing = ref(null);
 const form = ref({});
 let timer = null;
 
+const customFieldsList = ref([]);
+
+async function loadCustomFields() {
+  try {
+    const list = await fetchCustomFields('students');
+    customFieldsList.value = (Array.isArray(list) ? list : []).filter(f => !f.isStandard && f.isActive !== false);
+  } catch (e) {
+    customFieldsList.value = [];
+  }
+}
+
+function hasCustomFields(student) {
+  if (!student) return false;
+  const cf = student.customFields || student.leadId?.customFields;
+  if (!cf || typeof cf !== 'object') return false;
+  return Object.values(cf).some((v) => v !== undefined && v !== null && String(v).trim() !== '');
+}
+
+function formatCustomFieldLabel(key) {
+  if (!key) return '';
+  return String(key).replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 function blank() {
   return { 
     firstName: '', 
     lastName: '', 
     mobile: '', 
+    alternativeMobile: '',
     email: '', 
     parentName: '', 
     parentMobile: '', 
     schoolName: '',
+    institutionType: '',
+    educationBoard: '',
+    standard: '',
+    academicStream: '',
+    currentCoaching: '',
+    source: 'walk_in',
+    city: '',
+    address: '',
     status: 'active',
     notes: '',
+    customFields: {},
   };
 }
 
 function getStatusClass(status) {
   const s = String(status || '').toLowerCase();
-  if (s === 'active') return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border-emerald-500/20';
+  if (s === 'active' || s === 'enrolled') return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border-emerald-500/20';
   if (s === 'inactive') return 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border-amber-500/20';
   if (s === 'graduated') return 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border-blue-500/20';
   if (s === 'dropped') return 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border-rose-500/20';
-  return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700';
+  return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border-emerald-500/20';
 }
 
 function getStatusDotClass(status) {
@@ -827,31 +1132,58 @@ function openCreate() {
   editing.value = null;
   form.value = blank();
   error.value = '';
+  loadCustomFields();
   showModal.value = true;
 }
 
 function openEdit(row) {
   editing.value = row;
+  loadCustomFields();
   form.value = { 
     firstName: row.firstName || '',
     lastName: row.lastName || '',
     mobile: row.mobile || '',
-    email: row.email || '',
-    parentName: row.parentName || '',
-    parentMobile: row.parentMobile || '',
-    schoolName: row.schoolName || '',
+    alternativeMobile: row.alternativeMobile || row.leadId?.alternativeMobile || '',
+    email: row.email || row.leadId?.email || '',
+    parentName: row.parentName || row.leadId?.parentName || '',
+    parentMobile: row.parentMobile || row.leadId?.parentMobile || '',
+    schoolName: row.schoolName || row.leadId?.schoolName || '',
+    institutionType: row.institutionType || row.leadId?.institutionType || '',
+    educationBoard: row.educationBoard || row.leadId?.educationBoard || '',
+    standard: row.standard || row.leadId?.standard || '',
+    academicStream: row.academicStream || row.leadId?.academicStream || '',
+    currentCoaching: row.currentCoaching || row.leadId?.currentCoaching || '',
+    source: row.source || row.leadId?.source || 'walk_in',
+    city: row.city || row.leadId?.city || '',
+    address: row.address || row.leadId?.address || '',
+    classId: row.classId?._id || row.classId || '',
     status: row.status || 'active',
-    notes: row.notes || '',
+    notes: row.notes || row.leadId?.notes || '',
+    customFields: { ...(row.customFields || row.leadId?.customFields || {}) },
   };
   error.value = '';
   showModal.value = true;
 }
 
 async function save() {
+  // Validate required custom fields configured in Salesforce Object Manager
+  for (const cf of customFieldsList.value) {
+    if (cf.required) {
+      const val = form.value.customFields?.[cf.key];
+      if (val === undefined || val === null || String(val).trim() === '') {
+        error.value = `${cf.label} is mandatory.`;
+        return;
+      }
+    }
+  }
+
   saving.value = true;
   error.value = '';
   try {
-    const payload = { ...form.value };
+    const payload = { 
+      ...form.value,
+      customFields: form.value.customFields || {},
+    };
     if (editing.value) {
       await updateEducationStudent(editing.value._id, payload);
     } else {
@@ -914,6 +1246,7 @@ function formatDate(d) {
 }
 
 onMounted(async () => {
+  loadCustomFields();
   await load();
 });
 </script>

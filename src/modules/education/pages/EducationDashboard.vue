@@ -780,10 +780,11 @@
             <div
               v-for="fu in displayedFollowUps"
               :key="fu._id"
-              class="rounded-2xl border bg-white dark:bg-neutral-850 p-4 shadow-xs flex flex-col justify-between gap-3.5 transition-all hover:shadow-sm"
+              @click="openLeadDetails(fu.leadId)"
+              class="rounded-2xl border bg-white dark:bg-neutral-850 p-4 shadow-xs flex flex-col justify-between gap-3.5 transition-all hover:shadow-md cursor-pointer hover:border-slate-300 dark:hover:border-neutral-700"
               :class="fu.isOverdue
                 ? 'border-rose-300 dark:border-rose-900/80 ring-1 ring-rose-500/20 dark:ring-rose-500/10'
-                : 'border-slate-200/90 dark:border-neutral-800 hover:border-slate-300 dark:hover:border-neutral-700'"
+                : 'border-slate-200/90 dark:border-neutral-800'"
             >
               <!-- Card Header: Channel & Timing Badge -->
               <div class="flex items-center justify-between gap-2">
@@ -809,7 +810,7 @@
                 <div class="flex items-start justify-between gap-2">
                   <button
                     type="button"
-                    @click="openLeadDetails(fu.leadId)"
+                    @click.stop="openLeadDetails(fu.leadId)"
                     class="font-bold text-sm text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 text-left truncate cursor-pointer transition-colors"
                   >
                     {{ fu.studentName || 'Student Prospect' }}
@@ -868,7 +869,7 @@
                 <!-- Notes / Remarks Bubble -->
                 <div v-if="fu.notes" class="text-[11px] text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-neutral-800/80 p-2.5 rounded-lg border border-slate-200/60 dark:border-neutral-700/60 flex items-start gap-1.5 mt-1">
                   <PhChatText :size="13" class="text-slate-400 shrink-0 mt-0.5" />
-                  <p class="italic leading-relaxed line-clamp-2">"{{ fu.notes }}"</p>
+                  <p class="italic leading-relaxed line-clamp-2">"{{ formatLogText(fu.notes) }}"</p>
                 </div>
               </div>
 
@@ -877,6 +878,7 @@
                 <!-- Call -->
                 <a
                   :href="fu.contactNumber ? `tel:${fu.contactNumber}` : '#'"
+                  @click.stop
                   class="h-8 rounded-lg bg-white dark:bg-neutral-800 hover:bg-slate-100 dark:hover:bg-neutral-750 text-slate-700 dark:text-slate-200 border border-slate-200/90 dark:border-neutral-700 font-bold text-[11px] flex items-center justify-center gap-1 transition-colors"
                   title="Make phone call"
                 >
@@ -887,6 +889,7 @@
                 <!-- WhatsApp / Chat -->
                 <a
                   :href="formatWhatsAppLink(fu.contactNumber)"
+                  @click.stop
                   target="_blank"
                   rel="noopener"
                   class="h-8 rounded-lg bg-white dark:bg-neutral-800 hover:bg-slate-100 dark:hover:bg-neutral-750 text-slate-700 dark:text-slate-200 border border-slate-200/90 dark:border-neutral-700 font-bold text-[11px] flex items-center justify-center gap-1 transition-colors"
@@ -899,7 +902,7 @@
                 <!-- Status -->
                 <button
                   type="button"
-                  @click="openStatusModal(fu)"
+                  @click.stop="openStatusModal(fu)"
                   class="h-8 rounded-lg bg-white dark:bg-neutral-800 hover:bg-slate-100 dark:hover:bg-neutral-750 text-slate-700 dark:text-slate-200 border border-slate-200/90 dark:border-neutral-700 font-bold text-[11px] flex items-center justify-center gap-1 transition-colors cursor-pointer"
                   title="Update status"
                 >
@@ -910,7 +913,7 @@
                 <!-- Done -->
                 <button
                   type="button"
-                  @click="markComplete(fu)"
+                  @click.stop="markComplete(fu)"
                   :disabled="completingId === fu._id"
                   class="h-8 rounded-lg bg-white dark:bg-neutral-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-300 hover:border-emerald-300 dark:hover:border-emerald-800 text-slate-700 dark:text-slate-200 border border-slate-200/90 dark:border-neutral-700 font-bold text-[11px] flex items-center justify-center gap-1 transition-colors cursor-pointer"
                   title="Mark follow-up completed"
@@ -1030,6 +1033,7 @@ import {
 } from '../api/endpoints';
 import { updateLeadFollowUp } from '@/modules/leads/api/endpoints';
 import { getErrorMessage } from '@/utils/errorHandler';
+import { formatLeadSource } from '@/utils/formatters';
 
 // Drawers & Modals
 import EducationLeadDrawer from '../components/EducationLeadDrawer.vue';
@@ -1196,13 +1200,18 @@ const teamNotesList = computed(() => teamActivity.value?.recentNotes || []);
 // Lead Sources (Sober Business Palette)
 const leadSourcesList = computed(() => {
   const fromAnalytics = analytics.value?.sourceChartData || [];
-  if (fromAnalytics.length > 0) return fromAnalytics;
+  if (fromAnalytics.length > 0) {
+    return fromAnalytics.map((s) => ({
+      ...s,
+      label: formatLeadSource(s.label),
+    }));
+  }
 
   return [
-    { label: 'Walk-In / Campus', value: 34, percent: 34, color: '#0284c7' },
-    { label: 'Website & Forms', value: 28, percent: 28, color: '#0f766e' },
-    { label: 'Referrals & Direct', value: 20, percent: 20, color: '#15803d' },
-    { label: 'Social & Digital Ads', value: 18, percent: 18, color: '#475569' },
+    { label: 'Campus Walk-in', value: 34, percent: 34, color: '#0284c7' },
+    { label: 'Website & Digital', value: 28, percent: 28, color: '#0f766e' },
+    { label: 'Direct Referral', value: 20, percent: 20, color: '#15803d' },
+    { label: 'Social Media Ads', value: 18, percent: 18, color: '#475569' },
   ];
 });
 
@@ -1373,6 +1382,14 @@ function formatWhatsAppLink(mobile) {
 function formatStageName(status) {
   if (!status) return '-';
   return String(status).replace(/_/g, ' ');
+}
+
+function formatLogText(text) {
+  if (!text) return '';
+  return String(text)
+    .replace(/^Follow-up after (stage_change|status_change):\s*/i, 'Follow-up: ')
+    .replace(/^Follow-up after \w+:\s*/i, 'Follow-up: ')
+    .trim();
 }
 
 // Actions

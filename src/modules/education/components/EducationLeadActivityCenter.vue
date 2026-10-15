@@ -121,8 +121,8 @@
 
           <div>
             <span class="text-[10px] uppercase font-bold text-slate-400 block">Inquiry Source</span>
-            <span class="font-medium capitalize text-slate-800 dark:text-slate-200">
-              {{ studentLead.source ? studentLead.source.replace(/_/g, ' ') : '—' }}
+            <span class="font-medium text-slate-800 dark:text-slate-200">
+              {{ studentLead.source ? formatLeadSource(studentLead.source) : '—' }}
             </span>
           </div>
         </div>
@@ -416,6 +416,7 @@ import {
   logEducationLeadActivity,
   updateEducationLead,
 } from '../api/endpoints';
+import { formatLeadSource } from '@/utils/formatters';
 
 const props = defineProps({
   leadId: { type: String, required: true },

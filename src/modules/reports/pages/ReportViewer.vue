@@ -123,6 +123,7 @@ import {
   fetchEducationClasses,
 } from '@/modules/education/api/endpoints';
 import { fetchReportsDashboardStats } from '@/modules/reports/api/endpoints';
+import { formatLeadSource } from '@/utils/formatters';
 
 const route = useRoute();
 const store = useStore();
@@ -291,7 +292,10 @@ const reportKpis = computed(() => {
 const reportCharts = computed(() => {
   const trend = liveAnalytics.value?.trendChartData || [];
   const funnel = liveAnalytics.value?.funnelChartData || [];
-  const source = liveAnalytics.value?.sourceChartData || [];
+  const source = (liveAnalytics.value?.sourceChartData || []).map((s) => ({
+    ...s,
+    label: formatLeadSource(s.label),
+  }));
   const counselors = liveAnalytics.value?.counselorPerformanceData || [];
 
   return [
@@ -396,7 +400,7 @@ const records = computed(() => {
 
   const sources = liveAnalytics.value?.sourceChartData || [];
   return sources.map((s) => ({
-    'Channel / Stage': s.label,
+    'Channel / Stage': formatLeadSource(s.label),
     'Volume Count': s.value,
     'Yield Percentage': `${s.percent}%`,
   }));

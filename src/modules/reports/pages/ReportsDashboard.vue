@@ -501,6 +501,7 @@ import ReportCard from '../components/ReportCard.vue';
 import AnalyticsChart from '../components/AnalyticsChart.vue';
 import { fetchEducationAnalytics } from '@/modules/education/api/endpoints';
 import { fetchReportsDashboardStats } from '@/modules/reports/api/endpoints';
+import { formatLeadSource } from '@/utils/formatters';
 
 const store = useStore();
 const isEducation = computed(() => store.getters['organization/isEducationTenant']);
@@ -577,7 +578,11 @@ const funnelChartData = computed(() => {
 
 // Chart 3: Dynamic Donut Source Chart Data
 const sourceChartData = computed(() => {
-  return analyticsData.value?.sourceChartData || [];
+  const data = analyticsData.value?.sourceChartData || [];
+  return data.map((s) => ({
+    ...s,
+    label: formatLeadSource(s.label),
+  }));
 });
 
 // Chart 4: Dynamic Counselor / Agent Bar Performance Data

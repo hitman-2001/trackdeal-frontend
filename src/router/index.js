@@ -338,6 +338,12 @@ const routes = [
               import("@/modules/settings/pages/RoleSettings.vue"),
             meta: { requiresOrgType: ["AGENCY", "ENTERPRISE_AGENCY"] },
           },
+          {
+            path: "custom-fields",
+            name: "CustomFieldsSettings",
+            component: () =>
+              import("@/modules/settings/pages/CustomFieldsSettings.vue"),
+          },
         ],
       },
     ],

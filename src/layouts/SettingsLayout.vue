@@ -33,7 +33,7 @@ import { useRoute } from 'vue-router';
 import { useStore } from 'vuex';
 import {
   PhBuildings, PhMapPin, PhUsersThree,
-  PhShieldCheck,
+  PhShieldCheck, PhSlidersHorizontal,
 } from '@phosphor-icons/vue';
 
 const store = useStore();
@@ -45,6 +45,7 @@ const settingsMenu = computed(() => {
     { name: isEducation.value ? 'Institute Profile' : 'Organization', to: '/app/settings/org', icon: PhBuildings, permission: 'organizations.read' },
     { name: isEducation.value ? 'Campuses & Centres' : 'Branches', to: '/app/settings/branches', icon: PhMapPin, permission: 'branches.read' },
     { name: isEducation.value ? 'Staff Directory' : 'Users', to: '/app/settings/users', icon: PhUsersThree, permission: 'users.read' },
+    { name: 'Custom Fields', to: '/app/settings/custom-fields', icon: PhSlidersHorizontal, permission: 'organizations.read' },
   ];
   // Only include Roles & Permissions tab for non-education verticals
   if (!isEducation.value) {

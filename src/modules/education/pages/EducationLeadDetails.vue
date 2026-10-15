@@ -193,8 +193,8 @@
               <!-- Inquiry Source -->
               <div class="space-y-0.5">
                 <span class="text-[10px] uppercase font-bold text-slate-400 block">Inquiry Source</span>
-                <span class="font-medium capitalize text-slate-800 dark:text-slate-200">
-                  {{ lead.source ? lead.source.replace(/_/g, ' ') : 'Direct Inquiry' }}
+                <span class="font-medium text-slate-800 dark:text-slate-200">
+                  {{ lead.source ? formatLeadSource(lead.source) : 'Direct Inquiry' }}
                 </span>
               </div>
 
@@ -519,6 +519,7 @@ import {
   fetchEducationLeadActivityCenter,
   logEducationLeadActivity,
 } from '../api/endpoints';
+import { formatLeadSource } from '@/utils/formatters';
 
 const props = defineProps({
   initialLead: { type: Object, default: null },

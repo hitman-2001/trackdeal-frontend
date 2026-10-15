@@ -242,7 +242,7 @@
                     <span>{{ lead.mobile }}</span>
                   </a>
                   <span v-if="lead.source" class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-slate-300">
-                    {{ lead.source }}
+                    {{ formatLeadSource(lead.source) }}
                   </span>
                   <span v-if="lead.score" class="inline-flex items-center gap-1 font-bold text-amber-600 text-[10px]">
                     <PhStar :size="12" weight="fill" class="text-amber-500" />
@@ -413,6 +413,7 @@ import { PhTable, PhColumns, PhPlus, PhPhone, PhPhoneCall, PhWhatsappLogo, PhSta
 import apiClient from '@/api/client';
 import DeleteConfirmModal from '@/components/DeleteConfirmModal.vue';
 import LeadFilters from '../components/LeadFilters.vue';
+import { formatLeadSource } from '@/utils/formatters';
 
 function getWhatsAppUrl(mobile) {
   if (!mobile) return '#';

@@ -99,8 +99,8 @@
 
           <div>
             <span class="text-[10px] uppercase font-bold text-slate-400 block">Inquiry Source</span>
-            <span class="font-medium capitalize text-slate-800 dark:text-slate-200 truncate block mt-0.5">
-              {{ lead.source ? lead.source.replace(/_/g, ' ') : '—' }}
+            <span class="font-medium text-slate-800 dark:text-slate-200 truncate block mt-0.5">
+              {{ lead.source ? formatLeadSource(lead.source) : '—' }}
             </span>
           </div>
         </div>
@@ -201,8 +201,8 @@
           <!-- Inquiry Source -->
           <div class="flex flex-col gap-0.5">
             <span class="text-[11px] text-slate-400 font-medium">Inquiry Source</span>
-            <span class="font-medium text-slate-800 dark:text-slate-200 capitalize">
-              {{ lead.source ? lead.source.replace(/_/g, ' ') : '—' }}
+            <span class="font-medium text-slate-800 dark:text-slate-200">
+              {{ lead.source ? formatLeadSource(lead.source) : '—' }}
             </span>
           </div>
 
@@ -292,6 +292,26 @@
               {{ [lead.city, lead.address].filter(Boolean).join(', ') }}
             </span>
           </div>
+
+          <!-- Dynamic Custom Fields (Salesforce Object Manager) -->
+          <template v-if="lead.customFields && Object.keys(lead.customFields).length > 0">
+            <template
+              v-for="(val, key) in lead.customFields"
+              :key="key"
+            >
+              <div
+                v-if="val !== undefined && val !== null && String(val).trim() !== ''"
+                class="flex flex-col gap-0.5"
+              >
+                <span class="text-[11px] text-slate-400 font-medium capitalize">
+                  {{ formatCustomFieldLabel(key) }}
+                </span>
+                <span class="font-medium text-slate-800 dark:text-slate-200">
+                  {{ val }}
+                </span>
+              </div>
+            </template>
+          </template>
         </div>
       </div>
 
@@ -395,10 +415,10 @@
                     </span>
 
                     <span
-                      v-if="item.customerResponse || item.summary !== item.description"
+                      v-if="item.customerResponse || (item.summary && item.summary !== item.description && item.type !== 'stage_change')"
                       class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50"
                     >
-                      {{ item.customerResponse || item.summary }}
+                      {{ item.customerResponse || formatLogText(item.summary) }}
                     </span>
 
                     <span
@@ -416,10 +436,10 @@
 
                 <!-- Remarks / Notes Body -->
                 <p
-                  v-if="item.description || item.notes || item.content"
+                  v-if="item.description || item.notes || item.content || item.summary"
                   class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed pl-8 mt-1 whitespace-pre-line font-normal"
                 >
-                  {{ item.description || item.notes || item.content }}
+                  {{ formatLogText(item.description || item.notes || item.content || item.summary) }}
                 </p>
 
                 <!-- Follow-up Information if Scheduled -->
@@ -493,6 +513,7 @@ import AppDrawer from '@/components/AppDrawer.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import EducationLeadStatusModal from './EducationLeadStatusModal.vue';
 import { fetchEducationLead, fetchEducationLeadActivityCenter } from '../api/endpoints';
+import { formatLeadSource } from '@/utils/formatters';
 
 const props = defineProps({
   isOpen: { type: Boolean, required: true },
@@ -537,17 +558,48 @@ const upcomingFollowUp = computed(() => {
     .sort((a, b) => new Date(a.scheduledAt) - new Date(b.scheduledAt))[0] || null;
 });
 
+function formatLogText(text) {
+  if (!text) return '';
+  return String(text)
+    .replace(/^Follow-up after (stage_change|status_change):\s*/i, 'Follow-up: ')
+    .replace(/^Follow-up after \w+:\s*/i, 'Follow-up: ')
+    .trim();
+}
+
+function formatCustomFieldLabel(key) {
+  if (!key) return '';
+  return String(key).replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 // Unified Timeline
 const timelineItems = computed(() => {
   const items = [];
-  (activityData.value.activities || []).forEach((a) => {
+  const activities = activityData.value.activities || [];
+  const notes = activityData.value.notes || [];
+  const followUps = activityData.value.followUps || [];
+
+  // Track timestamps of follow-ups that were auto-created from activities
+  const coveredFollowUpTimes = new Set();
+
+  activities.forEach((a) => {
     items.push({ ...a, _type: a.type || 'activity' });
+    if (a.nextFollowUpAt) {
+      coveredFollowUpTimes.add(new Date(a.nextFollowUpAt).getTime());
+    }
   });
-  (activityData.value.notes || []).forEach((n) => {
+
+  notes.forEach((n) => {
     items.push({ ...n, _type: 'note', type: 'note', summary: n.content });
   });
-  (activityData.value.followUps || []).forEach((f) => {
-    items.push({ ...f, _type: 'follow_up', type: 'reminder', summary: f.notes });
+
+  followUps.forEach((f) => {
+    const schedTime = f.scheduledAt ? new Date(f.scheduledAt).getTime() : 0;
+    const isAutoFromActivity = coveredFollowUpTimes.has(schedTime) ||
+      (f.notes && f.notes.startsWith('Follow-up after'));
+
+    if (!isAutoFromActivity) {
+      items.push({ ...f, _type: 'follow_up', type: 'reminder', summary: f.notes });
+    }
   });
 
   return items.sort((a, b) => {
@@ -564,6 +616,7 @@ const filterTabs = computed(() => {
     { key: 'call', label: 'Calls', count: all.filter((i) => i.type === 'call' || i.type === 'phone_call').length },
     { key: 'whatsapp', label: 'WhatsApp', count: all.filter((i) => i.type === 'whatsapp').length },
     { key: 'meeting', label: 'Counselling', count: all.filter((i) => i.type === 'meeting').length },
+    { key: 'stage_change', label: 'Status', count: all.filter((i) => i.type === 'stage_change' || i.type === 'status_change').length },
     { key: 'note', label: 'Remarks', count: all.filter((i) => i.type === 'note').length },
     { key: 'reminder', label: 'Reminders', count: all.filter((i) => i.type === 'reminder' || i.type === 'follow_up').length },
   ];
@@ -573,6 +626,9 @@ const filteredTimeline = computed(() => {
   if (activeFilter.value === 'all') return timelineItems.value;
   if (activeFilter.value === 'call') {
     return timelineItems.value.filter((i) => i.type === 'call' || i.type === 'phone_call');
+  }
+  if (activeFilter.value === 'stage_change') {
+    return timelineItems.value.filter((i) => i.type === 'stage_change' || i.type === 'status_change');
   }
   return timelineItems.value.filter((i) => i.type === activeFilter.value);
 });
@@ -635,6 +691,7 @@ function getChannelTitle(item) {
   if (item.type === 'call' || item.type === 'phone_call') return 'Phone Call';
   if (item.type === 'whatsapp') return 'WhatsApp';
   if (item.type === 'meeting') return 'Counselling';
+  if (item.type === 'stage_change' || item.type === 'status_change') return 'Status Update';
   if (item.type === 'reminder' || item.type === 'follow_up') return 'Follow-up';
   if (item.type === 'note') return 'Remark';
   return item.type ? item.type.replace(/_/g, ' ') : 'Touchpoint';
@@ -644,6 +701,7 @@ function getChannelIcon(item) {
   if (item.type === 'call' || item.type === 'phone_call') return PhPhoneCall;
   if (item.type === 'whatsapp') return PhWhatsappLogo;
   if (item.type === 'meeting') return PhChalkboardTeacher;
+  if (item.type === 'stage_change' || item.type === 'status_change') return PhArrowsClockwise;
   if (item.type === 'reminder' || item.type === 'follow_up') return PhBell;
   return PhNotePencil;
 }
@@ -652,6 +710,7 @@ function getChannelIconBg(item) {
   if (item.type === 'call' || item.type === 'phone_call') return 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300';
   if (item.type === 'whatsapp') return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300';
   if (item.type === 'meeting') return 'bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300';
+  if (item.type === 'stage_change' || item.type === 'status_change') return 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300';
   if (item.type === 'reminder' || item.type === 'follow_up') return 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300';
   return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
 }
@@ -660,6 +719,7 @@ function getTimelineDotColor(item) {
   if (item.type === 'call' || item.type === 'phone_call') return 'bg-blue-500';
   if (item.type === 'whatsapp') return 'bg-emerald-500';
   if (item.type === 'meeting') return 'bg-purple-500';
+  if (item.type === 'stage_change' || item.type === 'status_change') return 'bg-indigo-500';
   if (item.type === 'reminder' || item.type === 'follow_up') return 'bg-amber-500';
   return 'bg-slate-400';
 }

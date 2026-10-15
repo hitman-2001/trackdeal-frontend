@@ -878,17 +878,17 @@
               class="modal-form-select"
             >
               <option value="">Select Standard / Grade</option>
-              <option value="8th SSC">8th SSC</option>
-              <option value="8th CBSE">8th CBSE</option>
-              <option value="8th ICSE">8th ICSE</option>
-              <option value="9th SSC">9th SSC</option>
-              <option value="9th CBSE">9th CBSE</option>
-              <option value="9th ICSE">9th ICSE</option>
-              <option value="10th SSC">10th SSC</option>
-              <option value="10th CBSE">10th CBSE</option>
-              <option value="10th ICSE">10th ICSE</option>
-              <option value="Class 11">Class 11</option>
-              <option value="Class 12">Class 12</option>
+              <option value="8">8</option>
+              <option value="9">9</option>
+              <option value="10">10</option>
+              <option value="11">11</option>
+              <option value="12">12</option>
+              <option
+                v-if="form.standard && !['8', '9', '10', '11', '12'].includes(String(form.standard))"
+                :value="form.standard"
+              >
+                {{ form.standard }}
+              </option>
             </select>
           </div>
           <div class="modal-form-group">
@@ -939,6 +939,51 @@
               placeholder="+91 9876543210"
               class="modal-form-input"
             />
+          </div>
+
+          <!-- Dynamic Custom Fields Group (Salesforce Object Manager) -->
+          <div v-if="customFieldsList.length > 0" class="modal-form-group col-span-full pt-2 border-t border-slate-100 dark:border-neutral-800 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Custom Attributes</span>
+              <span class="text-[10px] text-slate-400 font-medium">Object Manager Fields</span>
+            </div>
+            <div class="modal-form-grid">
+              <div
+                v-for="cf in customFieldsList"
+                :key="cf.key"
+                class="modal-form-group"
+              >
+                <label class="modal-form-label">
+                  {{ cf.label }}
+                  <span v-if="cf.required" class="required-star">*</span>
+                </label>
+                <!-- Dropdown Select -->
+                <select
+                  v-if="cf.type === 'select'"
+                  v-model="form.customFields[cf.key]"
+                  :required="cf.required"
+                  class="modal-form-select"
+                >
+                  <option value="">{{ cf.placeholder || `Select ${cf.label}` }}</option>
+                  <option
+                    v-for="(opt, idx) in cf.options"
+                    :key="idx"
+                    :value="opt.value || opt.label || opt"
+                  >
+                    {{ opt.label || opt.value || opt }}
+                  </option>
+                </select>
+                <!-- Text Input -->
+                <input
+                  v-else
+                  v-model="form.customFields[cf.key]"
+                  :required="cf.required"
+                  :placeholder="cf.placeholder || `Enter ${cf.label}`"
+                  class="modal-form-input"
+                />
+                <p v-if="cf.helpText" class="text-[10px] text-slate-400 mt-0.5">{{ cf.helpText }}</p>
+              </div>
+            </div>
           </div>
         </div>
       </form>
@@ -1238,6 +1283,7 @@ import {
   deleteEducationLead,
   fetchEducationLeads,
 } from "../api/endpoints";
+import { fetchCustomFields } from "@/api/customFields";
 
 const store = useStore();
 const canCreateLead = computed(() => {
@@ -1389,17 +1435,11 @@ const availableEducationBoards = [
 ];
 
 const availableStandards = [
-  { value: "8th SSC", label: "8th SSC" },
-  { value: "8th CBSE", label: "8th CBSE" },
-  { value: "8th ICSE", label: "8th ICSE" },
-  { value: "9th SSC", label: "9th SSC" },
-  { value: "9th CBSE", label: "9th CBSE" },
-  { value: "9th ICSE", label: "9th ICSE" },
-  { value: "10th SSC", label: "10th SSC" },
-  { value: "10th CBSE", label: "10th CBSE" },
-  { value: "10th ICSE", label: "10th ICSE" },
-  { value: "Class 11", label: "Class 11" },
-  { value: "Class 12", label: "Class 12" },
+  { value: "8", label: "8" },
+  { value: "9", label: "9" },
+  { value: "10", label: "10" },
+  { value: "11", label: "11" },
+  { value: "12", label: "12" },
 ];
 
 const availableStreams = [
@@ -1772,6 +1812,17 @@ function handleSearch() {
   }, 300);
 }
 
+const customFieldsList = ref([]);
+
+async function loadCustomFields() {
+  try {
+    const list = await fetchCustomFields('leads');
+    customFieldsList.value = (Array.isArray(list) ? list : []).filter(f => !f.isStandard && f.isActive !== false);
+  } catch (e) {
+    customFieldsList.value = [];
+  }
+}
+
 function openCreate() {
   form.value = {
     firstName: "",
@@ -1787,8 +1838,10 @@ function openCreate() {
     source: "walk_in",
     parentName: "",
     parentMobile: "",
+    customFields: {},
   };
   error.value = "";
+  loadCustomFields();
   showModal.value = true;
 }
 
@@ -1797,6 +1850,18 @@ async function save() {
     error.value = "Student Name, Primary Mobile, and School Name are mandatory.";
     return;
   }
+
+  // Validate required custom fields configured in Salesforce Object Manager
+  for (const cf of customFieldsList.value) {
+    if (cf.required) {
+      const val = form.value.customFields?.[cf.key];
+      if (val === undefined || val === null || String(val).trim() === '') {
+        error.value = `${cf.label} is mandatory.`;
+        return;
+      }
+    }
+  }
+
   saving.value = true;
   error.value = "";
   try {
@@ -1805,6 +1870,7 @@ async function save() {
       firstName: form.value.firstName.trim(),
       mobile: form.value.mobile.trim(),
       schoolName: form.value.schoolName.trim(),
+      customFields: form.value.customFields || {},
     });
     showModal.value = false;
     await load();
@@ -1824,6 +1890,7 @@ onMounted(async () => {
   } catch (e) {
     // fallback gracefully
   }
+  loadCustomFields();
   await load();
 });
 </script>
