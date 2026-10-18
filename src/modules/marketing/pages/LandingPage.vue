@@ -382,6 +382,12 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, reactive } from 'vue';
+import { useRouter } from 'vue-router';
+import { useStore } from 'vuex';
+import { Capacitor } from '@capacitor/core';
+
+const router = useRouter();
+const store = useStore();
 
 const scrolled = ref(false);
 const mobileOpen = ref(false);
@@ -453,6 +459,23 @@ function handleScroll() {
 }
 
 onMounted(() => {
+  const isAndroid =
+    Capacitor.isNativePlatform() ||
+    (typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent || ''));
+
+  if (isAndroid) {
+    const isAuthenticated = store.getters['auth/isAuthenticated'];
+    const userRole = store.getters['auth/userRole'];
+    const isPlatformAdmin = ['system_admin', 'super_admin'].includes(userRole);
+
+    if (isAuthenticated) {
+      router.replace(isPlatformAdmin ? '/admin' : '/app/dashboard');
+    } else {
+      router.replace('/login');
+    }
+    return;
+  }
+
   window.addEventListener('scroll', handleScroll, { passive: true });
   handleScroll(); // Trigger on mount
 });

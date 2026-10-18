@@ -1,11 +1,19 @@
 import store from "@/store";
+import { Capacitor } from "@capacitor/core";
 
 let sessionChecked = false;
 
+function isAndroidUser() {
+  if (Capacitor.isNativePlatform()) return true;
+  if (typeof navigator !== "undefined") {
+    const ua = navigator.userAgent || navigator.vendor || window.opera || "";
+    if (/android/i.test(ua)) return true;
+  }
+  return false;
+}
+
 export function setupRouterGuards(router) {
   router.beforeEach(async (to, from, next) => {
-    // The public landing page must render without waiting for the API.
-    if (to.meta.public) return next();
     // 1. Session Restoration on Application Boot
     if (!sessionChecked) {
       sessionChecked = true;
@@ -25,6 +33,21 @@ export function setupRouterGuards(router) {
         }
       }
     }
+
+    // 2. Bypass marketing landing page on Android phones and native app
+    if ((to.path === "/" || to.name === "Home") && isAndroidUser()) {
+      const isAuthenticated = store.getters["auth/isAuthenticated"];
+      const userRole = store.getters["auth/userRole"];
+      const isPlatformAdmin = ["system_admin", "super_admin"].includes(userRole);
+
+      if (isAuthenticated) {
+        return next(isPlatformAdmin ? { path: "/admin" } : { path: "/app/dashboard" });
+      }
+      return next({ path: "/login" });
+    }
+
+    // The public landing page must render without waiting for the API for non-Android users.
+    if (to.meta.public) return next();
 
     const requiresAuth = to.matched.some((record) => record.meta.requiresAuth);
     const requiresSystemAdmin = to.matched.some(
