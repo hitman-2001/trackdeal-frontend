@@ -2,6 +2,7 @@ node_modules
 artifacts/ui/
 package-lock.json
 scripts/
+!scripts/generate-padded-icons.mjs
 dist/
 .env
 *.md

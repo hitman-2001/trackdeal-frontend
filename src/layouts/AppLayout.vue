@@ -483,39 +483,85 @@
             </div>
           </header>
 
-          <div class="flex-1 overflow-y-auto p-3 space-y-2">
+          <div class="flex-1 overflow-y-auto p-3 space-y-2.5">
+            <!-- Push Notification Opt-In / Status Banner -->
             <div
-              v-for="item in mockNotifications"
+              v-if="pushPermission !== 'granted'"
+              class="p-3 rounded-xl bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-900/60 space-y-2"
+            >
+              <div class="flex items-center gap-2 text-violet-800 dark:text-violet-200 font-bold text-xs">
+                <PhBell :size="15" weight="bold" class="text-violet-600 dark:text-violet-400 shrink-0" />
+                <span>Mobile & Web Push Alerts</span>
+              </div>
+              <p class="text-[11px] text-violet-700/80 dark:text-violet-300/80 leading-relaxed">
+                Receive instant push notifications for lead assignments, scheduled follow-up reminders, and stage changes.
+              </p>
+              <button
+                type="button"
+                @click="handleEnablePush"
+                :disabled="isEnablingPush"
+                class="w-full h-8 rounded-lg bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-xs"
+              >
+                <span v-if="isEnablingPush" class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                <span>{{ isEnablingPush ? 'Enabling...' : 'Enable Push Notifications' }}</span>
+              </button>
+            </div>
+
+            <!-- Push Active Indicator with Test Button -->
+            <div
+              v-else
+              class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-neutral-800/60 border border-slate-200/60 dark:border-neutral-700/60 flex items-center justify-between gap-2 text-[11px]"
+            >
+              <div class="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold min-w-0">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                <span class="truncate">Push Alerts Active</span>
+              </div>
+              <button
+                type="button"
+                @click="handleSendTestPush"
+                :disabled="isSendingTest"
+                class="px-2.5 py-1 rounded-md text-[10px] font-bold border border-slate-300 dark:border-neutral-600 hover:bg-white dark:hover:bg-neutral-700 text-slate-700 dark:text-slate-200 transition-colors shrink-0"
+              >
+                {{ isSendingTest ? 'Sending...' : 'Send Test Push' }}
+              </button>
+            </div>
+
+            <!-- Notifications List -->
+            <div
+              v-for="item in notificationsList"
               :key="item.id"
-              class="p-3 rounded-xl border border-slate-200 dark:border-neutral-800 transition-all"
+              @click="handleNotificationClick(item)"
+              class="p-3 rounded-xl border border-slate-200 dark:border-neutral-800 transition-all cursor-pointer hover:border-primary/50"
               :class="
                 item.read
                   ? 'opacity-60 bg-transparent'
-                  : 'bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900'
+                  : 'bg-primary/5 dark:bg-primary/10 border-primary/30 dark:border-primary/40'
               "
             >
               <div class="flex justify-between items-start gap-2 mb-1">
-                <span
-                  class="text-xs font-bold text-slate-800 dark:text-slate-200"
-                  >{{ item.title }}</span
-                >
-                <span class="text-[10px] text-slate-400">{{ item.time }}</span>
+                <span class="text-xs font-bold text-slate-800 dark:text-slate-200">{{ item.title }}</span>
+                <span class="text-[10px] text-slate-400 shrink-0">{{ item.time }}</span>
               </div>
-              <p
-                class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed"
-              >
+              <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-3">
                 {{ item.message }}
               </p>
-              <button
-                v-if="!item.read"
-                @click="markNotificationRead(item.id)"
-                class="text-[10px] font-semibold text-blue-600 hover:underline mt-1.5"
-              >
-                Mark as read
-              </button>
+              <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-100 dark:border-neutral-800/80">
+                <span v-if="item.actionUrl" class="text-[10px] font-bold text-primary hover:underline">
+                  View details &rarr;
+                </span>
+                <button
+                  v-if="!item.read"
+                  type="button"
+                  @click.stop="markNotificationRead(item.id)"
+                  class="text-[10px] font-semibold text-slate-400 hover:text-slate-600 ml-auto"
+                >
+                  Mark as read
+                </button>
+              </div>
             </div>
+
             <div
-              v-if="mockNotifications.length === 0"
+              v-if="notificationsList.length === 0"
               class="text-center py-16"
             >
               <PhBellSlash
@@ -616,6 +662,11 @@ import {
 
 import GlobalSearchModal from "@/components/GlobalSearchModal.vue";
 import QuickAddModal from "@/components/QuickAddModal.vue";
+import { notificationApi } from "@/api/notification.api";
+import {
+  requestPushNotificationPermission,
+  checkPushPermissionStatus,
+} from "@/services/firebase";
 
 const store = useStore();
 const route = useRoute();
@@ -1083,19 +1134,112 @@ const filteredMenuGroups = computed(() => {
 });
 
 // ── Notifications ────────────────────────────────────────────────────────────
-const mockNotifications = ref([]);
-const unreadCount = computed(
-  () => mockNotifications.value.filter((n) => !n.read).length,
-);
+const notificationsList = ref([]);
+const unreadCount = ref(0);
+const pushPermission = ref('default');
+const isEnablingPush = ref(false);
+const isSendingTest = ref(false);
+
+const loadNotifications = async () => {
+  try {
+    const res = await notificationApi.getNotifications({ limit: 50 });
+    const items = res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
+    notificationsList.value = items.map((item) => ({
+      id: item._id || item.id,
+      title: item.title,
+      message: item.message,
+      time: item.createdAt ? new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+      read: item.isRead || item.read || false,
+      actionUrl: item.actionUrl,
+    }));
+    unreadCount.value = notificationsList.value.filter((n) => !n.read).length;
+  } catch (err) {}
+};
+
+const refreshUnreadCount = async () => {
+  try {
+    const res = await notificationApi.getUnreadCount();
+    if (res?.data?.count !== undefined) {
+      unreadCount.value = res.data.count;
+    } else if (res?.count !== undefined) {
+      unreadCount.value = res.count;
+    }
+  } catch (err) {}
+};
+
 const toggleNotifications = () => {
   notificationsOpen.value = !notificationsOpen.value;
+  if (notificationsOpen.value) {
+    loadNotifications();
+    checkPushPermissionStatus().then((st) => {
+      pushPermission.value = st;
+    }).catch(() => {});
+  }
 };
-const markNotificationRead = (id) => {
-  const n = mockNotifications.value.find((n) => n.id === id);
+
+const handleEnablePush = async () => {
+  isEnablingPush.value = true;
+  try {
+    const token = await requestPushNotificationPermission();
+    pushPermission.value = await checkPushPermissionStatus();
+    if (pushPermission.value === 'granted' || token) {
+      store.dispatch('notifications/triggerToast', {
+        message: 'Push notifications enabled successfully.',
+        type: 'success',
+      });
+    }
+  } catch (err) {
+    console.warn('Push enable error:', err);
+  } finally {
+    isEnablingPush.value = false;
+  }
+};
+
+const handleSendTestPush = async () => {
+  isSendingTest.value = true;
+  try {
+    await notificationApi.sendTestNotification();
+    store.dispatch('notifications/triggerToast', {
+      message: 'Test notification dispatched to your device.',
+      type: 'info',
+    });
+    setTimeout(() => {
+      loadNotifications();
+    }, 1200);
+  } catch (err) {
+    store.dispatch('notifications/triggerToast', {
+      message: err.response?.data?.message || 'Could not send test push.',
+      type: 'error',
+    });
+  } finally {
+    isSendingTest.value = false;
+  }
+};
+
+const markNotificationRead = async (id) => {
+  const n = notificationsList.value.find((item) => item.id === id);
   if (n) n.read = true;
+  unreadCount.value = notificationsList.value.filter((item) => !item.read).length;
+  try {
+    await notificationApi.markRead(id);
+  } catch (err) {}
 };
-const markAllNotificationsRead = () =>
-  mockNotifications.value.forEach((n) => (n.read = true));
+
+const markAllNotificationsRead = async () => {
+  notificationsList.value.forEach((n) => (n.read = true));
+  unreadCount.value = 0;
+  try {
+    await notificationApi.markAllRead();
+  } catch (err) {}
+};
+
+const handleNotificationClick = (item) => {
+  markNotificationRead(item.id);
+  if (item.actionUrl) {
+    notificationsOpen.value = false;
+    router.push(item.actionUrl).catch(() => {});
+  }
+};
 
 // ── Keyboard Shortcuts ───────────────────────────────────────────────────────
 const handleKeyDown = (e) => {
@@ -1115,6 +1259,7 @@ const handleKeyDown = (e) => {
 onMounted(() => {
   window.addEventListener("keydown", handleKeyDown);
   store.dispatch("ui/initializeTheme");
+  refreshUnreadCount();
 });
 onUnmounted(() => {
   window.removeEventListener("keydown", handleKeyDown);

@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "550666391129",
+    "project_id": "trackdeal-d0227",
+    "storage_bucket": "trackdeal-d0227.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:550666391129:android:ccefa4096fc23c5325ab48",
+        "android_client_info": {
+          "package_name": "com.trackdeal.myapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD7_u3IWBHfaJGvSfR-V-4gBxTth6_2dxc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
+
