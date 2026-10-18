@@ -58,6 +58,7 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
 import { useStore } from 'vuex';
+import Swal from 'sweetalert2';
 import AppModal from '@/components/AppModal.vue';
 import { addLeadFollowUp, updateLeadFollowUp, logLeadActivity } from '@/modules/leads/api/endpoints';
 
@@ -123,6 +124,46 @@ async function save() {
     return;
   }
 
+  const chosenTime = new Date(scheduledAt.value).getTime();
+  const currentFuId = props.lead?.currentFollowUpId;
+
+  // Check if conflicts with an existing queued task or active task for this student
+  let conflictTask = null;
+  if (props.lead?.upcomingTasks && Array.isArray(props.lead.upcomingTasks)) {
+    conflictTask = props.lead.upcomingTasks.find((t) => {
+      if (currentFuId && String(t._id) === String(currentFuId)) return false;
+      return Math.abs(new Date(t.scheduledAt).getTime() - chosenTime) < 15 * 60 * 1000;
+    });
+  }
+  if (!conflictTask && props.lead?.scheduledAt && (!currentFuId || String(props.lead.currentFollowUpId) !== String(props.lead._id))) {
+    if (Math.abs(new Date(props.lead.scheduledAt).getTime() - chosenTime) < 15 * 60 * 1000) {
+      conflictTask = props.lead;
+    }
+  }
+
+  if (conflictTask) {
+    const conflictDate = new Date(conflictTask.scheduledAt);
+    const timeStr = conflictDate.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+    await Swal.fire({
+      title: 'Task Already Scheduled',
+      html: `
+        <div class="text-slate-600 dark:text-slate-300 text-sm space-y-2 text-left">
+          <p>A task is already scheduled for <strong>${leadName.value}</strong> at <strong>${timeStr}</strong>.</p>
+          <p class="text-slate-500">The same student cannot have two tasks assigned at the same time. Please choose a different time slot.</p>
+        </div>
+      `,
+      icon: 'warning',
+      confirmButtonText: 'Select Different Time',
+      confirmButtonColor: '#3b82f6',
+      customClass: {
+        popup: 'rounded-2xl shadow-2xl border border-slate-200 dark:border-neutral-800 dark:bg-neutral-900',
+        title: 'text-base font-bold text-slate-800 dark:text-slate-100',
+        confirmButton: 'rounded-xl text-xs font-bold px-4 py-2.5 shadow-sm',
+      },
+    });
+    return;
+  }
+
   saving.value = true;
   error.value = '';
   try {
@@ -167,7 +208,22 @@ async function save() {
     emit('success');
     emit('close');
   } catch (err) {
-    error.value = err.response?.data?.message || err.message || 'Could not save reminder.';
+    const msg = err.response?.data?.message || err.message || 'Could not save reminder.';
+    if (msg.includes('already scheduled') || msg.includes('TASK_SCHEDULE_CONFLICT')) {
+      Swal.fire({
+        title: 'Task Already Scheduled',
+        text: msg,
+        icon: 'warning',
+        confirmButtonText: 'Select Different Time',
+        confirmButtonColor: '#3b82f6',
+        customClass: {
+          popup: 'rounded-2xl shadow-2xl border border-slate-200 dark:border-neutral-800 dark:bg-neutral-900',
+          title: 'text-base font-bold text-slate-800 dark:text-slate-100',
+          confirmButton: 'rounded-xl text-xs font-bold px-4 py-2.5 shadow-sm',
+        },
+      });
+    }
+    error.value = msg;
   } finally {
     saving.value = false;
   }

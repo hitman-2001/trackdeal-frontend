@@ -1,10 +1,10 @@
 <template>
-  <div class="space-y-6 text-xs">
+  <div class="w-full max-w-full min-w-0 space-y-4 sm:space-y-6 text-xs">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-1">
       <div class="min-w-0">
         <h1
-          class="font-heading text-xl font-extrabold text-slate-800 dark:text-slate-100 break-words"
+          class="font-heading text-lg sm:text-xl font-extrabold text-slate-800 dark:text-slate-100 break-words"
         >
           {{
             isEducationWorkspace
@@ -15,15 +15,15 @@
         <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
           {{
             isEducationWorkspace
-              ? "Onboard counselors and staff, manage account access, assign campus branches, and review audit logs."
-              : "Onboard team members, manage account suspensions, transfer regional branches, and review activity audit logs."
+              ? "Onboard counselors and staff, manage account access, and review audit logs."
+              : "Onboard team members, manage account suspensions, and review activity audit logs."
           }}
         </p>
       </div>
       <button
         @click="openInviteDrawer"
         :title="isUserQuotaReached ? `User limit reached (${users?.length || 0}/${maxUserQuota})` : ''"
-        class="btn-primary h-9 px-3.5 text-xs font-semibold gap-1.5 self-start sm:self-auto shrink-0 shadow-xs rounded-xl flex items-center"
+        class="btn-primary h-9 px-4 text-xs font-semibold gap-1.5 w-full sm:w-auto justify-center shrink-0 shadow-xs rounded-xl flex items-center active:scale-[0.98] transition-transform"
       >
         <PhPlus :size="14" weight="bold" />
         <span>{{
@@ -34,12 +34,12 @@
 
     <!-- Inner Tabs -->
     <div
-      class="flex border-b border-default overflow-x-auto gap-1 sm:gap-4 pb-0.5 scrollbar-none w-full min-w-0"
+      class="flex border-b border-default overflow-x-auto gap-2 sm:gap-4 pb-0.5 scrollbar-none w-full min-w-0"
       style="-webkit-overflow-scrolling: touch;"
     >
       <button
         @click="activeTab = 'directory'"
-        class="py-2.5 px-2.5 border-b-2 font-bold text-xs transition-colors shrink-0 whitespace-nowrap"
+        class="py-2.5 px-2 border-b-2 font-bold text-xs transition-colors shrink-0 whitespace-nowrap"
         :class="
           activeTab === 'directory'
             ? 'border-primary text-primary'
@@ -51,7 +51,7 @@
       <button
         v-if="isOrgAdmin"
         @click="activeTab = 'permissions'"
-        class="py-2.5 px-2.5 border-b-2 font-bold text-xs transition-colors shrink-0 whitespace-nowrap"
+        class="py-2.5 px-2 border-b-2 font-bold text-xs transition-colors shrink-0 whitespace-nowrap"
         :class="
           activeTab === 'permissions'
             ? 'border-primary text-primary'
@@ -62,38 +62,38 @@
       </button>
       <button
         @click="activeTab = 'audit'"
-        class="py-2.5 px-2.5 border-b-2 font-bold text-xs transition-colors shrink-0 whitespace-nowrap"
+        class="py-2.5 px-2 border-b-2 font-bold text-xs transition-colors shrink-0 whitespace-nowrap"
         :class="
           activeTab === 'audit'
             ? 'border-primary text-primary'
             : 'border-transparent text-slate-500 hover:text-slate-850 dark:hover:text-slate-200'
         "
       >
-        {{ isEducationWorkspace ? "Audit Logs" : "Immutable Audit Logs" }}
+        Audit Logs
       </button>
     </div>
 
     <!-- Tab Contents -->
-    <div class="space-y-6">
+    <div class="space-y-4 sm:space-y-6">
       <!-- 1. User Directory Tab -->
       <div
         v-if="activeTab === 'directory'"
-        class="bg-surface border border-default rounded-xl sm:rounded-2xl p-3.5 sm:p-5 shadow-xs space-y-4"
+        class="bg-transparent sm:bg-surface border-0 sm:border border-default rounded-none sm:rounded-2xl p-0 sm:p-5 shadow-none sm:shadow-xs space-y-3 sm:space-y-4"
       >
         <!-- Search and Counter Header -->
-        <div class="flex items-center justify-between gap-3 flex-wrap">
-          <div class="relative flex-1 min-w-[200px] max-w-sm">
+        <div class="flex items-center justify-between gap-2.5 flex-wrap">
+          <div class="relative flex-1 min-w-[200px]">
             <PhMagnifyingGlass :size="14" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               v-model="searchQuery"
               type="text"
               :placeholder="isEducationWorkspace ? 'Search staff by name, email, or role...' : 'Search users by name, email, or role...'"
-              class="w-full bg-slate-50 dark:bg-slate-850 border border-default rounded-xl pl-9 pr-3 py-2 text-xs focus:border-primary outline-none text-slate-800 dark:text-slate-200 placeholder:text-slate-400"
+              class="w-full bg-white dark:bg-slate-900 sm:bg-slate-50 sm:dark:bg-slate-850 border border-default rounded-xl pl-9 pr-3 py-2 text-xs focus:border-primary outline-none text-slate-800 dark:text-slate-200 placeholder:text-slate-400"
             />
           </div>
           <div class="text-[11px] font-semibold text-slate-500 font-tabular bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-default/60 shrink-0 flex items-center gap-1">
             <span>
-              {{ filteredUsers.length }} {{ isEducationWorkspace ? (filteredUsers.length === 1 ? 'Staff Member' : 'Staff Members') : (filteredUsers.length === 1 ? 'User' : 'Users') }}
+              {{ filteredUsers.length }} {{ isEducationWorkspace ? (filteredUsers.length === 1 ? 'Staff' : 'Staff') : (filteredUsers.length === 1 ? 'User' : 'Users') }}
             </span>
             <span v-if="maxUserQuota" class="text-slate-400 font-normal">
               / {{ maxUserQuota }} limit
@@ -254,7 +254,7 @@
         </div>
 
         <!-- Mobile User Cards Feed (< md) -->
-        <div class="block md:hidden space-y-3">
+        <div class="block md:hidden space-y-2.5">
           <div
             v-if="filteredUsers.length === 0"
             class="text-center py-10 text-slate-400 text-xs bg-slate-50/50 dark:bg-slate-850/30 rounded-xl border border-dashed border-default"
@@ -266,25 +266,25 @@
             v-else
             v-for="user in filteredUsers"
             :key="user._id || user.id"
-            class="p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-850/60 border border-slate-200/80 dark:border-slate-800/80 shadow-2xs space-y-3"
+            class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-2.5"
           >
             <!-- Top Row: Avatar + Name & Role + Status Toggle -->
             <div class="flex items-start justify-between gap-2.5">
               <div class="flex items-center gap-2.5 min-w-0 flex-1">
                 <!-- Avatar Initials -->
                 <div
-                  class="w-9 h-9 rounded-xl bg-primary/10 dark:bg-primary/20 text-primary flex items-center justify-center font-bold text-xs uppercase shrink-0 border border-primary/20"
+                  class="w-9 h-9 rounded-xl bg-primary-50 dark:bg-primary-950/50 text-primary border border-primary-200/60 flex items-center justify-center font-bold text-xs uppercase shrink-0"
                 >
                   {{ (getUserDisplayName(user) || 'U').charAt(0) }}
                 </div>
                 <div class="min-w-0 flex-1">
                   <div class="flex items-center gap-1.5 flex-wrap">
-                    <h3 class="font-heading font-bold text-xs text-slate-900 dark:text-slate-100 truncate">
+                    <h3 class="font-heading font-bold text-[13px] text-slate-900 dark:text-slate-100 truncate">
                       {{ getUserDisplayName(user) }}
                     </h3>
                     <span
                       v-if="isSuperAdminSelf(user)"
-                      class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-slate-200 dark:bg-slate-750 text-slate-600 dark:text-slate-300 uppercase tracking-wider"
+                      class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 uppercase tracking-wider"
                     >
                       You
                     </span>
@@ -302,7 +302,7 @@
               <div class="shrink-0 pt-0.5">
                 <span
                   v-if="isSuperAdminSelf(user)"
-                  class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-500/20"
+                  class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200/60"
                 >
                   Active
                 </span>
@@ -334,7 +334,7 @@
             </div>
 
             <!-- Details: Email & Branch -->
-            <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 space-y-1.5 text-xs">
+            <div class="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1 text-xs">
               <div class="flex items-center gap-2 text-slate-600 dark:text-slate-300 min-w-0">
                 <PhEnvelopeSimple :size="13" class="text-slate-400 shrink-0" />
                 <a
@@ -370,13 +370,13 @@
             <!-- Operations Actions Footer -->
             <div
               v-if="!isSuperAdminSelf(user)"
-              class="pt-2.5 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center gap-2"
+              class="pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2"
             >
               <button
                 @click="triggerRoleSwap(user)"
                 type="button"
                 :disabled="user.status !== 'active'"
-                class="flex-1 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
+                class="flex-1 h-8 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
               >
                 <PhGear :size="13" weight="bold" class="text-slate-500" />
                 <span>Adjust Role</span>
@@ -387,7 +387,7 @@
                 @click="triggerTransfer(user)"
                 type="button"
                 :disabled="user.status !== 'active'"
-                class="flex-1 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 text-primary text-xs font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
+                class="flex-1 h-8 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 text-primary text-xs font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
               >
                 <PhMapPin :size="13" weight="bold" class="text-primary" />
                 <span>Transfer Office</span>

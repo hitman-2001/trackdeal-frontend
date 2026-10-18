@@ -1,27 +1,28 @@
 <template>
-  <div class="settings-workspace">
-    <nav class="settings-subnav" aria-label="Workspace settings">
-      <div class="settings-subnav__intro">
-        <p class="eyebrow">Workspace settings</p>
-        <p>{{ isEducation ? 'Configure your institute, staff access, and campus policies.' : 'Configure your organization, access, and policies.' }}</p>
-      </div>
-      <div class="settings-subnav__items" role="tablist" aria-label="Settings sections">
+  <div class="workspace-page w-full max-w-full min-w-0 space-y-4 sm:space-y-6 pb-28 sm:pb-12 text-xs">
+    <!-- Subnav Tabs (Education Standard: swipeable horizontal line tabs) -->
+    <div class="border-b border-default pb-0.5">
+      <div
+        class="flex items-center gap-1 sm:gap-3 overflow-x-auto scrollbar-none w-full min-w-0 -mb-px"
+        style="-webkit-overflow-scrolling: touch;"
+      >
         <router-link
           v-for="item in filteredSettingsMenu"
           :key="item.name"
           :to="item.to"
-          class="settings-subnav__item"
-          :class="{ 'is-active': isActive(item.to) }"
-          role="tab"
-          :aria-selected="isActive(item.to)"
+          class="flex items-center gap-2 py-2.5 px-3 border-b-2 font-bold text-xs transition-colors shrink-0 whitespace-nowrap"
+          :class="isActive(item.to)
+            ? 'border-primary text-primary'
+            : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
         >
-          <component :is="item.icon" :size="16" :weight="isActive(item.to) ? 'bold' : 'regular'" />
+          <component :is="item.icon" :size="15" :weight="isActive(item.to) ? 'bold' : 'regular'" />
           <span>{{ item.name }}</span>
         </router-link>
       </div>
-    </nav>
+    </div>
 
-    <section class="settings-content">
+    <!-- Content Area -->
+    <section class="w-full max-w-full min-w-0">
       <router-view />
     </section>
   </div>
@@ -33,7 +34,7 @@ import { useRoute } from 'vue-router';
 import { useStore } from 'vuex';
 import {
   PhBuildings, PhMapPin, PhUsersThree,
-  PhShieldCheck, PhSlidersHorizontal,
+  PhSlidersHorizontal,
 } from '@phosphor-icons/vue';
 
 const store = useStore();
@@ -45,11 +46,10 @@ const settingsMenu = computed(() => {
     { name: isEducation.value ? 'Institute Profile' : 'Organization', to: '/app/settings/org', icon: PhBuildings, permission: 'organizations.read' },
     { name: isEducation.value ? 'Campuses & Centres' : 'Branches', to: '/app/settings/branches', icon: PhMapPin, permission: 'branches.read' },
     { name: isEducation.value ? 'Staff Directory' : 'Users', to: '/app/settings/users', icon: PhUsersThree, permission: 'users.read' },
-    { name: 'Custom Fields', to: '/app/settings/custom-fields', icon: PhSlidersHorizontal, permission: 'organizations.read' },
   ];
-  // Only include Roles & Permissions tab for non-education verticals
-  if (!isEducation.value) {
-    items.push({ name: 'Roles & Permissions', to: '/app/settings/roles', icon: PhShieldCheck, permission: 'roles.read' });
+  // Custom Fields is only for Education vertical
+  if (isEducation.value) {
+    items.push({ name: 'Custom Fields', to: '/app/settings/custom-fields', icon: PhSlidersHorizontal, permission: 'organizations.read' });
   }
   return items;
 });
@@ -64,7 +64,7 @@ const filteredSettingsMenu = computed(() => {
     if (item.to === '/app/settings/branches' && orgType !== 'ENTERPRISE_AGENCY') {
       return false;
     }
-    if ((item.to === '/app/settings/users' || item.to === '/app/settings/roles') && orgType === 'INDIVIDUAL_AGENT') {
+    if (item.to === '/app/settings/users' && orgType === 'INDIVIDUAL_AGENT') {
       return false;
     }
     if (!item.permission || isSuperAdmin) return true;
@@ -72,20 +72,3 @@ const filteredSettingsMenu = computed(() => {
   });
 });
 </script>
-
-<style scoped>
-.settings-workspace { width: min(100%, 88rem); margin-inline: auto; display: grid; gap: 1.5rem; }
-.settings-subnav { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding: 1rem 1.125rem; border: 1px solid hsl(var(--neutral-100)); border-radius: 12px; background: hsl(var(--bg-surface) / 0.86); box-shadow: 0 1px 2px rgb(26 22 18 / 0.025); }
-.settings-subnav__intro { flex: 0 0 auto; }
-.settings-subnav__intro > p:last-child { margin-top: 0.25rem; color: hsl(var(--neutral-400)); font-size: 11px; }
-.settings-subnav__items { display: flex; align-items: center; gap: 0.25rem; min-width: 0; padding: 0.25rem; border: 1px solid hsl(var(--neutral-100)); border-radius: 9px; background: hsl(var(--neutral-25)); }
-.settings-subnav__item { display: inline-flex; align-items: center; gap: 0.45rem; min-height: 2rem; padding: 0 0.65rem; border-radius: 6px; color: hsl(var(--neutral-500)); font-size: 11px; font-weight: 600; white-space: nowrap; flex-shrink: 0; transition: color 150ms ease, background-color 150ms ease, box-shadow 150ms ease; }
-.settings-subnav__item:hover { color: hsl(var(--neutral-900)); background: hsl(var(--bg-surface)); }
-.settings-subnav__item.is-active { color: hsl(var(--accent-700)); background: hsl(var(--bg-surface)); box-shadow: 0 1px 2px rgb(26 22 18 / 0.08); }
-.settings-content { min-width: 0; }
-@media (max-width: 900px) {
-  .settings-subnav { align-items: stretch; flex-direction: column; gap: 0.75rem; padding: 0.875rem; }
-  .settings-subnav__items { width: 100%; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none; }
-  .settings-subnav__items::-webkit-scrollbar { display: none; }
-}
-</style>

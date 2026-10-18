@@ -788,13 +788,25 @@
             >
               <!-- Card Header: Channel & Timing Badge -->
               <div class="flex items-center justify-between gap-2">
-                <span
-                  class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold border shrink-0"
-                  :class="getChannelMeta(fu.type).badgeClass"
-                >
-                  <component :is="getChannelMeta(fu.type).icon" :size="13" weight="bold" />
-                  <span>{{ getChannelMeta(fu.type).label }}</span>
-                </span>
+                <div class="flex items-center gap-1.5 flex-wrap min-w-0">
+                  <span
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold border shrink-0"
+                    :class="getChannelMeta(fu.type).badgeClass"
+                  >
+                    <component :is="getChannelMeta(fu.type).icon" :size="13" weight="bold" />
+                    <span>{{ getChannelMeta(fu.type).label }}</span>
+                  </span>
+
+                  <!-- Multi-Task Queue Badge -->
+                  <span
+                    v-if="fu.totalPendingTasks > 1 || (fu.upcomingTasks && fu.upcomingTasks.length > 0)"
+                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shrink-0"
+                    :title="`${fu.totalPendingTasks || (fu.upcomingTasks.length + 1)} tasks scheduled for this student`"
+                  >
+                    <PhQueue :size="11" weight="bold" class="text-indigo-600 dark:text-indigo-400" />
+                    <span>{{ fu.totalPendingTasks || (fu.upcomingTasks.length + 1) }} Tasks</span>
+                  </span>
+                </div>
 
                 <span
                   class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] border shrink-0"
@@ -871,10 +883,29 @@
                   <PhChatText :size="13" class="text-slate-400 shrink-0 mt-0.5" />
                   <p class="italic leading-relaxed line-clamp-2">"{{ formatLogText(fu.notes) }}"</p>
                 </div>
+
+                <!-- Next in Sequence Queue Preview (when student has multiple scheduled follow-ups) -->
+                <div
+                  v-if="fu.upcomingTasks && fu.upcomingTasks.length > 0"
+                  class="text-[11px] bg-slate-50 dark:bg-neutral-800/80 p-2.5 rounded-lg border border-dashed border-slate-300 dark:border-neutral-700 mt-1.5 space-y-1"
+                >
+                  <div class="flex items-center justify-between font-semibold text-slate-700 dark:text-slate-300 text-[11px]">
+                    <span class="flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                      <PhQueue :size="12" weight="bold" class="text-indigo-500" />
+                      <span>Next in queue:</span>
+                    </span>
+                    <span class="font-bold text-slate-800 dark:text-slate-200">
+                      {{ formatShortSchedule(fu.upcomingTasks[0].scheduledAt) }} &middot; {{ getChannelMeta(fu.upcomingTasks[0].type).label }}
+                    </span>
+                  </div>
+                  <p v-if="fu.upcomingTasks[0].notes" class="text-[10px] text-slate-500 dark:text-slate-400 italic truncate">
+                    "{{ formatLogText(fu.upcomingTasks[0].notes) }}"
+                  </p>
+                </div>
               </div>
 
-              <!-- 4-Touch Actions Row -->
-              <div class="grid grid-cols-4 gap-1.5 pt-3 border-t border-slate-100 dark:border-neutral-800">
+              <!-- 3-Touch Actions Row -->
+              <div class="grid grid-cols-3 gap-2 pt-3 border-t border-slate-100 dark:border-neutral-800">
                 <!-- Call -->
                 <a
                   :href="fu.contactNumber ? `tel:${fu.contactNumber}` : '#'"
@@ -908,18 +939,6 @@
                 >
                   <PhArrowsClockwise :size="13" weight="bold" class="text-blue-600 dark:text-blue-400" />
                   <span>Status</span>
-                </button>
-
-                <!-- Done -->
-                <button
-                  type="button"
-                  @click.stop="markComplete(fu)"
-                  :disabled="completingId === fu._id"
-                  class="h-8 rounded-lg bg-white dark:bg-neutral-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-300 hover:border-emerald-300 dark:hover:border-emerald-800 text-slate-700 dark:text-slate-200 border border-slate-200/90 dark:border-neutral-700 font-bold text-[11px] flex items-center justify-center gap-1 transition-colors cursor-pointer"
-                  title="Mark follow-up completed"
-                >
-                  <PhCheckCircle :size="13" weight="bold" class="text-emerald-600 dark:text-emerald-400" />
-                  <span>Done</span>
                 </button>
               </div>
             </div>
@@ -1024,6 +1043,7 @@ import {
   PhFileText,
   PhPulse,
   PhUserCheck,
+  PhQueue,
 } from '@phosphor-icons/vue';
 
 import {
@@ -1091,28 +1111,104 @@ const isStatusOpen = ref(false);
 const activeReminderLead = ref(null);
 const isReminderOpen = ref(false);
 
-// Follow-ups Processing
+// Follow-ups Processing (Grouped by student lead, displaying sequential tasks)
 const allFollowUps = computed(() => {
   const items = summary.value.followUps || [];
   const now = new Date();
   const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
   const endToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
 
-  const mapped = items.map((f) => {
+  const leadGroupMap = new Map();
+
+  items.forEach((f) => {
     const sched = f.scheduledAt ? new Date(f.scheduledAt) : null;
     const isOverdue = f.isOverdue !== undefined ? f.isOverdue : Boolean(sched && sched < now && f.status === 'scheduled');
     const isToday = f.isToday !== undefined ? f.isToday : Boolean(sched && sched >= startToday && sched <= endToday);
     const isUpcoming = f.isUpcoming !== undefined ? f.isUpcoming : Boolean(sched && sched > endToday);
-    return {
+
+    const fItem = {
       ...f,
       isOverdue,
       isToday,
       isUpcoming,
       _time: sched ? sched.getTime() : 0,
+      upcomingTasks: Array.isArray(f.upcomingTasks) ? [...f.upcomingTasks] : [],
+      totalPendingTasks: f.totalPendingTasks || 1,
     };
+
+    const lId = String(f.leadId || f._id);
+    if (!leadGroupMap.has(lId)) {
+      leadGroupMap.set(lId, { ...fItem });
+      return;
+    }
+
+    const existing = leadGroupMap.get(lId);
+    const curTime = existing._time;
+    const newTime = fItem._time;
+
+    // Deduplicate if within 15 minutes of primary task
+    const isDuplicatePrimary = Math.abs(curTime - newTime) < 15 * 60 * 1000;
+    if (isDuplicatePrimary) {
+      if (fItem.notes && (!existing.notes || fItem.notes.length > existing.notes.length)) {
+        existing.notes = fItem.notes;
+      }
+      return;
+    }
+
+    // Deduplicate if within 15 minutes of an already queued upcoming task
+    const isDuplicateUpcoming = existing.upcomingTasks.find(
+      (t) => Math.abs(new Date(t.scheduledAt).getTime() - newTime) < 15 * 60 * 1000
+    );
+    if (isDuplicateUpcoming) {
+      if (fItem.notes && (!isDuplicateUpcoming.notes || fItem.notes.length > isDuplicateUpcoming.notes.length)) {
+        isDuplicateUpcoming.notes = fItem.notes;
+      }
+      return;
+    }
+
+    existing.totalPendingTasks = (existing.totalPendingTasks || 1) + 1;
+
+    if (newTime < curTime) {
+      // The newly evaluated task is earlier: it becomes the primary active task
+      const prevActive = {
+        _id: existing._id,
+        scheduledAt: existing.scheduledAt,
+        type: existing.type,
+        notes: existing.notes,
+        status: existing.status,
+        isOverdue: existing.isOverdue,
+        isToday: existing.isToday,
+        isUpcoming: existing.isUpcoming,
+      };
+      existing._id = fItem._id;
+      existing.scheduledAt = fItem.scheduledAt;
+      existing.type = fItem.type;
+      existing.notes = fItem.notes;
+      existing.status = fItem.status;
+      existing.isOverdue = fItem.isOverdue;
+      existing.isToday = fItem.isToday;
+      existing.isUpcoming = fItem.isUpcoming;
+      existing._time = newTime;
+      existing.upcomingTasks.push(prevActive);
+    } else {
+      existing.upcomingTasks.push({
+        _id: fItem._id,
+        scheduledAt: fItem.scheduledAt,
+        type: fItem.type,
+        notes: fItem.notes,
+        status: fItem.status,
+        isOverdue: fItem.isOverdue,
+        isToday: fItem.isToday,
+        isUpcoming: fItem.isUpcoming,
+      });
+    }
+
+    existing.upcomingTasks.sort((a, b) => new Date(a.scheduledAt) - new Date(b.scheduledAt));
   });
 
-  return mapped.sort((a, b) => {
+  const groupedList = Array.from(leadGroupMap.values());
+
+  return groupedList.sort((a, b) => {
     if (a.isOverdue && !b.isOverdue) return -1;
     if (!a.isOverdue && b.isOverdue) return 1;
     if (a.isToday && !b.isToday) return -1;
@@ -1392,6 +1488,20 @@ function formatLogText(text) {
     .trim();
 }
 
+function formatShortSchedule(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '';
+  const now = new Date();
+  const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startTarget = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diffDays = Math.round((startTarget - startToday) / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return `Today, ${timeStr}`;
+  if (diffDays === 1) return `Tomorrow, ${timeStr}`;
+  return `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })}, ${timeStr}`;
+}
+
 // Actions
 function openLeadDetails(leadId) {
   if (!leadId) return;
@@ -1407,6 +1517,9 @@ function openStatusModal(fu) {
     parentName: fu.parentName,
     mobile: fu.contactNumber,
     status: fu.status || 'new',
+    currentFollowUpId: fu._id,
+    nextFollowUpAt: fu.scheduledAt,
+    hasPendingFollowUp: true,
   };
   isStatusOpen.value = true;
 }
@@ -1415,7 +1528,22 @@ async function markComplete(fu) {
   completingId.value = fu._id;
   try {
     if (summary.value && Array.isArray(summary.value.followUps)) {
-      summary.value.followUps = summary.value.followUps.filter((item) => item._id !== fu._id);
+      const cardIndex = summary.value.followUps.findIndex(
+        (item) => item.leadId === fu.leadId || item._id === fu._id
+      );
+      if (cardIndex !== -1) {
+        const card = summary.value.followUps[cardIndex];
+        if (card.upcomingTasks && card.upcomingTasks.length > 0) {
+          const nextTask = card.upcomingTasks.shift();
+          card._id = nextTask._id;
+          card.scheduledAt = nextTask.scheduledAt;
+          card.type = nextTask.type;
+          card.notes = nextTask.notes;
+          card.totalPendingTasks = Math.max(1, (card.totalPendingTasks || 1) - 1);
+        } else {
+          summary.value.followUps.splice(cardIndex, 1);
+        }
+      }
     }
 
     await updateLeadFollowUp({
@@ -1442,9 +1570,32 @@ async function markComplete(fu) {
   }
 }
 
-async function handleActionSuccess() {
+async function handleActionSuccess(updatedLead) {
   isStatusOpen.value = false;
   isReminderOpen.value = false;
+
+  // Optimistic UI update: advance to next queued task or remove completed card
+  if (activeStatusLead.value?.currentFollowUpId && summary.value?.followUps) {
+    const targetLeadId = activeStatusLead.value._id || activeStatusLead.value.id;
+    const cardIndex = summary.value.followUps.findIndex(
+      (item) => item.leadId === targetLeadId || item._id === activeStatusLead.value.currentFollowUpId
+    );
+    if (cardIndex !== -1) {
+      const card = summary.value.followUps[cardIndex];
+      if (card.upcomingTasks && card.upcomingTasks.length > 0) {
+        // Advance to next upcoming task in queue
+        const nextTask = card.upcomingTasks.shift();
+        card._id = nextTask._id;
+        card.scheduledAt = nextTask.scheduledAt;
+        card.type = nextTask.type;
+        card.notes = nextTask.notes;
+        card.totalPendingTasks = Math.max(1, (card.totalPendingTasks || 1) - 1);
+      } else if (!updatedLead?.nextFollowUpAt) {
+        summary.value.followUps.splice(cardIndex, 1);
+      }
+    }
+  }
+
   await loadDashboard(true);
 }
 

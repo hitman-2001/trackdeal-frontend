@@ -343,6 +343,7 @@ const routes = [
             name: "CustomFieldsSettings",
             component: () =>
               import("@/modules/settings/pages/CustomFieldsSettings.vue"),
+            meta: { vertical: "education" },
           },
         ],
       },

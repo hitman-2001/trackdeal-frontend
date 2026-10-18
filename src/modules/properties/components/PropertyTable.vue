@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-4">
     <!-- Desktop Table View (sm and above) -->
-    <div class="hidden sm:block">
+    <div class="hidden sm:block bg-surface border border-default rounded-2xl overflow-hidden shadow-xs">
       <AppTable 
         :columns="columns"
         :rows="rows"
@@ -93,27 +93,43 @@
 
     <!-- Mobile Property Cards Feed (< 640px) -->
     <div class="block sm:hidden space-y-3">
-      <div v-if="rows.length === 0" class="py-12 text-center text-slate-400 bg-surface border border-default rounded-2xl p-6">
-        <p class="font-bold text-slate-800 dark:text-slate-200 text-sm">No properties found</p>
-        <p class="text-xs text-slate-400 mt-1">Adjust your search or add a new property listing.</p>
+      <div v-if="rows.length === 0" class="py-14 text-center space-y-3 bg-surface border border-default rounded-2xl p-6 shadow-2xs">
+        <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-500 flex items-center justify-center mx-auto">
+          <PhBuildings :size="24" />
+        </div>
+        <div>
+          <p class="font-bold text-slate-800 dark:text-slate-200 text-sm">No properties found</p>
+          <p class="text-xs text-slate-400 mt-1">Adjust your search or add a new property listing.</p>
+        </div>
       </div>
 
       <div
         v-else
         v-for="prop in rows"
         :key="prop._id || prop.id"
-        class="bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 rounded-2xl p-4 shadow-[0_2px_10px_rgba(0,0,0,0.03)] space-y-3 active:scale-[0.99] transition-all cursor-pointer"
+        class="bg-surface border rounded-2xl p-4 shadow-xs space-y-3 active:scale-[0.99] transition-all cursor-pointer"
+        :class="isRowSelected(prop)
+          ? 'border-primary ring-2 ring-primary/20 bg-primary/5'
+          : 'border-default hover:border-slate-300 dark:hover:border-neutral-700'"
         @click="$router.push(`/app/properties/${prop._id || prop.id}`)"
       >
-        <!-- Header: Title + Status Badge -->
+        <!-- Header: Checkbox + Title + Status Badge -->
         <div class="flex items-start justify-between gap-2.5">
-          <div class="min-w-0 flex-1">
-            <h3 class="font-bold text-base text-slate-900 dark:text-slate-100 tracking-tight leading-snug truncate">
-              {{ prop.title }}
-            </h3>
-            <span class="text-[10px] font-mono text-slate-400 block mt-0.5">
-              {{ prop._id || prop.id }}
-            </span>
+          <div class="flex items-start gap-2.5 min-w-0 flex-1">
+            <input
+              type="checkbox"
+              :checked="isRowSelected(prop)"
+              @click.stop="toggleRowSelection(prop)"
+              class="w-4.5 h-4.5 mt-0.5 rounded text-primary border-slate-300 dark:border-neutral-700 focus:ring-primary cursor-pointer shrink-0"
+            />
+            <div class="min-w-0 flex-1">
+              <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100 tracking-tight leading-snug truncate">
+                {{ prop.title }}
+              </h3>
+              <span class="text-[10px] font-mono text-slate-400 block mt-0.5">
+                {{ prop._id || prop.id }}
+              </span>
+            </div>
           </div>
           <span
             class="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold border uppercase"
@@ -133,7 +149,7 @@
           </div>
           <div v-if="prop.project?.builderId" class="text-right shrink-0">
             <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Builder</span>
-            <span class="font-medium text-slate-600 dark:text-slate-300 text-[11px] mt-0.5 block truncate max-w-[100px]">
+            <span class="font-medium text-slate-600 dark:text-slate-300 text-[11px] mt-0.5 block truncate max-w-[120px]">
               {{ prop.project.builderId.name || 'Builder' }}
             </span>
           </div>
@@ -174,25 +190,16 @@
       </div>
 
       <!-- Mobile Pagination Controls -->
-      <div v-if="pagination && pagination.totalPages > 1" class="flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 shadow-xs text-xs font-semibold">
-        <button
-          type="button"
-          :disabled="pagination.page <= 1"
-          @click="$emit('pageChange', pagination.page - 1)"
-          class="h-9 px-4 rounded-xl bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-slate-300 disabled:opacity-40"
-        >
-          Previous
-        </button>
-        <span class="text-slate-400 font-medium">{{ pagination.page }} / {{ pagination.totalPages }}</span>
-        <button
-          type="button"
-          :disabled="pagination.page >= pagination.totalPages"
-          @click="$emit('pageChange', pagination.page + 1)"
-          class="h-9 px-4 rounded-xl bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-slate-300 disabled:opacity-40"
-        >
-          Next
-        </button>
-      </div>
+      <AppPagination
+        v-if="pagination"
+        class="col-span-full pt-2"
+        :page="pagination.page"
+        :page-size="pagination.limit || 20"
+        :total="pagination.total"
+        :totalPages="pagination.totalPages || pagination.pages"
+        @page-change="$emit('pageChange', $event)"
+        @page-size-change="$emit('pageSizeChange', $event)"
+      />
     </div>
   </div>
 </template>
@@ -200,6 +207,7 @@
 <script setup>
 import { ref } from 'vue';
 import AppTable from '@/components/AppTable.vue';
+import { PhBuildings } from '@phosphor-icons/vue';
 
 const props = defineProps({
   rows: { type: Array, required: true },
@@ -222,6 +230,35 @@ const columns = [
   { key: 'carpetArea', label: 'Carpet Area' },
   { key: 'status', label: 'Status', sortable: true }
 ];
+
+const isRowSelected = (prop) => {
+  const targetId = prop._id || prop.id;
+  return props.selectedProperties.some((item) => {
+    if (!item) return false;
+    const itemId = typeof item === 'object' ? (item._id || item.id) : item;
+    return itemId === targetId;
+  });
+};
+
+const toggleRowSelection = (prop) => {
+  const targetId = prop._id || prop.id;
+  const current = [...props.selectedProperties];
+  const idx = current.findIndex((item) => {
+    if (!item) return false;
+    const itemId = typeof item === 'object' ? (item._id || item.id) : item;
+    return itemId === targetId;
+  });
+  if (idx > -1) {
+    current.splice(idx, 1);
+  } else {
+    if (current.length > 0 && typeof current[0] === 'string') {
+      current.push(targetId);
+    } else {
+      current.push(prop);
+    }
+  }
+  emit('selectionChange', current);
+};
 
 const handleSelectionChange = (updatedSelection) => {
   emit('selectionChange', updatedSelection);

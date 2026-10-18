@@ -262,7 +262,7 @@
         <main
           id="workspace-main"
           tabindex="-1"
-          class="content flex-1 min-h-0 overflow-y-auto px-4 py-5 sm:px-6 lg:px-8 lg:py-6"
+          class="content flex-1 min-h-0 overflow-y-auto overflow-x-hidden w-full max-w-full min-w-0 px-3 py-4 sm:px-6 lg:px-8 lg:py-6"
         >
           <!-- Dynamic Workspace Breadcrumb Header -->
           <nav
@@ -728,6 +728,12 @@ const activePageName = computed(() => {
     return "Agreements";
   }
   if (
+    route.path === "/app/commissions/receivables" ||
+    route.path.startsWith("/app/commissions/receivables/")
+  ) {
+    return "Receivables";
+  }
+  if (
     route.path === "/app/commissions" ||
     route.path.startsWith("/app/commissions/")
   ) {
@@ -756,7 +762,7 @@ const activePageName = computed(() => {
 });
 
 const isActiveRoute = (item) => {
-  const to = typeof item === "string" ? item : item.to;
+  const to = typeof item === "string" ? item : item?.to;
   if (!to) return false;
   if (
     item?.activeExcludes?.some(
@@ -767,7 +773,20 @@ const isActiveRoute = (item) => {
   ) {
     return false;
   }
-  return route.path === to || route.path.startsWith(`${to}/`);
+  if (route.path === to) return true;
+  if (!route.path.startsWith(`${to}/`)) return false;
+
+  // If matched via prefix, make sure there is no other menu item that has a more specific (longer) match
+  const hasMoreSpecificMatch = allNavItems.value?.some((otherItem) => {
+    const otherTo = typeof otherItem === "string" ? otherItem : otherItem?.to;
+    if (!otherTo || otherTo === to) return false;
+    return (
+      otherTo.length > to.length &&
+      (route.path === otherTo || route.path.startsWith(`${otherTo}/`))
+    );
+  });
+
+  return !hasMoreSpecificMatch;
 };
 
 // ── Theme & Sidebar ─────────────────────────────────────────────────────────
@@ -881,6 +900,7 @@ const realEstateMenuGroups = [
         permission: "commissions:read",
         featureFlag: "commissionModule",
         module: "commissions",
+        activeExcludes: ["/app/commissions/receivables"],
       },
       {
         name: "Receivables",
@@ -896,19 +916,11 @@ const realEstateMenuGroups = [
     title: "Admin",
     items: [
       {
-        name: "Team",
-        to: "/app/settings/users",
-        icon: PhUsersThree,
-        permission: "users:read",
-        module: "settings",
-      },
-      {
         name: "Settings",
         to: "/app/settings",
         icon: PhGearSix,
         permission: "settings:read",
         module: "settings",
-        activeExcludes: ["/app/settings/users"],
       },
     ],
   },
@@ -951,19 +963,11 @@ const educationMenuGroups = [
     title: "Admin",
     items: [
       {
-        name: "Team",
-        to: "/app/settings/users",
-        icon: PhUsersThree,
-        permission: "users:read",
-        module: "settings",
-      },
-      {
         name: "Settings",
         to: "/app/settings",
         icon: PhGearSix,
         permission: "settings:read",
         module: "settings",
-        activeExcludes: ["/app/settings/users"],
       },
     ],
   },
@@ -972,6 +976,17 @@ const educationMenuGroups = [
 const menuGroups = computed(() =>
   isEducationWorkspace.value ? educationMenuGroups : realEstateMenuGroups,
 );
+
+const allNavItems = computed(() => {
+  const items = [];
+  const groups = menuGroups.value || [];
+  for (const group of groups) {
+    if (group?.items) {
+      items.push(...group.items);
+    }
+  }
+  return items;
+});
 
 const isOrgAdmin = computed(() => {
   const role = String(store.getters["auth/userRole"] || "").toLowerCase();

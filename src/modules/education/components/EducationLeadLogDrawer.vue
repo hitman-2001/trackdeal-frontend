@@ -437,6 +437,7 @@ import {
 } from '@phosphor-icons/vue';
 import AppDrawer from '@/components/AppDrawer.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
+import Swal from 'sweetalert2';
 import apiClient from '@/api/client';
 import {
   fetchEducationLead,
@@ -689,7 +690,32 @@ async function saveUpdate() {
 
     if (form.value.scheduleFollowUp && form.value.followUpDate) {
       const timeStr = form.value.followUpTime || '10:00';
-      payload.nextFollowUpAt = new Date(`${form.value.followUpDate}T${timeStr}:00`).toISOString();
+      const chosenDate = new Date(`${form.value.followUpDate}T${timeStr}:00`);
+      const existingDate = lead.value?.scheduledAt ? new Date(lead.value.scheduledAt) : (lead.value?.nextFollowUpAt ? new Date(lead.value.nextFollowUpAt) : null);
+      if (existingDate && Math.abs(chosenDate.getTime() - existingDate.getTime()) < 15 * 60 * 1000) {
+        saving.value = false;
+        const targetName = lead.value?.firstName ? `${lead.value.firstName} ${lead.value.lastName || ''}`.trim() : 'this student';
+        const conflictTime = existingDate.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+        await Swal.fire({
+          title: 'Task Already Scheduled',
+          html: `
+            <div class="text-slate-600 dark:text-slate-300 text-sm space-y-2 text-left">
+              <p>A task is already scheduled for <strong>${targetName}</strong> at <strong>${conflictTime}</strong>.</p>
+              <p class="text-slate-500">The same student cannot have two tasks assigned at the same time. Please choose a different time slot.</p>
+            </div>
+          `,
+          icon: 'warning',
+          confirmButtonText: 'Select Different Time',
+          confirmButtonColor: '#3b82f6',
+          customClass: {
+            popup: 'rounded-2xl shadow-2xl border border-slate-200 dark:border-neutral-800 dark:bg-neutral-900',
+            title: 'text-base font-bold text-slate-800 dark:text-slate-100',
+            confirmButton: 'rounded-xl text-xs font-bold px-4 py-2.5 shadow-sm',
+          },
+        });
+        return;
+      }
+      payload.nextFollowUpAt = chosenDate.toISOString();
     }
 
     // 1. Log Activity Record
@@ -721,7 +747,22 @@ async function saveUpdate() {
     emit('success');
     emit('close');
   } catch (err) {
-    error.value = err.response?.data?.message || err.message || 'Unable to save update.';
+    const msg = err.response?.data?.message || err.message || 'Unable to save update.';
+    if (msg.includes('already scheduled') || msg.includes('TASK_SCHEDULE_CONFLICT')) {
+      Swal.fire({
+        title: 'Task Already Scheduled',
+        text: msg,
+        icon: 'warning',
+        confirmButtonText: 'Select Different Time',
+        confirmButtonColor: '#3b82f6',
+        customClass: {
+          popup: 'rounded-2xl shadow-2xl border border-slate-200 dark:border-neutral-800 dark:bg-neutral-900',
+          title: 'text-base font-bold text-slate-800 dark:text-slate-100',
+          confirmButton: 'rounded-xl text-xs font-bold px-4 py-2.5 shadow-sm',
+        },
+      });
+    }
+    error.value = msg;
   } finally {
     saving.value = false;
   }

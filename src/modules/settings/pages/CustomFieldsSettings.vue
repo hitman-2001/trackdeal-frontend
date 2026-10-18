@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-3 sm:space-y-6 text-xs pb-28 sm:pb-8">
+  <div class="w-full max-w-full min-w-0 space-y-3 sm:space-y-6 text-xs pb-28 sm:pb-8">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div>
@@ -21,7 +21,7 @@
     </div>
 
     <!-- Object Selector Tabs -->
-    <div class="flex items-center border-b border-default overflow-x-auto space-x-2 pb-0.5 scrollbar-none">
+    <div class="flex items-center border-b border-default overflow-x-auto space-x-2 pb-0.5 scrollbar-none w-full min-w-0" style="-webkit-overflow-scrolling: touch;">
       <button
         v-for="obj in OBJECTS"
         :key="obj.key"

@@ -103,12 +103,13 @@
           <button
             type="button"
             @click="scheduleFollowUp = !scheduleFollowUp"
-            class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 cursor-pointer"
+            class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 cursor-pointer shrink-0"
             :class="scheduleFollowUp ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-600'"
+            aria-label="Toggle next follow-up schedule"
           >
             <span
-              class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform duration-200"
-              :class="scheduleFollowUp ? 'translate-x-4.5' : 'translate-x-0.5'"
+              class="inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-200"
+              :class="scheduleFollowUp ? 'translate-x-6' : 'translate-x-1'"
             ></span>
           </button>
         </div>
@@ -189,6 +190,7 @@ import {
   PhXCircle,
   PhCalendar,
 } from '@phosphor-icons/vue';
+import Swal from 'sweetalert2';
 import AppModal from '@/components/AppModal.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import {
@@ -196,14 +198,20 @@ import {
   EDUCATION_SUB_STATUS_MAP,
   normalizeStatus,
 } from '../constants/leadStatusConfig';
-import { updateEducationLead, logEducationLeadActivity } from '../api/endpoints';
+import {
+  updateEducationLead,
+  logEducationLeadActivity,
+  fetchEducationLead,
+  fetchEducationLeadActivityCenter,
+} from '../api/endpoints';
+import { updateLeadFollowUp } from '@/modules/leads/api/endpoints';
 
 const props = defineProps({
   isOpen: { type: Boolean, default: false },
   lead:   { type: Object, default: null },
 });
 
-const emit = defineEmits(['close', 'saved']);
+const emit = defineEmits(['close', 'saved', 'success']);
 const store = useStore();
 
 // Status options with high-end Phosphor vector icons
@@ -226,6 +234,8 @@ const errorMessage = ref('');
 const scheduleFollowUp = ref(false);
 const followUpDate = ref(defaultFollowUpDate());
 const followUpTime = ref('11:00');
+const hasExistingFollowUp = ref(false);
+const existingFollowUpId = ref(null);
 
 function defaultFollowUpDate() {
   const d = new Date();
@@ -271,13 +281,53 @@ watch(
       }
 
       remarks.value = leadData.statusRemarks || '';
-      scheduleFollowUp.value = norm === 'call_back';
+      scheduleFollowUp.value = false;
       followUpDate.value = defaultFollowUpDate();
       followUpTime.value = '11:00';
+
+      existingFollowUpId.value = leadData.currentFollowUpId || null;
+      hasExistingFollowUp.value = Boolean(
+        leadData.currentFollowUpId ||
+        leadData.nextFollowUpAt ||
+        leadData.scheduledAt ||
+        leadData.followUpAt ||
+        leadData.hasPendingFollowUp
+      );
+
+      // Async background check to pre-cache follow-up state
+      const leadId = leadData._id || leadData.id;
+      if (leadId && !hasExistingFollowUp.value) {
+        Promise.allSettled([
+          fetchEducationLead(leadId),
+          fetchEducationLeadActivityCenter(leadId),
+        ]).then(([freshRes, actRes]) => {
+          if (freshRes.status === 'fulfilled') {
+            const freshLead = freshRes.value?.data || freshRes.value;
+            if (freshLead?.nextFollowUpAt) {
+              hasExistingFollowUp.value = true;
+            }
+          }
+          if (actRes.status === 'fulfilled') {
+            const list = actRes.value?.data?.followUps || actRes.value?.followUps || [];
+            const scheduled = list.find((f) => f.status === 'scheduled' && !f.isDeleted);
+            if (scheduled) {
+              hasExistingFollowUp.value = true;
+              existingFollowUpId.value = scheduled._id || scheduled.id;
+            }
+          }
+        }).catch(() => {});
+      }
     }
   },
   { immediate: true }
 );
+
+// Auto-enable follow-up reminder only when user actively switches to "Follow-Up Needed"
+watch(selectedSubStatus, (newVal, oldVal) => {
+  if (oldVal && (newVal === 'Follow-Up Needed' || (newVal && newVal.toLowerCase().includes('follow-up')))) {
+    scheduleFollowUp.value = true;
+  }
+});
 
 const currentStatusLabel = computed(() => {
   const match = statusOptions.find(s => s.value === selectedStatus.value);
@@ -310,15 +360,149 @@ async function handleSave() {
   errorMessage.value = '';
 
   try {
+    // Check if this lead has a pending follow-up task
+    let hasActiveFollowUp = Boolean(
+      props.lead.currentFollowUpId ||
+      props.lead.nextFollowUpAt ||
+      props.lead.scheduledAt ||
+      props.lead.followUpAt ||
+      props.lead.hasPendingFollowUp ||
+      hasExistingFollowUp.value
+    );
+    let activeFollowUpId = existingFollowUpId.value || props.lead.currentFollowUpId || null;
+
+    if (!hasActiveFollowUp && leadId) {
+      try {
+        const [freshLeadRes, actRes] = await Promise.allSettled([
+          fetchEducationLead(leadId),
+          fetchEducationLeadActivityCenter(leadId),
+        ]);
+
+        if (freshLeadRes.status === 'fulfilled') {
+          const freshLead = freshLeadRes.value?.data || freshLeadRes.value;
+          if (freshLead?.nextFollowUpAt) {
+            hasActiveFollowUp = true;
+          }
+        }
+
+        if (actRes.status === 'fulfilled') {
+          const list = actRes.value?.data?.followUps || actRes.value?.followUps || [];
+          const scheduled = list.find((f) => f.status === 'scheduled' && !f.isDeleted);
+          if (scheduled) {
+            hasActiveFollowUp = true;
+            activeFollowUpId = scheduled._id || scheduled.id;
+          }
+        }
+      } catch (checkErr) {
+        console.warn('Could not verify existing follow-up status:', checkErr);
+      }
+    }
+
     const payload = {
       status: selectedStatus.value,
       subStatus: selectedSubStatus.value,
       statusRemarks: remarks.value.trim(),
     };
 
-    if (scheduleFollowUp.value && followUpDate.value) {
-      const timeStr = followUpTime.value || '11:00';
-      payload.nextFollowUpAt = new Date(`${followUpDate.value}T${timeStr}:00`).toISOString();
+    if (hasActiveFollowUp) {
+      // User is updating status on a lead with an active follow-up task.
+      // Salesforce / LeadSquared international UX: Ask user whether to complete or keep in agenda.
+      saving.value = false;
+      const targetName = props.lead.firstName || props.lead.studentName || props.lead.name || 'this student';
+
+      const result = await Swal.fire({
+        title: 'Pending Follow-up Task',
+        html: `
+          <div class="text-slate-600 dark:text-slate-300 text-sm space-y-2 text-left">
+            <p><strong>${targetName}</strong> currently has a scheduled follow-up task in your agenda.</p>
+            <p class="font-medium text-slate-800 dark:text-slate-100">
+              Would you like to mark this follow-up task as <span class="text-emerald-600 dark:text-emerald-400 font-semibold">Completed</span>, or keep it open in your agenda?
+            </p>
+          </div>
+        `,
+        icon: 'question',
+        showDenyButton: true,
+        showCancelButton: true,
+        confirmButtonText: 'Mark Task Completed',
+        denyButtonText: 'Keep in Agenda',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#10b981',
+        denyButtonColor: '#3b82f6',
+        cancelButtonColor: '#94a3b8',
+        buttonsStyling: true,
+        customClass: {
+          popup: 'rounded-2xl shadow-2xl border border-slate-200 dark:border-neutral-800 dark:bg-neutral-900',
+          title: 'text-base font-bold text-slate-800 dark:text-slate-100',
+          confirmButton: 'rounded-xl text-xs font-bold px-4 py-2.5 shadow-sm',
+          denyButton: 'rounded-xl text-xs font-bold px-4 py-2.5 shadow-sm',
+          cancelButton: 'rounded-xl text-xs font-medium px-3.5 py-2.5',
+        },
+      });
+
+      if (result.isDismissed && result.dismiss === Swal.DismissReason.cancel) {
+        return;
+      }
+
+      saving.value = true;
+
+      if (result.isConfirmed) {
+        // Mark task completed and remove from scheduled tasks
+        if (scheduleFollowUp.value && followUpDate.value) {
+          const timeStr = followUpTime.value || '11:00';
+          payload.nextFollowUpAt = new Date(`${followUpDate.value}T${timeStr}:00`).toISOString();
+        } else {
+          payload.nextFollowUpAt = null;
+        }
+
+        if (activeFollowUpId && !String(activeFollowUpId).startsWith('fu-')) {
+          try {
+            await updateLeadFollowUp({
+              leadId,
+              followUpId: activeFollowUpId,
+              status: 'completed',
+            });
+          } catch (fuErr) {
+            console.warn('Could not update individual follow-up record:', fuErr);
+          }
+        }
+      } else if (result.isDenied) {
+        // User clicked "Keep in Agenda" -> preserve task, apply new schedule if selected
+        if (scheduleFollowUp.value && followUpDate.value) {
+          const timeStr = followUpTime.value || '11:00';
+          const chosenDate = new Date(`${followUpDate.value}T${timeStr}:00`);
+          const existingDate = props.lead.scheduledAt ? new Date(props.lead.scheduledAt) : (props.lead.nextFollowUpAt ? new Date(props.lead.nextFollowUpAt) : null);
+          if (existingDate && Math.abs(chosenDate.getTime() - existingDate.getTime()) < 15 * 60 * 1000) {
+            saving.value = false;
+            const conflictTime = existingDate.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+            await Swal.fire({
+              title: 'Task Already Scheduled',
+              html: `
+                <div class="text-slate-600 dark:text-slate-300 text-sm space-y-2 text-left">
+                  <p>A task is already scheduled for <strong>${targetName}</strong> at <strong>${conflictTime}</strong>.</p>
+                  <p class="text-slate-500">The same student cannot have two tasks assigned at the same time. Please choose a different time slot.</p>
+                </div>
+              `,
+              icon: 'warning',
+              confirmButtonText: 'Select Different Time',
+              confirmButtonColor: '#3b82f6',
+              customClass: {
+                popup: 'rounded-2xl shadow-2xl border border-slate-200 dark:border-neutral-800 dark:bg-neutral-900',
+                title: 'text-base font-bold text-slate-800 dark:text-slate-100',
+                confirmButton: 'rounded-xl text-xs font-bold px-4 py-2.5 shadow-sm',
+              },
+            });
+            return;
+          }
+          payload.nextFollowUpAt = chosenDate.toISOString();
+          payload.keepExistingFollowUp = true;
+        }
+      }
+    } else {
+      // No active follow-up: apply new schedule if user toggled on
+      if (scheduleFollowUp.value && followUpDate.value) {
+        const timeStr = followUpTime.value || '11:00';
+        payload.nextFollowUpAt = new Date(`${followUpDate.value}T${timeStr}:00`).toISOString();
+      }
     }
 
     const updated = await updateEducationLead(leadId, payload);
@@ -336,7 +520,7 @@ async function handleSave() {
 
     const cleanDescription = remarks.value.trim() ? remarks.value.trim() : cleanSummary;
 
-    // Also record an audit activity log entry
+    // Record an audit activity log entry
     try {
       const actPayload = {
         type: 'stage_change',
@@ -360,10 +544,26 @@ async function handleSave() {
     });
 
     emit('saved', updated?.lead || updated);
+    emit('success', updated?.lead || updated);
     handleClose();
   } catch (err) {
     console.error('Failed to update lead status:', err);
-    errorMessage.value = err.response?.data?.message || err.message || 'Failed to update status. Please try again.';
+    const msg = err.response?.data?.message || err.message || 'Failed to update status. Please try again.';
+    if (msg.includes('already scheduled') || msg.includes('TASK_SCHEDULE_CONFLICT')) {
+      Swal.fire({
+        title: 'Task Already Scheduled',
+        text: msg,
+        icon: 'warning',
+        confirmButtonText: 'Select Different Time',
+        confirmButtonColor: '#3b82f6',
+        customClass: {
+          popup: 'rounded-2xl shadow-2xl border border-slate-200 dark:border-neutral-800 dark:bg-neutral-900',
+          title: 'text-base font-bold text-slate-800 dark:text-slate-100',
+          confirmButton: 'rounded-xl text-xs font-bold px-4 py-2.5 shadow-sm',
+        },
+      });
+    }
+    errorMessage.value = msg;
   } finally {
     saving.value = false;
   }
