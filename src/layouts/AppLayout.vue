@@ -507,23 +507,13 @@
               </button>
             </div>
 
-            <!-- Push Active Indicator with Test Button -->
+            <!-- Push Active Indicator -->
             <div
               v-else
-              class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-neutral-800/60 border border-slate-200/60 dark:border-neutral-700/60 flex items-center justify-between gap-2 text-[11px]"
+              class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-neutral-800/60 border border-slate-200/60 dark:border-neutral-700/60 flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold"
             >
-              <div class="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold min-w-0">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
-                <span class="truncate">Push Alerts Active</span>
-              </div>
-              <button
-                type="button"
-                @click="handleSendTestPush"
-                :disabled="isSendingTest"
-                class="px-2.5 py-1 rounded-md text-[10px] font-bold border border-slate-300 dark:border-neutral-600 hover:bg-white dark:hover:bg-neutral-700 text-slate-700 dark:text-slate-200 transition-colors shrink-0"
-              >
-                {{ isSendingTest ? 'Sending...' : 'Send Test Push' }}
-              </button>
+              <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+              <span class="truncate">Push Alerts Active</span>
             </div>
 
             <!-- Notifications List -->

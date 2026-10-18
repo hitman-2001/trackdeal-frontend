@@ -16,6 +16,7 @@ import GlobalToastContainer from '@/components/GlobalToastContainer.vue';
 import {
   onForegroundNotification,
   syncPushTokenIfPermissionGranted,
+  requestPushNotificationPermission,
 } from '@/services/firebase';
 
 const store = useStore();
@@ -27,6 +28,11 @@ onMounted(() => {
   // Expose router for push notification action callbacks
   if (typeof window !== 'undefined') {
     window.$router = router;
+  }
+
+  // Automatically request push notification permissions on app install / launch
+  if (Capacitor.isNativePlatform()) {
+    requestPushNotificationPermission().catch(() => {});
   }
 
   // Initialize dynamic styles and theme modes immediately from store / local cache

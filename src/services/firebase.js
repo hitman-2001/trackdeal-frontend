@@ -121,7 +121,7 @@ export async function requestPushNotificationPermission() {
     try {
       initNativePushListeners();
       let permStatus = await PushNotifications.checkPermissions();
-      if (permStatus.receive === 'prompt' || permStatus.receive === 'prompt-with-rationale') {
+      if (permStatus.receive !== 'granted') {
         permStatus = await PushNotifications.requestPermissions();
       }
 

@@ -59,51 +59,44 @@
             />
           </div>
           <div class="modal-form-group col-span-full">
-            <label class="modal-form-label">School Name <span class="required-star">*</span></label>
+            <label class="modal-form-label">{{ getFieldLabel('schoolName', 'School / College Name') }} <span class="required-star">*</span></label>
             <input
               v-model="form.schoolName"
               required
-              placeholder="e.g. Delhi Public School / St. Xavier's"
+              :placeholder="getFieldPlaceholder('schoolName', 'e.g. Delhi Public School / St. Xavier\'s College')"
               class="modal-form-input"
             />
           </div>
           <div class="modal-form-group">
-            <label class="modal-form-label">Institution Type</label>
+            <label class="modal-form-label">{{ getFieldLabel('institutionType', 'Institution Type') }}</label>
             <select
               v-model="form.institutionType"
               class="modal-form-select"
             >
-              <option value="">Select Institution Type</option>
-              <option value="School">School</option>
-              <option value="Private Classes">Private Classes</option>
+              <option value="">{{ getFieldPlaceholder('institutionType', 'Select Institution Type') }}</option>
+              <option v-for="opt in institutionTypeOptions" :key="opt" :value="opt">{{ opt }}</option>
             </select>
           </div>
           <div class="modal-form-group">
-            <label class="modal-form-label">Education Board</label>
+            <label class="modal-form-label">{{ getFieldLabel('educationBoard', 'Education Board') }}</label>
             <select
               v-model="form.educationBoard"
               class="modal-form-select"
             >
-              <option value="">Select Board</option>
-              <option value="CBSE">CBSE</option>
-              <option value="ICSE">ICSE</option>
-              <option value="State Board">State Board (SSC)</option>
+              <option value="">{{ getFieldPlaceholder('educationBoard', 'Select Board') }}</option>
+              <option v-for="opt in educationBoardOptions" :key="opt" :value="opt">{{ opt }}</option>
             </select>
           </div>
           <div class="modal-form-group">
-            <label class="modal-form-label">Standard / Grade</label>
+            <label class="modal-form-label">{{ getFieldLabel('standard', 'Standard / Grade') }}</label>
             <select
               v-model="form.standard"
               class="modal-form-select"
             >
-              <option value="">Select Standard / Grade</option>
-              <option value="8">8</option>
-              <option value="9">9</option>
-              <option value="10">10</option>
-              <option value="11">11</option>
-              <option value="12">12</option>
+              <option value="">{{ getFieldPlaceholder('standard', 'Select Standard / Grade') }}</option>
+              <option v-for="opt in standardOptions" :key="opt" :value="opt">{{ opt }}</option>
               <option
-                v-if="form.standard && !['8', '9', '10', '11', '12'].includes(String(form.standard))"
+                v-if="form.standard && !standardOptions.includes(String(form.standard))"
                 :value="form.standard"
               >
                 {{ form.standard }}
@@ -111,14 +104,13 @@
             </select>
           </div>
           <div class="modal-form-group">
-            <label class="modal-form-label">Academic Stream</label>
+            <label class="modal-form-label">{{ getFieldLabel('academicStream', 'Academic Stream') }}</label>
             <select
               v-model="form.academicStream"
               class="modal-form-select"
             >
-              <option value="">Select Stream</option>
-              <option value="Science">Science</option>
-              <option value="Commerce">Commerce</option>
+              <option value="">{{ getFieldPlaceholder('academicStream', 'Select Stream') }}</option>
+              <option v-for="opt in streamOptions" :key="opt" :value="opt">{{ opt }}</option>
             </select>
           </div>
           <div class="modal-form-group col-span-full">
@@ -207,13 +199,13 @@
               :required="cf.required"
               class="modal-form-select"
             >
-              <option value="">{{ cf.placeholder || `Select ${cf.label}` }}</option>
+              <option value="" :disabled="cf.required">{{ cf.placeholder ? cf.placeholder : `Select ${cf.label}` }}</option>
               <option
-                v-for="(opt, idx) in cf.options"
+                v-for="(opt, idx) in (cf.options || [])"
                 :key="idx"
-                :value="opt.value || opt.label || opt"
+                :value="getOptionValue(opt)"
               >
-                {{ opt.label || opt.value || opt }}
+                {{ getOptionLabel(opt) }}
               </option>
             </select>
             <!-- Text Input -->
@@ -319,13 +311,63 @@ const loading = ref(false);
 const saving = ref(false);
 const error = ref("");
 const lead = ref(null);
+const allFieldsList = ref([]);
 const customFieldsList = ref([]);
+
+function getFieldConfig(key) {
+  return allFieldsList.value.find(f => f.key === key);
+}
+
+function getFieldLabel(key, fallback) {
+  const cfg = getFieldConfig(key);
+  return cfg?.label || fallback;
+}
+
+function getFieldPlaceholder(key, fallback) {
+  const cfg = getFieldConfig(key);
+  return cfg?.placeholder || fallback;
+}
+
+function getFieldOptions(key, fallback = []) {
+  const cfg = getFieldConfig(key);
+  if (cfg && Array.isArray(cfg.options) && cfg.options.length > 0) {
+    return cfg.options.map(o => typeof o === 'object' ? (o.value || o.label) : String(o));
+  }
+  return fallback;
+}
+
+function getOptionValue(opt) {
+  if (opt === null || opt === undefined) return '';
+  if (typeof opt === 'object') return String(opt.value ?? opt.label ?? '');
+  return String(opt);
+}
+
+function getOptionLabel(opt) {
+  if (opt === null || opt === undefined) return '';
+  if (typeof opt === 'object') return String(opt.label ?? opt.value ?? '');
+  return String(opt);
+}
+
+const institutionTypeOptions = computed(() => getFieldOptions('institutionType', ['School', 'Private Classes']));
+const educationBoardOptions = computed(() => getFieldOptions('educationBoard', ['CBSE', 'ICSE', 'State Board']));
+const standardOptions = computed(() => getFieldOptions('standard', ['8', '9', '10', '11', '12']));
+const streamOptions = computed(() => getFieldOptions('academicStream', ['Science', 'Commerce']));
 
 async function loadCustomFields() {
   try {
-    const list = await fetchCustomFields('leads');
-    customFieldsList.value = (Array.isArray(list) ? list : []).filter(f => !f.isStandard && f.isActive !== false);
+    const list = await fetchCustomFields('leads', { includeStandard: true });
+    allFieldsList.value = Array.isArray(list) ? list : [];
+    customFieldsList.value = allFieldsList.value.filter(f => !f.isStandard && f.isActive !== false);
+    if (!form.value.customFields) {
+      form.value.customFields = {};
+    }
+    for (const cf of customFieldsList.value) {
+      if (form.value.customFields[cf.key] === undefined || form.value.customFields[cf.key] === null) {
+        form.value.customFields[cf.key] = "";
+      }
+    }
   } catch (e) {
+    allFieldsList.value = [];
     customFieldsList.value = [];
   }
 }
@@ -391,6 +433,12 @@ async function loadLead() {
         "",
       customFields: { ...(lead.value.customFields || {}) },
     };
+
+    for (const cf of customFieldsList.value) {
+      if (form.value.customFields[cf.key] === undefined || form.value.customFields[cf.key] === null) {
+        form.value.customFields[cf.key] = "";
+      }
+    }
   } catch (err) {
     error.value = "Failed to load student details for editing.";
   } finally {
@@ -402,8 +450,9 @@ watch(
   () => props.isOpen,
   (newVal) => {
     if (newVal) {
-      loadCustomFields();
-      loadLead();
+      loadCustomFields().then(() => {
+        loadLead();
+      });
     } else {
       lead.value = null;
     }
@@ -422,7 +471,7 @@ async function handleSave() {
   }
 
   if (!form.value.schoolName?.trim()) {
-    error.value = "School name is mandatory.";
+    error.value = "School / College Name is mandatory.";
     saving.value = false;
     return;
   }
