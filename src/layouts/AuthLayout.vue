@@ -127,16 +127,6 @@
     <div
       class="auth-form-panel w-full lg:w-[50%] xl:w-[48%] flex flex-col justify-between items-center p-6 sm:p-10 lg:p-14 relative min-h-screen"
     >
-      <!-- Top Bar: Navigation -->
-      <div class="w-full flex items-center justify-between mb-6">
-        <router-link
-          to="/"
-          class="inline-flex items-center gap-2 text-xs font-semibold text-[#64748b] hover:text-[#0a6ef0] transition-colors py-1.5 px-3 rounded-lg hover:bg-black/5"
-        >
-          <span aria-hidden="true">&larr;</span> Back to website
-        </router-link>
-      </div>
-
       <!-- Main Form Wrapper -->
       <div class="w-full max-w-[440px] my-auto">
         <!-- Logo for Mobile & Tablet (< 1024px) -->
