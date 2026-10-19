@@ -1,36 +1,62 @@
 <template>
   <div class="workspace-page education-list space-y-5 text-xs">
     <!-- Page Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-default pb-3 sm:pb-4">
-      <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+      <div class="flex items-center justify-between gap-2 w-full sm:w-auto">
         <div>
-          <h1 class="font-heading text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <h1 class="font-heading text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2 whitespace-nowrap leading-none">
             <span>Enrolled Students</span>
           </h1>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 hidden sm:block">
             Directory of enrolled students and parent guardian contacts.
           </p>
         </div>
-        <!-- Compact Add Student Button for Mobile Header -->
+        <!-- Compact Actions for Mobile Screen Header -->
+        <div class="sm:hidden flex items-center gap-1.5 shrink-0">
+          <button 
+            v-if="canCreateStudent"
+            type="button"
+            class="h-8 px-2.5 rounded-xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 shadow-2xs active:scale-95 transition-all"
+            @click="showBulkUpload = true"
+            title="Bulk Upload Enrolled Students from Excel (.xlsx, .csv)"
+          >
+            <PhFileArrowUp :size="14" weight="bold" class="text-emerald-600 dark:text-emerald-400" />
+            <span>Import</span>
+          </button>
+          <button 
+            v-if="canCreateStudent"
+            type="button"
+            class="h-8 px-3 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold flex items-center gap-1 shadow-xs active:scale-95 transition-all"
+            @click="openCreate"
+          >
+            <PhPlus :size="13" weight="bold" />
+            <span>Add</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Desktop Action Buttons (sm and above) -->
+      <div class="hidden sm:flex items-center gap-2.5 shrink-0">
         <button 
           v-if="canCreateStudent"
-          class="sm:hidden btn btn-primary btn-sm h-9 px-3.5 text-xs font-semibold gap-1.5 shadow-xs rounded-xl active:scale-95 transition-transform" 
+          type="button"
+          class="btn btn-secondary btn-sm h-9 px-3.5 text-xs font-semibold flex items-center gap-1.5 shadow-xs" 
+          @click="showBulkUpload = true"
+          title="Bulk Upload Enrolled Students from Excel (.xlsx, .csv)"
+        >
+          <PhFileArrowUp :size="15" weight="bold" />
+          <span>Import Excel</span>
+        </button>
+        <button 
+          v-if="canCreateStudent"
+          type="button"
+          class="btn btn-primary btn-sm h-9 px-3.5 text-xs font-semibold flex items-center gap-1.5 shadow-xs" 
           @click="openCreate"
         >
           <PhPlus :size="15" weight="bold" />
           <span>Add Student</span>
         </button>
       </div>
-
-      <!-- Desktop Add Student Button -->
-      <button 
-        v-if="canCreateStudent"
-        class="hidden sm:inline-flex btn btn-primary btn-sm h-9 px-3.5 text-xs font-semibold gap-1.5 shadow-xs" 
-        @click="openCreate"
-      >
-        <PhPlus :size="15" weight="bold" />
-        <span>Add Student</span>
-      </button>
     </div>
 
     <!-- Mobile Streamlined Search & Filter (Flipkart / Amazon Style) (< 640px) -->
@@ -838,6 +864,14 @@
         </div>
       </template>
     </AppModal>
+
+    <!-- Bulk Import Enrolled Students Modal -->
+    <LeadBulkUploadModal
+      :isOpen="showBulkUpload"
+      target="students"
+      @close="showBulkUpload = false"
+      @success="load"
+    />
   </div>
 </template>
 
@@ -860,11 +894,13 @@ import {
   PhBuildings,
   PhUser,
   PhMapPin,
+  PhFileArrowUp,
 } from '@phosphor-icons/vue';
 import Swal from 'sweetalert2';
 import AppTable from '@/components/AppTable.vue';
 import AppDrawer from '@/components/AppDrawer.vue';
 import AppModal from '@/components/AppModal.vue';
+import LeadBulkUploadModal from '@/modules/leads/components/LeadBulkUploadModal.vue';
 import { 
   createEducationStudent, 
   fetchEducationStudents,
@@ -875,6 +911,7 @@ import { fetchCustomFields } from '@/api/customFields';
 import { formatLeadSource } from '@/utils/formatters';
 
 const store = useStore();
+const showBulkUpload = ref(false);
 const canCreateStudent = computed(() => {
   return Boolean(store.getters['permissions/hasCapability']?.('students.create'));
 });

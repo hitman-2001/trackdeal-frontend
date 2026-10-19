@@ -117,15 +117,15 @@
         </div>
 
         <!-- Right: Action Buttons (Equal width on mobile, inline on desktop) -->
-        <div class="flex items-center gap-2 w-full sm:w-auto">
+        <div class="grid grid-flow-col auto-cols-fr gap-1.5 sm:flex sm:items-center sm:gap-2 w-full sm:w-auto min-w-0">
           <button
             v-if="canAssignLeads"
             type="button"
             @click="openBulkAssign"
-            class="btn btn-primary btn-sm flex-1 sm:flex-none flex items-center justify-center gap-1.5 shadow-xs font-semibold"
+            class="btn btn-primary btn-sm min-w-0 px-2 sm:px-3 h-8.5 sm:h-9 flex items-center justify-center gap-1 sm:gap-1.5 shadow-xs font-semibold text-[11px] sm:text-xs"
             title="Assign selected leads to agents"
           >
-            <PhUserPlus :size="15" weight="bold" />
+            <PhUserPlus :size="14" weight="bold" class="shrink-0" />
             <span class="truncate">Assign</span>
           </button>
 
@@ -133,10 +133,10 @@
             v-if="canBulkDeleteLeads"
             type="button"
             @click="openBulkDelete"
-            class="btn btn-danger-outline btn-sm flex-1 sm:flex-none flex items-center justify-center gap-1.5 shadow-xs font-semibold"
+            class="btn btn-danger-outline btn-sm min-w-0 px-2 sm:px-3 h-8.5 sm:h-9 flex items-center justify-center gap-1 sm:gap-1.5 shadow-xs font-semibold text-[11px] sm:text-xs"
             title="Delete selected leads"
           >
-            <PhTrash :size="15" weight="bold" />
+            <PhTrash :size="14" weight="bold" class="shrink-0" />
             <span class="truncate">Delete</span>
           </button>
 

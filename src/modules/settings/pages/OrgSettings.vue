@@ -1,149 +1,185 @@
 <template>
-  <div class="w-full max-w-full min-w-0 space-y-4 sm:space-y-6 text-xs">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-default">
-      <div class="min-w-0">
-        <div class="flex items-center gap-2">
-          <span class="p-1.5 rounded-lg bg-primary/10 text-primary shrink-0">
-            <component :is="activeTab === 'profile' ? PhBuilding : PhPalette" :size="20" weight="bold" />
-          </span>
-          <h1 class="font-heading text-lg sm:text-xl font-extrabold text-slate-800 dark:text-slate-100 truncate">
-            {{ isEducation ? 'Institute Settings' : 'Organization Settings' }}
-          </h1>
-        </div>
-        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-          {{ isEducation ? 'Configure institute identity, currency, and customized workspace branding.' : 'Configure company profile, localization defaults, and workspace theme branding.' }}
-        </p>
-      </div>
-    </div>
-
-    <!-- Inner Tab Navigation -->
-    <div class="flex border-b border-default overflow-x-auto gap-3 sm:gap-6 pb-0.5 scrollbar-none w-full min-w-0" style="-webkit-overflow-scrolling: touch;">
+  <div class="w-full max-w-full min-w-0 space-y-3 sm:space-y-4 text-xs">
+    <!-- Accordion 1: Institute Identity / Organization Details -->
+    <div class="bg-surface border border-default rounded-xl shadow-xs overflow-hidden transition-all">
       <button
-        v-for="tab in tabs"
-        :key="tab.value"
-        @click="activeTab = tab.value"
-        class="flex items-center gap-2 py-2.5 px-1 border-b-2 font-bold text-xs transition-colors shrink-0 whitespace-nowrap"
-        :class="[
-          activeTab === tab.value
-            ? 'border-primary text-primary'
-            : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-        ]"
+        type="button"
+        @click="toggleSection('identity')"
+        class="w-full flex items-center justify-between p-3.5 sm:p-4 text-left bg-surface hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors select-none"
       >
-        <component :is="tab.icon" :size="15" weight="bold" />
-        <span>{{ tab.label }}</span>
-      </button>
-    </div>
-
-    <!-- Tab Contents -->
-    <div class="space-y-4 sm:space-y-6 w-full max-w-full min-w-0">
-      <!-- 1. Profile Metadata Form -->
-      <div v-if="activeTab === 'profile'" class="space-y-4 sm:space-y-6 w-full max-w-full min-w-0">
-        <!-- Organization Identity Card -->
-        <div class="bg-surface border border-default rounded-xl p-3.5 sm:p-6 shadow-xs space-y-4 sm:space-y-5 w-full max-w-full min-w-0">
-          <div class="border-b border-default pb-3">
-            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
+            <PhBuilding :size="18" weight="bold" />
+          </span>
+          <div class="min-w-0">
+            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
               {{ isEducation ? 'Institute Identity' : 'Organization Details' }}
             </h3>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
               Official registered details of your organization across reports and documents.
             </p>
           </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0 ml-2">
+          <span v-if="orgForm.companyName" class="hidden sm:inline-block px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 max-w-[150px] truncate">
+            {{ orgForm.companyName }}
+          </span>
+          <component :is="openSections.identity ? PhCaretUp : PhCaretDown" :size="16" class="text-slate-400" weight="bold" />
+        </div>
+      </button>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 w-full min-w-0">
-            <div class="sm:col-span-2">
-              <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                {{ isEducation ? 'Institute / Organization Name' : 'Company / Legal Name' }}
-                <span class="text-rose-500">*</span>
-              </label>
-              <input
-                v-model="orgForm.companyName"
-                type="text"
-                :placeholder="isEducation ? 'e.g. Manch Classes Institute' : 'e.g. TrackDeal Technologies Pvt Ltd'"
-                class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-lg px-3.5 py-2.5 text-xs outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 dark:text-slate-100 font-medium transition-all"
-              />
-            </div>
+      <div v-show="openSections.identity" class="p-3.5 sm:p-5 border-t border-default space-y-4 sm:space-y-5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 w-full min-w-0">
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              {{ isEducation ? 'Institute / Organization Name' : 'Company / Legal Name' }}
+              <span class="text-rose-500">*</span>
+            </label>
+            <input
+              v-model="orgForm.companyName"
+              type="text"
+              :placeholder="isEducation ? 'e.g. Manch Classes Institute' : 'e.g. TrackDeal Technologies Pvt Ltd'"
+              class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-lg px-3.5 py-2.5 text-xs outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 dark:text-slate-100 font-medium transition-all"
+            />
+          </div>
 
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                Primary Administrator / SPOC
-                <span class="text-rose-500">*</span>
-              </label>
-              <input
-                v-model="orgForm.spoc"
-                type="text"
-                placeholder="e.g. Mayank Rai"
-                class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-lg px-3.5 py-2.5 text-xs outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 dark:text-slate-100 transition-all"
-              />
-            </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              Primary Administrator / SPOC
+              <span class="text-rose-500">*</span>
+            </label>
+            <input
+              v-model="orgForm.spoc"
+              type="text"
+              placeholder="e.g. Mayank Rai"
+              class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-lg px-3.5 py-2.5 text-xs outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 dark:text-slate-100 transition-all"
+            />
+          </div>
 
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                GSTIN / Tax ID
-                <span class="text-slate-400 font-normal">(Optional)</span>
-              </label>
-              <input
-                v-model="orgForm.gstin"
-                type="text"
-                placeholder="e.g. 27AAAAA1111A1Z1"
-                class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-lg px-3.5 py-2.5 text-xs outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 dark:text-slate-100 uppercase tracking-wider font-mono transition-all"
-              />
-            </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              GSTIN / Tax ID
+              <span class="text-slate-400 font-normal">(Optional)</span>
+            </label>
+            <input
+              v-model="orgForm.gstin"
+              type="text"
+              placeholder="e.g. 27AAAAA1111A1Z1"
+              class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-lg px-3.5 py-2.5 text-xs outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 dark:text-slate-100 uppercase tracking-wider font-mono transition-all"
+            />
           </div>
         </div>
 
-        <!-- Regional Localization Card -->
-        <div class="bg-surface border border-default rounded-xl p-3.5 sm:p-6 shadow-xs space-y-4 sm:space-y-5 w-full max-w-full min-w-0">
-          <div class="border-b border-default pb-3">
-            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Regional Localization & Currency</h3>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+        <div class="flex justify-end pt-3 border-t border-default">
+          <button
+            @click="saveProfile"
+            class="btn-md btn-primary gap-1.5 w-full sm:w-auto justify-center shadow-xs active:scale-[0.98] transition-transform"
+            :disabled="isUpdating"
+          >
+            <PhFloppyDisk :size="15" weight="bold" />
+            <span>{{ isUpdating ? 'Saving Changes...' : 'Save Identity Details' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- Accordion 2: Regional Localization & Currency -->
+    <div class="bg-surface border border-default rounded-xl shadow-xs overflow-hidden transition-all">
+      <button
+        type="button"
+        @click="toggleSection('localization')"
+        class="w-full flex items-center justify-between p-3.5 sm:p-4 text-left bg-surface hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors select-none"
+      >
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
+            <PhGlobe :size="18" weight="bold" />
+          </span>
+          <div class="min-w-0">
+            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
+              Regional Localization & Currency
+            </h3>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
               Set standard financial currency formats and scheduling timezones.
             </p>
           </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0 ml-2">
+          <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200/60">
+            {{ orgForm.currency || 'INR' }}
+          </span>
+          <component :is="openSections.localization ? PhCaretUp : PhCaretDown" :size="16" class="text-slate-400" weight="bold" />
+        </div>
+      </button>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 w-full min-w-0">
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                Default Currency
-              </label>
-              <select
-                v-model="orgForm.currency"
-                class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-lg px-3.5 py-2.5 text-xs outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 dark:text-slate-100 font-medium transition-all"
-              >
-                <option value="INR">INR (₹) - Indian Rupee</option>
-                <option value="USD" disabled>USD ($) - US Dollar (Enterprise Plan only)</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                Default Timezone
-              </label>
-              <select
-                v-model="orgForm.timezone"
-                class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-lg px-3.5 py-2.5 text-xs outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 dark:text-slate-100 transition-all"
-              >
-                <option value="Asia/Kolkata">(GMT+05:30) Mumbai, New Delhi, Kolkata</option>
-                <option value="GMT">(GMT+00:00) UTC / London</option>
-              </select>
-            </div>
+      <div v-show="openSections.localization" class="p-3.5 sm:p-5 border-t border-default space-y-4 sm:space-y-5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 w-full min-w-0">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              Default Currency
+            </label>
+            <select
+              v-model="orgForm.currency"
+              class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-lg px-3.5 py-2.5 text-xs outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 dark:text-slate-100 font-medium transition-all"
+            >
+              <option value="INR">INR (₹) - Indian Rupee</option>
+              <option value="USD" disabled>USD ($) - US Dollar (Enterprise Plan only)</option>
+            </select>
           </div>
 
-          <div class="flex justify-end pt-4 border-t border-default">
-            <button
-              @click="saveProfile"
-              class="btn-md btn-primary gap-1.5 w-full sm:w-auto justify-center shadow-xs active:scale-[0.98] transition-transform"
-              :disabled="isUpdating"
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              Default Timezone
+            </label>
+            <select
+              v-model="orgForm.timezone"
+              class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-lg px-3.5 py-2.5 text-xs outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 dark:text-slate-100 transition-all"
             >
-              <PhFloppyDisk :size="15" weight="bold" />
-              <span>{{ isUpdating ? 'Saving Changes...' : 'Save Profile Settings' }}</span>
-            </button>
+              <option value="Asia/Kolkata">(GMT+05:30) Mumbai, New Delhi, Kolkata</option>
+              <option value="GMT">(GMT+00:00) UTC / London</option>
+            </select>
           </div>
         </div>
-      </div>
 
-      <!-- 2. Branding & Theme Tab -->
-      <div v-if="activeTab === 'theme'" class="space-y-6">
+        <div class="flex justify-end pt-3 border-t border-default">
+          <button
+            @click="saveProfile"
+            class="btn-md btn-primary gap-1.5 w-full sm:w-auto justify-center shadow-xs active:scale-[0.98] transition-transform"
+            :disabled="isUpdating"
+          >
+            <PhFloppyDisk :size="15" weight="bold" />
+            <span>{{ isUpdating ? 'Saving Changes...' : 'Save Regional Settings' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Accordion 3: Branding & Theme Colors -->
+    <div class="bg-surface border border-default rounded-xl shadow-xs overflow-hidden transition-all">
+      <button
+        type="button"
+        @click="toggleSection('theme')"
+        class="w-full flex items-center justify-between p-3.5 sm:p-4 text-left bg-surface hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors select-none"
+      >
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
+            <PhPalette :size="18" weight="bold" />
+          </span>
+          <div class="min-w-0">
+            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
+              Branding & Theme Colors
+            </h3>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+              Curated color themes and workspace palette customization.
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0 ml-2">
+          <!-- Active theme preview swatch dot -->
+          <span class="w-3.5 h-3.5 rounded-full border border-black/10 shadow-xs" :style="{ backgroundColor: themeConfig.primaryHex }"></span>
+          <component :is="openSections.theme ? PhCaretUp : PhCaretDown" :size="16" class="text-slate-400" weight="bold" />
+        </div>
+      </button>
+
+      <div v-show="openSections.theme" class="p-3.5 sm:p-5 border-t border-default space-y-4 sm:space-y-6">
         <!-- Admin Restriction Notice -->
         <div
           v-if="!isOrgAdmin"
@@ -447,11 +483,14 @@ import { ref, computed, watch } from 'vue';
 import { useStore } from 'vuex';
 import { 
   PhBuilding, 
+  PhGlobe,
   PhPalette, 
   PhFloppyDisk, 
   PhArrowCounterClockwise, 
   PhCheck, 
-  PhLockKey 
+  PhLockKey,
+  PhCaretDown,
+  PhCaretUp,
 } from '@phosphor-icons/vue';
 import { applyThemeTokensToDOM } from '@/store/modules/ui';
 import { useOrgSettingsQuery, useUpdateOrgSettingsMutation } from '../queries';
@@ -529,20 +568,16 @@ const presets = [
   }
 ];
 
-const tabs = computed(() => [
-  { 
-    label: isEducation.value ? 'Institute Profile' : 'Organization Profile', 
-    value: 'profile',
-    icon: PhBuilding
-  },
-  { 
-    label: 'Branding & Colors', 
-    value: 'theme',
-    icon: PhPalette
-  },
-]);
+// Accordion open/close state: identity open by default on mobile; all open on desktop
+const openSections = ref({
+  identity: true,
+  localization: typeof window !== 'undefined' ? window.innerWidth >= 640 : true,
+  theme: typeof window !== 'undefined' ? window.innerWidth >= 640 : false,
+});
 
-const activeTab = ref('profile');
+const toggleSection = (section) => {
+  openSections.value[section] = !openSections.value[section];
+};
 
 // Local forms state
 const orgForm = ref({

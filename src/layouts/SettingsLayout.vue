@@ -1,5 +1,20 @@
 <template>
   <div class="workspace-page w-full max-w-full min-w-0 space-y-4 sm:space-y-6 pb-28 sm:pb-12 text-xs">
+    <!-- Page Header (Positioned above tab navigation) -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-default">
+      <div class="min-w-0">
+        <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
+          Workspace &bull; {{ isEducation ? 'Institute Settings' : 'Organization Settings' }}
+        </div>
+        <h1 class="font-heading text-lg sm:text-xl font-extrabold text-slate-800 dark:text-slate-100 truncate">
+          {{ isEducation ? 'Institute Settings' : 'Organization Settings' }}
+        </h1>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+          {{ isEducation ? 'Configure institute identity, staff directory, and customized data fields.' : 'Configure company profile, users, branches, and workspace settings.' }}
+        </p>
+      </div>
+    </div>
+
     <!-- Subnav Tabs (Education Standard: swipeable horizontal line tabs) -->
     <div class="border-b border-default pb-0.5">
       <div
@@ -10,13 +25,14 @@
           v-for="item in filteredSettingsMenu"
           :key="item.name"
           :to="item.to"
-          class="flex items-center gap-2 py-2.5 px-3 border-b-2 font-bold text-xs transition-colors shrink-0 whitespace-nowrap"
+          class="flex items-center gap-1.5 sm:gap-2 py-2.5 px-2.5 sm:px-3 border-b-2 font-bold text-xs transition-colors shrink-0 whitespace-nowrap"
           :class="isActive(item.to)
             ? 'border-primary text-primary'
             : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
         >
           <component :is="item.icon" :size="15" :weight="isActive(item.to) ? 'bold' : 'regular'" />
-          <span>{{ item.name }}</span>
+          <span class="hidden sm:inline">{{ item.name }}</span>
+          <span class="sm:hidden">{{ item.shortName || item.name }}</span>
         </router-link>
       </div>
     </div>
@@ -43,13 +59,37 @@ const isEducation = computed(() => store.getters['organization/isEducationTenant
 
 const settingsMenu = computed(() => {
   const items = [
-    { name: isEducation.value ? 'Institute Profile' : 'Organization', to: '/app/settings/org', icon: PhBuildings, permission: 'organizations.read' },
-    { name: isEducation.value ? 'Campuses & Centres' : 'Branches', to: '/app/settings/branches', icon: PhMapPin, permission: 'branches.read' },
-    { name: isEducation.value ? 'Staff Directory' : 'Users', to: '/app/settings/users', icon: PhUsersThree, permission: 'users.read' },
+    {
+      name: isEducation.value ? 'Institute Profile' : 'Organization',
+      shortName: isEducation.value ? 'Profile' : 'Org',
+      to: '/app/settings/org',
+      icon: PhBuildings,
+      permission: 'organizations.read',
+    },
+    {
+      name: isEducation.value ? 'Campuses & Centres' : 'Branches',
+      shortName: isEducation.value ? 'Campuses' : 'Branches',
+      to: '/app/settings/branches',
+      icon: PhMapPin,
+      permission: 'branches.read',
+    },
+    {
+      name: isEducation.value ? 'Staff Directory' : 'Users',
+      shortName: isEducation.value ? 'Staff' : 'Users',
+      to: '/app/settings/users',
+      icon: PhUsersThree,
+      permission: 'users.read',
+    },
   ];
   // Custom Fields is only for Education vertical
   if (isEducation.value) {
-    items.push({ name: 'Custom Fields', to: '/app/settings/custom-fields', icon: PhSlidersHorizontal, permission: 'organizations.read' });
+    items.push({
+      name: 'Fields & Templates',
+      shortName: 'Fields',
+      to: '/app/settings/custom-fields',
+      icon: PhSlidersHorizontal,
+      permission: 'organizations.read',
+    });
   }
   return items;
 });

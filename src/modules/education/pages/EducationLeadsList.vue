@@ -4,28 +4,41 @@
     <div
       class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4"
     >
-      <div class="flex items-center justify-between">
+      <div class="flex items-center justify-between gap-2 w-full sm:w-auto">
         <div>
-          <h1 class="text-xl sm:text-[28px] font-bold text-slate-900 dark:text-slate-100 tracking-tight leading-tight">
+          <h1 class="text-lg sm:text-[28px] font-bold text-slate-900 dark:text-slate-100 tracking-tight leading-tight whitespace-nowrap">
             Student Leads
           </h1>
           <p class="text-xs sm:text-[13px] text-slate-500 mt-0.5 hidden sm:block">
             Admission inquiries. Convert a lead into an enrolled student.
           </p>
         </div>
-        <!-- Compact Add Button for Mobile Screen Header -->
-        <button
-          v-if="canCreateLead"
-          class="sm:hidden btn btn-primary btn-sm rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-transform"
-          @click="openCreate"
-        >
-          <PhPlus :size="14" weight="bold" />
-          <span>Add Lead</span>
-        </button>
+        <!-- Compact Actions for Mobile Screen Header -->
+        <div class="sm:hidden flex items-center gap-1.5 shrink-0">
+          <button
+            v-if="canBulkUpload"
+            type="button"
+            class="h-8 px-2.5 rounded-xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 shadow-2xs active:scale-95 transition-all"
+            @click="showBulkUpload = true"
+            title="Bulk Upload Student Leads from Excel (.xlsx, .csv)"
+          >
+            <PhFileArrowUp :size="14" weight="bold" class="text-emerald-600 dark:text-emerald-400" />
+            <span>Import</span>
+          </button>
+          <button
+            v-if="canCreateLead"
+            type="button"
+            class="h-8 px-3 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold flex items-center gap-1 shadow-xs active:scale-95 transition-all"
+            @click="openCreate"
+          >
+            <PhPlus :size="13" weight="bold" />
+            <span>Add</span>
+          </button>
+        </div>
       </div>
 
       <!-- Desktop Action Buttons (sm and above) -->
-      <div class="hidden sm:flex items-center gap-2.5 flex-wrap">
+      <div class="hidden sm:flex items-center gap-2.5 shrink-0">
 
         <button
           v-if="canBulkUpload"
@@ -106,6 +119,16 @@
         </button>
 
         <button
+          v-if="staffFilter"
+          type="button"
+          @click="staffFilter = ''; onFilterChange()"
+          class="h-6 px-2.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-[11px] font-semibold text-indigo-700 dark:text-indigo-300 inline-flex items-center gap-1 active:scale-95 transition-all"
+        >
+          <span>Staff: {{ getStaffName(staffFilter) }}</span>
+          <PhX :size="11" weight="bold" class="opacity-70 hover:opacity-100" />
+        </button>
+
+        <button
           v-if="institutionTypeFilter"
           type="button"
           @click="institutionTypeFilter = ''; onFilterChange()"
@@ -146,16 +169,6 @@
         </button>
 
         <button
-          v-if="staffFilter"
-          type="button"
-          @click="staffFilter = ''; onFilterChange()"
-          class="h-6 px-2.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-[11px] font-semibold text-indigo-700 dark:text-indigo-300 inline-flex items-center gap-1 active:scale-95 transition-all"
-        >
-          <span>Staff: {{ getStaffName(staffFilter) }}</span>
-          <PhX :size="11" weight="bold" class="opacity-70 hover:opacity-100" />
-        </button>
-
-        <button
           type="button"
           @click="clearAllFilters"
           class="h-6 px-2 text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline inline-flex items-center"
@@ -166,96 +179,42 @@
     </div>
 
     <!-- Desktop Filters Bar (sm and above) -->
-    <div class="hidden sm:block p-4 rounded-2xl bg-surface border border-default shadow-xs space-y-3">
-      <!-- Top Row: Search + Status Multi-Select Trigger + Staff Filter -->
-      <div
-        class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center"
-        :class="canFilterAllStaff ? 'lg:grid-cols-3' : 'lg:grid-cols-2'"
-      >
-        <div class="relative w-full">
-          <PhMagnifyingGlass :size="16" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
-          <input
-            v-model="search"
-            type="text"
-            placeholder="Search student lead..."
-            class="filter-control !pl-10 w-full"
-            @input="handleSearch"
-          />
+    <div class="hidden sm:block p-3.5 rounded-2xl bg-surface border border-default shadow-xs space-y-3">
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <div class="flex items-center gap-2.5 flex-1 flex-wrap">
+          <!-- Search Field -->
+          <div class="relative w-full sm:w-80">
+            <PhMagnifyingGlass :size="15" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <input
+              v-model="search"
+              type="text"
+              placeholder="Search student lead..."
+              class="w-full bg-slate-50 dark:bg-slate-850 border border-default rounded-xl pl-9 pr-3 py-2 text-xs focus:border-primary outline-none text-slate-800 dark:text-slate-200 placeholder:text-slate-400"
+              @input="handleSearch"
+            />
+          </div>
+
+          <!-- Status Multi-Select Button -->
+          <button
+            type="button"
+            @click="openFilterModal"
+            class="bg-slate-50 dark:bg-slate-850 border border-default hover:border-blue-400 rounded-xl px-3 py-2 text-xs text-slate-700 dark:text-slate-300 outline-none inline-flex items-center gap-2 cursor-pointer transition-colors"
+          >
+            <span>{{ filterButtonLabel }}</span>
+            <PhSlidersHorizontal :size="14" class="text-slate-400 shrink-0" />
+          </button>
         </div>
 
-        <button
-          type="button"
-          @click="openFilterModal"
-          class="filter-control w-full flex items-center justify-between text-left cursor-pointer hover:border-blue-400"
-        >
-          <span class="truncate">
-            {{ selectedStatuses.length === 0 ? 'All statuses (Multi-select)' : (selectedStatuses.length === 1 ? getStatusLabel(selectedStatuses[0]) : `${selectedStatuses.length} statuses selected`) }}
+        <!-- Results Pill -->
+        <div class="flex items-center gap-2 self-end sm:self-auto">
+          <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 font-tabular bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg border border-default/60">
+            {{ pagination.total }} {{ pagination.total === 1 ? 'Student Lead' : 'Student Leads' }}
           </span>
-          <PhSlidersHorizontal :size="15" class="text-slate-400 shrink-0" />
-        </button>
-
-        <select
-          v-if="canFilterAllStaff"
-          v-model="staffFilter"
-          class="filter-control w-full"
-          @change="onFilterChange"
-        >
-          <option value="">All staff</option>
-          <option v-for="s in staffList" :key="s._id || s.id" :value="s._id || s.id">
-            {{ s.firstName }} {{ s.lastName || '' }}
-          </option>
-        </select>
-      </div>
-
-      <!-- Quick Segmentation Filter Row: Institution Type, Board, Standard, Stream -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1 border-t border-slate-100 dark:border-neutral-800/80">
-        <select
-          v-model="institutionTypeFilter"
-          class="filter-control w-full text-xs"
-          @change="onFilterChange"
-        >
-          <option value="">All Institution Types</option>
-          <option v-for="t in availableInstitutionTypes" :key="t.value" :value="t.value">
-            {{ t.label }}
-          </option>
-        </select>
-
-        <select
-          v-model="educationBoardFilter"
-          class="filter-control w-full text-xs"
-          @change="onFilterChange"
-        >
-          <option value="">All Education Boards</option>
-          <option v-for="b in availableEducationBoards" :key="b.value" :value="b.value">
-            {{ b.label }}
-          </option>
-        </select>
-
-        <select
-          v-model="standardFilter"
-          class="filter-control w-full text-xs"
-          @change="onFilterChange"
-        >
-          <option value="">All Standards / Grades</option>
-          <option v-for="std in availableStandards" :key="std.value" :value="std.value">
-            {{ std.label }}
-          </option>
-        </select>
-
-        <select
-          v-model="academicStreamFilter"
-          class="filter-control w-full text-xs"
-          @change="onFilterChange"
-        >
-          <option value="">All Academic Streams</option>
-          <option v-for="str in availableStreams" :key="str.value" :value="str.value">
-            {{ str.label }}
-          </option>
-        </select>
+        </div>
       </div>
 
       <!-- Applied Filter Chips Row on Desktop -->
-      <div v-if="activeFilterCount > 0" class="flex items-center gap-1.5 flex-wrap pt-1 border-t border-slate-100 dark:border-neutral-800">
+      <div v-if="activeFilterCount > 0" class="flex items-center gap-1.5 flex-wrap pt-2 border-t border-slate-100 dark:border-neutral-800">
         <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mr-1">Active:</span>
 
         <button
@@ -266,6 +225,16 @@
           class="h-6 px-2.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-[11px] font-semibold text-blue-700 dark:text-blue-300 inline-flex items-center gap-1 hover:border-blue-300 transition-all"
         >
           <span>{{ getStatusLabel(st) }}</span>
+          <PhX :size="11" weight="bold" class="opacity-70 hover:opacity-100" />
+        </button>
+
+        <button
+          v-if="staffFilter"
+          type="button"
+          @click="staffFilter = ''; onFilterChange()"
+          class="h-6 px-2.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-[11px] font-semibold text-indigo-700 dark:text-indigo-300 inline-flex items-center gap-1 hover:border-indigo-300 transition-all"
+        >
+          <span>Staff: {{ getStaffName(staffFilter) }}</span>
           <PhX :size="11" weight="bold" class="opacity-70 hover:opacity-100" />
         </button>
 
@@ -310,19 +279,9 @@
         </button>
 
         <button
-          v-if="staffFilter"
-          type="button"
-          @click="staffFilter = ''; onFilterChange()"
-          class="h-6 px-2.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-[11px] font-semibold text-indigo-700 dark:text-indigo-300 inline-flex items-center gap-1 hover:border-indigo-300 transition-all"
-        >
-          <span>Staff: {{ getStaffName(staffFilter) }}</span>
-          <PhX :size="11" weight="bold" class="opacity-70 hover:opacity-100" />
-        </button>
-
-        <button
           type="button"
           @click="clearAllFilters"
-          class="h-6 px-2 text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline inline-flex items-center"
+          class="h-6 px-2 text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline inline-flex items-center cursor-pointer"
         >
           Clear all
         </button>
@@ -368,15 +327,15 @@
       </div>
 
       <!-- Right: Action Buttons (Equal width on mobile, inline on desktop) -->
-      <div class="flex items-center gap-2 w-full sm:w-auto">
+      <div class="grid grid-flow-col auto-cols-fr gap-1.5 sm:flex sm:items-center sm:gap-2 w-full sm:w-auto min-w-0">
         <button
           v-if="canAssignLeads"
           type="button"
           @click="openBulkAssign"
-          class="btn btn-primary btn-sm flex-1 sm:flex-none flex items-center justify-center gap-1.5 shadow-xs font-semibold"
+          class="btn btn-primary btn-sm min-w-0 px-2 sm:px-3 h-8.5 sm:h-9 flex items-center justify-center gap-1 sm:gap-1.5 shadow-xs font-semibold text-[11px] sm:text-xs"
           title="Assign selected leads to staff"
         >
-          <PhUserPlus :size="15" weight="bold" />
+          <PhUserPlus :size="14" weight="bold" class="shrink-0" />
           <span class="truncate">Assign</span>
         </button>
 
@@ -384,10 +343,10 @@
           v-if="canAssignLeads"
           type="button"
           @click="openRoundRobinAssign"
-          class="btn btn-secondary btn-sm flex-1 sm:flex-none flex items-center justify-center gap-1.5 shadow-xs font-semibold"
+          class="btn btn-secondary btn-sm min-w-0 px-1.5 sm:px-3 h-8.5 sm:h-9 flex items-center justify-center gap-1 sm:gap-1.5 shadow-xs font-semibold text-[11px] sm:text-xs"
           title="Distribute in fixed batches of 10 cyclically"
         >
-          <PhArrowsClockwise :size="15" weight="bold" />
+          <PhArrowsClockwise :size="14" weight="bold" class="shrink-0" />
           <span class="truncate">Round-Robin</span>
         </button>
 
@@ -395,10 +354,10 @@
           v-if="canBulkDeleteLeads"
           type="button"
           @click="openBulkDelete"
-          class="btn btn-danger-outline btn-sm flex-1 sm:flex-none flex items-center justify-center gap-1.5 shadow-xs font-semibold"
+          class="btn btn-danger-outline btn-sm min-w-0 px-2 sm:px-3 h-8.5 sm:h-9 flex items-center justify-center gap-1 sm:gap-1.5 shadow-xs font-semibold text-[11px] sm:text-xs"
           title="Delete selected leads"
         >
-          <PhTrash :size="15" weight="bold" />
+          <PhTrash :size="14" weight="bold" class="shrink-0" />
           <span class="truncate">Delete</span>
         </button>
 
@@ -1410,6 +1369,7 @@ const educationBoardFilter = ref("");
 const standardFilter = ref("");
 const academicStreamFilter = ref("");
 
+const tempStaff = ref("");
 const tempInstitutionType = ref("");
 const tempEducationBoard = ref("");
 const tempStandard = ref("");
@@ -1452,7 +1412,6 @@ const availableStatuses = [
 const isFilterModalOpen = ref(false);
 const selectedStatuses = ref([]);
 const tempStatuses = ref([]);
-const tempStaff = ref("");
 
 const activeFilterCount = computed(() => {
   let count = selectedStatuses.value.length;
@@ -1462,6 +1421,14 @@ const activeFilterCount = computed(() => {
   if (standardFilter.value) count += 1;
   if (academicStreamFilter.value) count += 1;
   return count;
+});
+
+const filterButtonLabel = computed(() => {
+  if (activeFilterCount.value === 0) return "All statuses (Multi-select)";
+  if (selectedStatuses.value.length === 1 && activeFilterCount.value === 1) {
+    return getStatusLabel(selectedStatuses.value[0]);
+  }
+  return `${activeFilterCount.value} filters active`;
 });
 
 function openFilterModal() {
@@ -1489,14 +1456,10 @@ function applyFiltersInModal() {
   institutionTypeFilter.value = tempInstitutionType.value;
   educationBoardFilter.value = tempEducationBoard.value;
   standardFilter.value = tempStandard.value;
-  academicStreamStreamFilter();
+  academicStreamFilter.value = tempAcademicStream.value;
   statusFilter.value = selectedStatuses.value.length === 1 ? selectedStatuses.value[0] : "";
   isFilterModalOpen.value = false;
   onFilterChange();
-}
-
-function academicStreamStreamFilter() {
-  academicStreamFilter.value = tempAcademicStream.value;
 }
 
 function removeStatusFilter(statusVal) {

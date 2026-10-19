@@ -1,138 +1,201 @@
 <template>
-  <div class="w-full max-w-full min-w-0 space-y-3 sm:space-y-6 text-xs pb-28 sm:pb-8">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-      <div>
-        <h1 class="font-heading text-lg sm:text-xl font-extrabold text-slate-800 dark:text-slate-100">
-          {{ activeModule === 'excel' ? 'Excel Import Templates & Column Designer' : 'Object Manager & Form Fields' }}
-        </h1>
-        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-          {{ activeModule === 'excel'
-            ? 'Design custom column headers, add extra columns, and manage spreadsheet structures for bulk data imports.'
-            : 'Review standard built-in fields and configure custom metadata attributes for your CRM objects.' }}
+  <div class="w-full max-w-full min-w-0 space-y-3 sm:space-y-5 text-xs pb-28 sm:pb-8">
+    <!-- Desktop Header (Hidden on mobile to save screen space) -->
+    <div class="hidden sm:flex sm:items-center sm:justify-between gap-3 pb-1 border-b border-default">
+      <div class="min-w-0">
+        <h2 class="font-heading text-lg sm:text-xl font-extrabold text-slate-800 dark:text-slate-100 truncate">
+          {{ currentObjectLabel }} &mdash; {{ activeView === 'template' ? 'Excel Import Template' : 'Form Fields' }}
+        </h2>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+          {{ activeView === 'template'
+            ? 'Design column headers and configure active spreadsheet attributes for bulk data imports.'
+            : 'Configure standard CRM fields and custom attributes for lead and student records.' }}
         </p>
       </div>
 
-      <!-- Header Action Buttons -->
-      <div class="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
-        <template v-if="activeModule === 'excel'">
+      <!-- Desktop Header Action Buttons -->
+      <div class="flex items-center gap-2 shrink-0">
+        <template v-if="activeView === 'template'">
           <button
             type="button"
             @click="openAddExcelColumnModal"
-            class="btn-md btn-secondary gap-1.5 justify-center shadow-xs text-xs font-semibold"
+            class="btn-sm btn-secondary gap-1.5 justify-center shadow-xs text-xs font-semibold"
           >
-            <PhPlus :size="15" weight="bold" />
-            <span class="truncate">Add Column</span>
+            <PhPlus :size="14" weight="bold" />
+            <span>Add Column</span>
           </button>
           <button
             type="button"
             @click="downloadExcelTemplate"
-            class="btn-md btn-primary gap-1.5 justify-center shadow-xs active:scale-[0.98] transition-transform text-xs font-bold"
+            class="btn-sm btn-primary gap-1.5 justify-center shadow-xs active:scale-[0.98] transition-transform text-xs font-bold"
           >
-            <PhDownloadSimple :size="15" weight="bold" />
-            <span class="truncate">Download .XLSX</span>
+            <PhDownloadSimple :size="14" weight="bold" />
+            <span>Download .XLSX</span>
           </button>
         </template>
         <button
           v-else
           type="button"
           @click="openCreateDrawer"
-          class="btn-md btn-primary gap-1.5 justify-center col-span-2 sm:col-span-1 shadow-xs active:scale-[0.98] transition-transform text-xs font-bold"
+          class="btn-sm btn-primary gap-1.5 justify-center shadow-xs active:scale-[0.98] transition-transform text-xs font-bold"
         >
-          <PhPlus :size="15" weight="bold" />
+          <PhPlus :size="14" weight="bold" />
           <span>New Custom Field</span>
         </button>
       </div>
     </div>
 
-    <!-- Object Selector Tabs (Leads, Students, Excel Import Templates) -->
-    <div class="flex items-center border-b border-default overflow-x-auto space-x-2 pb-0.5 scrollbar-none w-full min-w-0" style="-webkit-overflow-scrolling: touch;">
-      <button
-        v-for="obj in OBJECTS"
-        :key="obj.key"
-        type="button"
-        @click="selectModule(obj.key)"
-        class="py-2 px-3 border-b-2 font-bold text-xs transition-colors shrink-0 flex items-center gap-2"
-        :class="activeModule === obj.key
-          ? 'border-primary text-primary dark:text-primary-400'
-          : 'border-transparent text-slate-500 hover:text-slate-850 dark:hover:text-slate-200'"
-      >
-        <component :is="obj.icon" :size="15" weight="bold" />
-        <span>{{ obj.label }}</span>
-        <span
-          class="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold"
-          :class="activeModule === obj.key
-            ? 'bg-primary-100 text-primary-800 dark:bg-primary-950 dark:text-primary-300'
-            : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'"
+    <!-- Controls Row 1: Object Selector Tabs + Mobile Inline Action Buttons + Desktop View Switcher -->
+    <div class="flex items-center justify-between gap-2">
+      <!-- Object Tabs -->
+      <div class="flex items-center gap-1 sm:gap-1.5 bg-slate-100 dark:bg-slate-800/80 p-0.5 sm:p-1 rounded-xl border border-default overflow-x-auto scrollbar-none">
+        <button
+          v-for="obj in OBJECTS"
+          :key="obj.key"
+          type="button"
+          @click="selectObject(obj.key)"
+          class="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg font-bold text-xs transition-all flex items-center gap-1.5 whitespace-nowrap"
+          :class="activeObject === obj.key
+            ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-xs'
+            : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'"
         >
-          {{ getModuleTotalCount(obj.key) }}
-        </span>
+          <component :is="obj.icon" :size="14" weight="bold" />
+          <span class="hidden sm:inline">{{ obj.label }}</span>
+          <span class="sm:hidden">{{ obj.shortLabel }}</span>
+          <span
+            class="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold"
+            :class="activeObject === obj.key
+              ? 'bg-primary/10 text-primary'
+              : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300'"
+          >
+            {{ getObjectFieldCount(obj.key) }}
+          </span>
+        </button>
+      </div>
+
+      <!-- Mobile Action Buttons (Compact inline pills) -->
+      <div class="flex sm:hidden items-center gap-1.5 shrink-0">
+        <template v-if="activeView === 'template'">
+          <button
+            type="button"
+            @click="openAddExcelColumnModal"
+            class="h-7 px-2 rounded-lg border border-default bg-surface text-slate-700 dark:text-slate-200 font-semibold text-[11px] flex items-center gap-1 shadow-xs active:scale-95 transition-all"
+            title="Add Column"
+          >
+            <PhPlus :size="12" weight="bold" />
+            <span>Column</span>
+          </button>
+          <button
+            type="button"
+            @click="downloadExcelTemplate"
+            class="h-7 px-2.5 rounded-lg bg-primary text-white font-bold text-[11px] flex items-center gap-1 shadow-xs active:scale-95 transition-all"
+            title="Download Template"
+          >
+            <PhDownloadSimple :size="12" weight="bold" />
+            <span>.XLSX</span>
+          </button>
+        </template>
+        <button
+          v-else
+          type="button"
+          @click="openCreateDrawer"
+          class="h-7 px-2.5 rounded-lg bg-primary text-white font-bold text-[11px] flex items-center gap-1 shadow-xs active:scale-95 transition-all"
+        >
+          <PhPlus :size="12" weight="bold" />
+          <span>New Field</span>
+        </button>
+      </div>
+
+      <!-- Desktop View Switcher (Segmented Pill) -->
+      <div class="hidden sm:flex items-center p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl border border-default shrink-0">
+        <button
+          type="button"
+          @click="selectView('fields')"
+          class="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all"
+          :class="activeView === 'fields'
+            ? 'bg-white dark:bg-slate-700 text-primary shadow-xs'
+            : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
+        >
+          <PhSlidersHorizontal :size="13" weight="bold" />
+          <span>Form Fields</span>
+        </button>
+        <button
+          type="button"
+          @click="selectView('template')"
+          class="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all"
+          :class="activeView === 'template'
+            ? 'bg-white dark:bg-slate-700 text-primary shadow-xs'
+            : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
+        >
+          <PhFileXls :size="13" weight="bold" />
+          <span>Excel Template</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile-only View Switcher (Slim full-width segmented control) -->
+    <div class="flex sm:hidden items-center p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl border border-default">
+      <button
+        type="button"
+        @click="selectView('fields')"
+        class="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all"
+        :class="activeView === 'fields'
+          ? 'bg-white dark:bg-slate-700 text-primary shadow-xs'
+          : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
+      >
+        <PhSlidersHorizontal :size="13" weight="bold" />
+        <span>Form Fields</span>
+      </button>
+      <button
+        type="button"
+        @click="selectView('template')"
+        class="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all"
+        :class="activeView === 'template'
+          ? 'bg-white dark:bg-slate-700 text-primary shadow-xs'
+          : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
+      >
+        <PhFileXls :size="13" weight="bold" />
+        <span>Excel Template</span>
       </button>
     </div>
 
     <!-- ===================================================================== -->
     <!-- VIEW A: EXCEL IMPORT TEMPLATES TAB                                    -->
     <!-- ===================================================================== -->
-    <template v-if="activeModule === 'excel'">
-      <!-- Excel Target Selector (Leads vs Students) -->
-      <div class="grid grid-cols-2 sm:flex sm:items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl border border-default w-full sm:w-fit">
-        <button
-          type="button"
-          @click="switchExcelTarget('leads')"
-          class="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all min-w-0"
-          :class="excelTarget === 'leads'
-            ? 'bg-white dark:bg-slate-700 text-primary shadow-xs'
-            : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-semibold'"
-        >
-          <PhStudent :size="14" weight="bold" class="shrink-0" />
-          <span class="truncate">{{ isEducation ? 'Student Leads' : 'Sales Leads' }}</span>
-          <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-mono shrink-0">
-            {{ excelColumnsLeads.length }}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          @click="switchExcelTarget('students')"
-          class="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all min-w-0"
-          :class="excelTarget === 'students'
-            ? 'bg-white dark:bg-slate-700 text-primary shadow-xs'
-            : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-semibold'"
-        >
-          <PhUserCheck :size="14" weight="bold" class="shrink-0" />
-          <span class="truncate">{{ isEducation ? 'Enrolled Students' : 'Students' }}</span>
-          <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-mono shrink-0">
-            {{ excelColumnsStudents.length }}
-          </span>
-        </button>
-      </div>
-
-      <!-- Stats Row for Excel Templates -->
-      <div class="hidden sm:grid sm:grid-cols-4 gap-3">
-        <div class="bg-surface border border-default rounded-xl p-3 shadow-xs">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">Total Columns</span>
-          <span class="text-lg font-extrabold text-slate-800 dark:text-slate-100 font-tabular">{{ currentExcelColumns.length }}</span>
+    <template v-if="activeView === 'template'">
+      <!-- Summary Strip for Excel Templates (with integrated Select All & Reset) -->
+      <div class="flex items-center justify-between px-1 text-[11px] text-slate-500 font-medium">
+        <div class="flex items-center gap-1.5">
+          <span>{{ enabledExcelColumnsCount }} of {{ currentExcelColumns.length }} enabled</span>
+          <span class="hidden sm:inline text-purple-600 dark:text-purple-400 font-semibold">({{ customExcelColumnsCount }} custom)</span>
         </div>
-        <div class="bg-surface border border-default rounded-xl p-3 shadow-xs">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block truncate">Enabled For Template</span>
-          <span class="text-lg font-extrabold text-emerald-600 dark:text-emerald-400 font-tabular">{{ enabledExcelColumnsCount }}</span>
-        </div>
-        <div class="bg-surface border border-default rounded-xl p-3 shadow-xs">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">Standard CRM Fields</span>
-          <span class="text-lg font-extrabold text-slate-700 dark:text-slate-300 font-tabular">{{ standardExcelColumnsCount }}</span>
-        </div>
-        <div class="bg-surface border border-default rounded-xl p-3 shadow-xs">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 block truncate">Custom & Added Columns</span>
-          <span class="text-lg font-extrabold text-purple-600 dark:text-purple-400 font-tabular">{{ customExcelColumnsCount }}</span>
+        <div class="flex items-center gap-2 text-xs">
+          <button
+            type="button"
+            @click="selectAllExcelColumns"
+            class="text-primary hover:underline font-semibold"
+            title="Enable all columns in template"
+          >
+            Select All
+          </button>
+          <span class="text-slate-300 dark:text-slate-600">&bull;</span>
+          <button
+            type="button"
+            @click="resetExcelColumnsToDefault"
+            class="text-slate-600 dark:text-slate-400 hover:underline font-semibold"
+            title="Restore standard column titles"
+          >
+            Reset Headers
+          </button>
         </div>
       </div>
 
       <!-- Main Container for Excel Templates -->
-      <div class="bg-transparent sm:bg-surface border-0 sm:border border-default rounded-none sm:rounded-xl p-0 sm:p-5 shadow-none sm:shadow-sm space-y-4">
-        <!-- Toolbar: Filters, Search, Actions -->
+      <div class="bg-transparent sm:bg-surface border-0 sm:border border-default rounded-none sm:rounded-xl p-0 sm:p-5 shadow-none sm:shadow-sm space-y-3 sm:space-y-4">
+        <!-- Toolbar: Filters & Search -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <!-- Filter Tabs -->
-          <div class="flex items-center gap-1 p-1 bg-slate-100/90 dark:bg-slate-800 rounded-lg border border-default text-xs font-semibold overflow-x-auto scrollbar-none">
+          <div class="flex items-center gap-1 p-1 bg-slate-100/90 dark:bg-slate-800 rounded-lg border border-default text-xs font-semibold overflow-x-auto scrollbar-none w-full sm:w-auto">
             <button
               type="button"
               @click="excelCategoryFilter = 'all'"
@@ -161,7 +224,7 @@
                 ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-xs font-bold'
                 : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-medium'"
             >
-              Custom Attributes ({{ customAttributesCount }})
+              Custom ({{ customAttributesCount }})
             </button>
             <button
               type="button"
@@ -171,39 +234,19 @@
                 ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-xs font-bold'
                 : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-medium'"
             >
-              Added Columns ({{ userAddedColumnsCount }})
+              Added ({{ userAddedColumnsCount }})
             </button>
           </div>
 
-          <!-- Search Input & Quick Controls -->
-          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-            <div class="relative w-full sm:w-60">
-              <input
-                v-model="excelSearchQuery"
-                type="text"
-                placeholder="Search template headers..."
-                class="w-full bg-white dark:bg-slate-900 sm:bg-surface border border-default rounded-lg pl-8 pr-7 py-2 text-xs outline-none focus:border-primary text-slate-800 dark:text-slate-200 placeholder:text-slate-400"
-              />
-              <PhMagnifyingGlass :size="13" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-            </div>
-            <div class="grid grid-cols-2 sm:flex sm:items-center gap-2 shrink-0">
-              <button
-                type="button"
-                @click="selectAllExcelColumns"
-                class="btn-sm btn-secondary font-semibold justify-center"
-                title="Enable all columns in template"
-              >
-                Select All
-              </button>
-              <button
-                type="button"
-                @click="resetExcelColumnsToDefault"
-                class="btn-sm btn-secondary font-semibold justify-center"
-                title="Restore standard column titles"
-              >
-                Reset Headers
-              </button>
-            </div>
+          <!-- Search Input -->
+          <div class="relative w-full sm:w-60">
+            <input
+              v-model="excelSearchQuery"
+              type="text"
+              placeholder="Search template headers..."
+              class="w-full bg-white dark:bg-slate-900 sm:bg-surface border border-default rounded-lg pl-8 pr-7 py-1.5 sm:py-2 text-xs outline-none focus:border-primary text-slate-800 dark:text-slate-200 placeholder:text-slate-400"
+            />
+            <PhMagnifyingGlass :size="13" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           </div>
         </div>
 
@@ -313,20 +356,34 @@
                   {{ col.sample || '—' }}
                 </td>
 
-                <!-- Actions (Delete for user-added) -->
+                <!-- Actions: Edit Pencil for every column, Trash for custom/added, Lock for standard delete -->
                 <td class="p-3 text-center">
-                  <button
-                    v-if="col.isUserAdded"
-                    type="button"
-                    @click="removeExcelColumn(col)"
-                    class="p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-950 text-red-600 dark:text-red-400 transition-colors"
-                    title="Remove custom column"
-                  >
-                    <PhTrash :size="14" />
-                  </button>
-                  <span v-else class="text-slate-300 dark:text-slate-600 inline-flex items-center justify-center p-1" title="Locked built-in field">
-                    <PhLockSimple :size="13" />
-                  </span>
+                  <div class="flex items-center justify-center gap-1.5">
+                    <button
+                      type="button"
+                      @click="openEditExcelColumn(col)"
+                      title="Edit column & samples"
+                      class="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
+                    >
+                      <PhPencilSimple :size="14" />
+                    </button>
+                    <button
+                      v-if="col.isUserAdded || col.isCustomField"
+                      type="button"
+                      @click="removeExcelColumn(col)"
+                      class="p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-950 text-red-600 dark:text-red-400 transition-colors"
+                      title="Remove column"
+                    >
+                      <PhTrash :size="14" />
+                    </button>
+                    <span
+                      v-else
+                      class="text-slate-300 dark:text-slate-600 p-1"
+                      title="Standard CRM field"
+                    >
+                      <PhLockSimple :size="13" />
+                    </span>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -360,7 +417,15 @@
                 />
               </div>
               <button
-                v-if="col.isUserAdded"
+                type="button"
+                @click="openEditExcelColumn(col)"
+                class="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors shrink-0"
+                title="Edit column properties"
+              >
+                <PhPencilSimple :size="15" />
+              </button>
+              <button
+                v-if="col.isUserAdded || col.isCustomField"
                 type="button"
                 @click="removeExcelColumn(col)"
                 class="p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-950 text-red-500 transition-colors shrink-0"
@@ -434,29 +499,9 @@
     <!-- VIEW B: OBJECT MANAGER FIELDS LIST (LEADS / STUDENTS)                 -->
     <!-- ===================================================================== -->
     <template v-else>
-      <!-- Stats Row (Desktop 4-col; hidden on mobile to eliminate clutter) -->
-      <div class="hidden sm:grid sm:grid-cols-4 gap-3">
-        <div class="bg-surface border border-default rounded-xl p-3 shadow-xs">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">Total Fields</span>
-          <span class="text-lg font-extrabold text-slate-800 dark:text-slate-100 font-tabular">{{ currentModuleFields.length }}</span>
-        </div>
-        <div class="bg-surface border border-default rounded-xl p-3 shadow-xs">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">Standard Built-in</span>
-          <span class="text-lg font-extrabold text-slate-700 dark:text-slate-300 font-tabular">{{ standardCount }}</span>
-        </div>
-        <div class="bg-surface border border-default rounded-xl p-3 shadow-xs">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 block truncate">Custom Fields</span>
-          <span class="text-lg font-extrabold text-indigo-600 dark:text-indigo-400 font-tabular">{{ customCount }}</span>
-        </div>
-        <div class="bg-surface border border-default rounded-xl p-3 shadow-xs">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 block truncate">Mandatory Fields</span>
-          <span class="text-lg font-extrabold text-amber-600 dark:text-amber-400 font-tabular">{{ requiredCount }}</span>
-        </div>
-      </div>
-
-      <!-- Mobile Clean Summary (One single unobtrusive line) -->
-      <div class="flex sm:hidden items-center justify-between px-1 text-[11px] text-slate-500 font-medium">
-        <span>{{ currentModuleFields.length }} total fields ({{ standardCount }} standard, {{ customCount }} custom)</span>
+      <!-- Summary Strip for Form Fields -->
+      <div class="flex items-center justify-between px-1 text-[11px] text-slate-500 font-medium">
+        <span>{{ currentModuleFields.length }} fields ({{ standardCount }} standard, {{ customCount }} custom)</span>
         <span v-if="requiredCount > 0" class="text-amber-600 dark:text-amber-400 font-semibold">{{ requiredCount }} required</span>
       </div>
 
@@ -830,7 +875,7 @@
             :disabled="!!editingField"
             class="w-full bg-surface border border-default rounded-lg px-3 py-2 outline-none focus:border-primary text-slate-800 dark:text-slate-200 font-semibold disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:cursor-not-allowed"
           >
-            <option v-for="obj in OBJECTS.filter(o => o.key !== 'excel')" :key="obj.key" :value="obj.key">
+            <option v-for="obj in OBJECTS" :key="obj.key" :value="obj.key">
               {{ obj.label }}
             </option>
           </select>
@@ -1038,76 +1083,151 @@
     </AppDrawer>
 
     <!-- ===================================================================== -->
-    <!-- MODAL 2: ADD EXCEL TEMPLATE COLUMN MODAL                              -->
+    <!-- MODAL 2: ADD / EDIT EXCEL TEMPLATE COLUMN DRAWER                      -->
     <!-- ===================================================================== -->
     <AppDrawer
-      :isOpen="showAddExcelColumnModal"
-      title="Add Template Column"
-      subtitle="Define a custom column header to include in your spreadsheet"
-      width="460px"
-      @close="showAddExcelColumnModal = false"
+      :isOpen="isExcelDrawerOpen"
+      :title="editingExcelCol ? 'Edit Template Column' : 'Add Template Column'"
+      :subtitle="editingExcelCol ? `Configure spreadsheet header and sample data for ${editingExcelCol.fieldLabel || editingExcelCol.key}` : 'Define a custom column header to include in your spreadsheet'"
+      width="480px"
+      @close="closeExcelDrawer"
     >
-      <form id="add-excel-col-form" @submit.prevent="handleAddExcelColumnSubmit" class="space-y-4 text-xs">
+      <form id="edit-excel-col-form" @submit.prevent="saveExcelColumnDrawer" class="space-y-4 text-xs">
+        <!-- Target Object info badge -->
+        <div class="p-2.5 bg-slate-50 dark:bg-slate-850/60 rounded-xl border border-default flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Target Object:</span>
+            <span class="font-bold text-slate-800 dark:text-slate-200">{{ currentObjectLabel }}</span>
+          </div>
+          <span
+            class="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide"
+            :class="excelColForm.isCustomField
+              ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200/50'
+              : (excelColForm.isUserAdded
+                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/50'
+                : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-default')"
+          >
+            {{ excelColForm.isCustomField ? 'Custom Field' : (excelColForm.isUserAdded ? 'Added Column' : 'Standard Field') }}
+          </span>
+        </div>
+
+        <!-- Column Header in Excel -->
         <div>
           <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">
             Column Header in Excel <span class="text-rose-500">*</span>
           </label>
           <input
-            v-model="newExcelColName"
+            v-model="excelColForm.header"
             type="text"
             required
-            placeholder="e.g. City / Bus Route / Target Examination"
-            class="w-full bg-surface border border-default rounded-lg px-3 py-2 outline-none focus:border-primary text-slate-800 dark:text-slate-200 font-semibold"
+            placeholder="e.g. Student Name / Primary Mobile"
+            class="w-full bg-surface border border-default rounded-lg px-3 py-2 outline-none focus:border-primary text-slate-800 dark:text-slate-200 font-bold"
           />
           <p class="text-[10px] text-slate-400 mt-1">
-            Exact header name that will appear in row 1 of the generated spreadsheet.
+            Exact title that appears in row 1 of the generated spreadsheet.
           </p>
         </div>
 
+        <!-- Mapped CRM Field Key -->
         <div>
           <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">
-            Sample Value (Optional)
+            Mapped CRM Attribute Key
           </label>
           <input
-            v-model="newExcelColSample"
+            v-model="excelColForm.key"
             type="text"
-            placeholder="e.g. Mumbai / Route 4 / JEE Main"
-            class="w-full bg-surface border border-default rounded-lg px-3 py-2 outline-none focus:border-primary text-slate-800 dark:text-slate-200"
+            :disabled="!excelColForm.isUserAdded"
+            class="w-full bg-surface border border-default rounded-lg px-3 py-2 outline-none focus:border-primary font-mono text-slate-800 dark:text-slate-200 font-bold disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:cursor-not-allowed"
           />
           <p class="text-[10px] text-slate-400 mt-1">
-            Example value populated in sample rows of the downloaded template.
+            Internal database attribute mapped to this spreadsheet column.
           </p>
         </div>
 
-        <label class="flex items-center justify-between cursor-pointer p-2.5 rounded-lg border border-default bg-surface hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-          <div>
-            <span class="font-bold text-slate-800 dark:text-slate-200 block">Mark as Required</span>
-            <span class="text-[10px] text-slate-400 block">Spreadsheet imports will check that this column is filled</span>
+        <!-- Sample Values Section -->
+        <div class="space-y-2.5 p-3 bg-slate-50 dark:bg-slate-850/50 rounded-xl border border-default">
+          <label class="block text-[10px] font-bold text-slate-500 uppercase">
+            Template Sample Rows (Pre-populated values)
+          </label>
+          <div class="space-y-2">
+            <div>
+              <span class="text-[10px] text-slate-400 font-semibold block mb-0.5">Sample Row 1:</span>
+              <input
+                v-model="excelColForm.sample"
+                type="text"
+                placeholder="e.g. Aarav Sharma"
+                class="w-full bg-surface border border-default rounded-lg px-3 py-1.5 outline-none focus:border-primary text-slate-800 dark:text-slate-200 font-medium"
+              />
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400 font-semibold block mb-0.5">Sample Row 2:</span>
+              <input
+                v-model="excelColForm.sample2"
+                type="text"
+                placeholder="e.g. Priya Verma"
+                class="w-full bg-surface border border-default rounded-lg px-3 py-1.5 outline-none focus:border-primary text-slate-800 dark:text-slate-200 font-medium"
+              />
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400 font-semibold block mb-0.5">Sample Row 3:</span>
+              <input
+                v-model="excelColForm.sample3"
+                type="text"
+                placeholder="e.g. Rohan Patil"
+                class="w-full bg-surface border border-default rounded-lg px-3 py-1.5 outline-none focus:border-primary text-slate-800 dark:text-slate-200 font-medium"
+              />
+            </div>
           </div>
-          <input
-            v-model="newExcelColRequired"
-            type="checkbox"
-            class="w-4 h-4 rounded text-primary focus:ring-primary border-slate-300"
-          />
-        </label>
+        </div>
+
+        <!-- Toggles: Included in Template & Mark as Required -->
+        <div class="space-y-2.5 pt-1">
+          <!-- Include Toggle -->
+          <label class="flex items-center justify-between cursor-pointer p-2.5 rounded-lg border border-default bg-surface hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+            <div>
+              <span class="font-bold text-slate-800 dark:text-slate-200 block">Include in Excel Template</span>
+              <span class="text-[10px] text-slate-400 block">Column will be exported when downloading the blank template</span>
+            </div>
+            <input
+              v-model="excelColForm.enabled"
+              type="checkbox"
+              :disabled="excelColForm.isLockedRequired"
+              class="w-4 h-4 rounded text-primary focus:ring-primary border-slate-300 disabled:opacity-50 cursor-pointer"
+            />
+          </label>
+
+          <!-- Required Toggle -->
+          <label class="flex items-center justify-between cursor-pointer p-2.5 rounded-lg border border-default bg-surface hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+            <div>
+              <span class="font-bold text-slate-800 dark:text-slate-200 block">Mark as Required</span>
+              <span class="text-[10px] text-slate-400 block">Spreadsheet import will validate that this column has a value</span>
+            </div>
+            <input
+              v-model="excelColForm.required"
+              type="checkbox"
+              :disabled="excelColForm.isLockedRequired"
+              class="w-4 h-4 rounded text-primary focus:ring-primary border-slate-300 disabled:opacity-50 cursor-pointer"
+            />
+          </label>
+        </div>
       </form>
 
       <template #footer>
         <div class="grid grid-cols-2 gap-2.5 w-full sm:flex sm:justify-end">
           <button
             type="button"
-            @click="showAddExcelColumnModal = false"
+            @click="closeExcelDrawer"
             class="btn-md btn-secondary justify-center"
           >
             Cancel
           </button>
           <button
             type="submit"
-            form="add-excel-col-form"
+            form="edit-excel-col-form"
             class="btn-md btn-primary justify-center font-bold"
-            :disabled="!newExcelColName.trim()"
+            :disabled="!excelColForm.header?.trim()"
           >
-            Add Column
+            {{ editingExcelCol ? 'Save Changes' : 'Add Column' }}
           </button>
         </div>
       </template>
@@ -1155,6 +1275,7 @@ import {
   updateCustomField,
   deleteCustomField,
 } from '@/api/customFields';
+import { downloadExcelWorkbook } from '@/utils/fileDownload';
 
 const store = useStore();
 const route = useRoute();
@@ -1163,24 +1284,66 @@ const router = useRouter();
 const isEducation = computed(() => store.getters['organization/isEducationTenant']);
 
 const OBJECTS = computed(() => [
-  { key: 'leads', label: isEducation.value ? 'Student Leads' : 'Sales Leads', icon: PhStudent },
-  { key: 'students', label: 'Enrolled Students', icon: PhUserCheck },
-  { key: 'excel', label: 'Excel Templates', icon: PhFileXls },
+  { key: 'leads', label: isEducation.value ? 'Student Leads' : 'Sales Leads', shortLabel: isEducation.value ? 'Leads' : 'Leads', icon: PhStudent },
+  { key: 'students', label: 'Enrolled Students', shortLabel: 'Students', icon: PhUserCheck },
 ]);
 
-const initialTab = (route.query.tab && ['leads', 'students', 'excel'].includes(route.query.tab))
-  ? String(route.query.tab)
-  : 'leads';
-const activeModule = ref(initialTab);
+const initialTarget = (route.query.target && ['leads', 'students'].includes(route.query.target))
+  ? String(route.query.target)
+  : ((route.query.tab && ['leads', 'students'].includes(route.query.tab))
+      ? String(route.query.tab)
+      : 'leads');
+const activeObject = ref(initialTarget);
+
+const initialView = (route.query.view && ['fields', 'template'].includes(route.query.view))
+  ? String(route.query.view)
+  : (route.query.tab === 'excel' ? 'template' : 'fields');
+const activeView = ref(initialView);
 
 watch(
-  () => route.query.tab,
-  (newTab) => {
-    if (newTab && ['leads', 'students', 'excel'].includes(newTab) && activeModule.value !== newTab) {
-      activeModule.value = String(newTab);
+  () => route.query,
+  (newQuery) => {
+    if (newQuery.target && ['leads', 'students'].includes(newQuery.target)) {
+      activeObject.value = String(newQuery.target);
+    } else if (newQuery.tab && ['leads', 'students'].includes(newQuery.tab)) {
+      activeObject.value = String(newQuery.tab);
+    }
+    if (newQuery.view && ['fields', 'template'].includes(newQuery.view)) {
+      activeView.value = String(newQuery.view);
+    } else if (newQuery.tab === 'excel') {
+      activeView.value = 'template';
     }
   }
 );
+
+function selectObject(objKey) {
+  activeObject.value = objKey;
+  searchQuery.value = '';
+  categoryFilter.value = 'all';
+  excelSearchQuery.value = '';
+  excelCategoryFilter.value = 'all';
+  router.replace({
+    query: {
+      ...route.query,
+      target: objKey,
+      tab: activeView.value === 'template' ? 'excel' : objKey,
+      view: activeView.value,
+    },
+  }).catch(() => {});
+}
+
+function selectView(viewKey) {
+  activeView.value = viewKey;
+  router.replace({
+    query: {
+      ...route.query,
+      target: activeObject.value,
+      tab: viewKey === 'template' ? 'excel' : activeObject.value,
+      view: viewKey,
+    },
+  }).catch(() => {});
+}
+
 const allFields = ref([]);
 const loading = ref(false);
 const error = ref('');
@@ -1213,14 +1376,22 @@ const isDeleting = ref(false);
 
 // =========================================================================
 // EXCEL TEMPLATES MANAGEMENT STATE & LOGIC
-// =========================================================================
-const excelTarget = ref('leads'); // 'leads' | 'students'
 const excelSearchQuery = ref('');
 const excelCategoryFilter = ref('all'); // 'all' | 'standard' | 'custom' | 'added'
-const showAddExcelColumnModal = ref(false);
-const newExcelColName = ref('');
-const newExcelColSample = ref('');
-const newExcelColRequired = ref(false);
+const isExcelDrawerOpen = ref(false);
+const editingExcelCol = ref(null);
+const excelColForm = ref({
+  header: '',
+  key: '',
+  sample: '',
+  sample2: '',
+  sample3: '',
+  enabled: true,
+  required: false,
+  isLockedRequired: false,
+  isCustomField: false,
+  isUserAdded: false,
+});
 
 const excelColumnsLeads = ref([]);
 const excelColumnsStudents = ref([]);
@@ -1279,7 +1450,7 @@ function getDefaultStudentsColumns() {
 }
 
 const currentExcelColumns = computed(() => {
-  return excelTarget.value === 'leads' ? excelColumnsLeads.value : excelColumnsStudents.value;
+  return activeObject.value === 'leads' ? excelColumnsLeads.value : excelColumnsStudents.value;
 });
 
 const enabledExcelColumnsCount = computed(() => {
@@ -1317,15 +1488,9 @@ const filteredExcelColumns = computed(() => {
   });
 });
 
-function switchExcelTarget(target) {
-  excelTarget.value = target;
-  excelSearchQuery.value = '';
-  excelCategoryFilter.value = 'all';
-}
-
 function persistExcelColumns() {
   try {
-    const key = excelTarget.value === 'leads'
+    const key = activeObject.value === 'leads'
       ? (isEducation.value ? 'trackdeal_template_columns_leads' : 'trackdeal_template_columns_sales_leads')
       : 'trackdeal_template_columns_students';
     localStorage.setItem(key, JSON.stringify(currentExcelColumns.value));
@@ -1340,7 +1505,7 @@ function selectAllExcelColumns() {
 }
 
 function resetExcelColumnsToDefault() {
-  if (excelTarget.value === 'leads') {
+  if (activeObject.value === 'leads') {
     excelColumnsLeads.value = getDefaultLeadsColumns();
     attachCustomFieldsToTemplate(excelColumnsLeads.value, 'leads');
   } else {
@@ -1351,36 +1516,76 @@ function resetExcelColumnsToDefault() {
 }
 
 function openAddExcelColumnModal() {
-  newExcelColName.value = '';
-  newExcelColSample.value = '';
-  newExcelColRequired.value = false;
-  showAddExcelColumnModal.value = true;
-}
-
-function handleAddExcelColumnSubmit() {
-  const name = newExcelColName.value.trim();
-  if (!name) return;
-  const slugKey = name.toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '');
-
-  currentExcelColumns.value.push({
-    key: slugKey || `col_${Date.now()}`,
-    header: name,
-    fieldLabel: `Custom: ${name}`,
-    isCustomField: false,
-    isUserAdded: true,
-    isLockedRequired: false,
-    enabled: true,
-    required: newExcelColRequired.value,
-    sample: newExcelColSample.value.trim() || 'Sample value',
+  editingExcelCol.value = null;
+  excelColForm.value = {
+    header: '',
+    key: '',
+    sample: '',
     sample2: '',
     sample3: '',
-  });
+    enabled: true,
+    required: false,
+    isLockedRequired: false,
+    isCustomField: false,
+    isUserAdded: true,
+  };
+  isExcelDrawerOpen.value = true;
+}
+
+function openEditExcelColumn(col) {
+  editingExcelCol.value = col;
+  excelColForm.value = {
+    header: col.header || '',
+    key: col.key || '',
+    sample: col.sample || '',
+    sample2: col.sample2 || '',
+    sample3: col.sample3 || '',
+    enabled: col.enabled !== false,
+    required: Boolean(col.required || col.isLockedRequired),
+    isLockedRequired: Boolean(col.isLockedRequired),
+    isCustomField: Boolean(col.isCustomField),
+    isUserAdded: Boolean(col.isUserAdded),
+  };
+  isExcelDrawerOpen.value = true;
+}
+
+function closeExcelDrawer() {
+  isExcelDrawerOpen.value = false;
+  editingExcelCol.value = null;
+}
+
+function saveExcelColumnDrawer() {
+  const headerName = excelColForm.value.header?.trim();
+  if (!headerName) return;
+
+  if (editingExcelCol.value) {
+    editingExcelCol.value.header = headerName;
+    editingExcelCol.value.sample = excelColForm.value.sample?.trim() || '';
+    editingExcelCol.value.sample2 = excelColForm.value.sample2?.trim() || '';
+    editingExcelCol.value.sample3 = excelColForm.value.sample3?.trim() || '';
+    if (!editingExcelCol.value.isLockedRequired) {
+      editingExcelCol.value.enabled = excelColForm.value.enabled;
+      editingExcelCol.value.required = excelColForm.value.required;
+    }
+  } else {
+    const slugKey = excelColForm.value.key?.trim() || headerName.toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '');
+    currentExcelColumns.value.push({
+      key: slugKey || `col_${Date.now()}`,
+      header: headerName,
+      fieldLabel: `Custom: ${headerName}`,
+      isCustomField: false,
+      isUserAdded: true,
+      isLockedRequired: false,
+      enabled: excelColForm.value.enabled,
+      required: excelColForm.value.required,
+      sample: excelColForm.value.sample?.trim() || 'Sample value',
+      sample2: excelColForm.value.sample2?.trim() || '',
+      sample3: excelColForm.value.sample3?.trim() || '',
+    });
+  }
 
   persistExcelColumns();
-  showAddExcelColumnModal.value = false;
-  newExcelColName.value = '';
-  newExcelColSample.value = '';
-  newExcelColRequired.value = false;
+  closeExcelDrawer();
 }
 
 function removeExcelColumn(col) {
@@ -1412,14 +1617,14 @@ async function downloadExcelTemplate() {
   }));
 
   const wb = XLSX.utils.book_new();
-  const sheetName = excelTarget.value === 'leads' ? 'Leads' : 'Students';
+  const sheetName = activeObject.value === 'leads' ? 'Leads' : 'Students';
   XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
-  const filename = excelTarget.value === 'leads'
+  const filename = activeObject.value === 'leads'
     ? (isEducation.value ? 'TrackDeal_Student_Leads_Template.xlsx' : 'TrackDeal_Sales_Leads_Template.xlsx')
     : 'TrackDeal_Enrolled_Students_Template.xlsx';
 
-  XLSX.writeFile(wb, filename);
+  await downloadExcelWorkbook(wb, filename);
 }
 
 function attachCustomFieldsToTemplate(targetList, mod) {
@@ -1489,12 +1694,12 @@ function loadPersistedExcelColumns() {
 // OBJECT MANAGER FIELDS STATE & LOGIC
 // =========================================================================
 const currentObjectLabel = computed(() => {
-  const found = OBJECTS.value.find((o) => o.key === activeModule.value);
+  const found = OBJECTS.value.find((o) => o.key === activeObject.value);
   return found ? found.label : 'Object';
 });
 
 const currentModuleFields = computed(() => {
-  return allFields.value.filter((f) => f.module === activeModule.value);
+  return allFields.value.filter((f) => f.module === activeObject.value);
 });
 
 const standardCount = computed(() => {
@@ -1522,20 +1727,8 @@ const filteredFields = computed(() => {
   });
 });
 
-function getModuleTotalCount(mod) {
-  if (mod === 'excel') {
-    return currentExcelColumns.value.length;
-  }
+function getObjectFieldCount(mod) {
   return allFields.value.filter((f) => f.module === mod).length;
-}
-
-function selectModule(mod) {
-  activeModule.value = mod;
-  categoryFilter.value = 'all';
-  searchQuery.value = '';
-  if (route.query.tab !== mod) {
-    router.replace({ query: { ...route.query, tab: mod } }).catch(() => {});
-  }
 }
 
 function slugify(text) {
@@ -1608,7 +1801,7 @@ function openCreateDrawer() {
   formError.value = '';
   newOptionInput.value = '';
   fieldForm.value = {
-    module: activeModule.value === 'excel' ? 'leads' : activeModule.value,
+    module: activeObject.value,
     label: '',
     key: '',
     type: 'text',
@@ -1626,7 +1819,7 @@ function openEditDrawer(field) {
   formError.value = '';
   newOptionInput.value = '';
   fieldForm.value = {
-    module: field.module || (activeModule.value === 'excel' ? 'leads' : activeModule.value),
+    module: field.module || activeObject.value,
     label: field.label || '',
     key: field.key || '',
     type: field.type || 'text',

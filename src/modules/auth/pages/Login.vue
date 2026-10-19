@@ -86,18 +86,9 @@
 
       <!-- Password Input -->
       <div class="space-y-1.5">
-        <div class="flex justify-between items-center mb-1">
-          <label for="password" class="block text-xs font-semibold text-[#0f172a]">
-            Password <span class="text-red-500">*</span>
-          </label>
-          <router-link
-            to="/forgot-password"
-            class="text-xs font-semibold text-[#0a6ef0] hover:text-[#0056cc] hover:underline"
-            :disabled="isPending"
-          >
-            Forgot password?
-          </router-link>
-        </div>
+        <label for="password" class="block text-xs font-semibold text-[#0f172a] mb-1">
+          Password <span class="text-red-500">*</span>
+        </label>
         <div class="relative flex items-center">
           <input
             id="password"

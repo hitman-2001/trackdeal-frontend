@@ -77,43 +77,18 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { useForm, useField } from 'vee-validate';
-import { toTypedSchema } from '@vee-validate/zod';
-import { PhEnvelope, PhSpinner } from '@phosphor-icons/vue';
-import { forgotPasswordSchema } from '../schemas/validation';
-import { useForgotPasswordMutation } from '../queries';
-import { getErrorMessage } from '@/utils/errorHandler';
+import { onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { useStore } from 'vuex';
 
-const errorMessage = ref('');
-const isSuccess = ref(false);
+const router = useRouter();
+const store = useStore();
 
-const { errors, handleSubmit } = useForm({
-  validationSchema: toTypedSchema(forgotPasswordSchema),
-  initialValues: {
-    email: ''
-  }
-});
-
-const { value: email } = useField('email');
-const { mutate, isPending } = useForgotPasswordMutation();
-
-const onSubmit = handleSubmit((values) => {
-  errorMessage.value = '';
-  
-  mutate(
-    { email: values.email },
-    {
-      onSuccess: () => {
-        isSuccess.value = true;
-      },
-      onError: (err) => {
-        errorMessage.value = getErrorMessage(
-          err,
-          'Failed to dispatch password recovery link. Please verify the email address.'
-        );
-      }
-    }
-  );
+onMounted(() => {
+  store.dispatch('notifications/triggerToast', {
+    message: 'Password management is handled directly by your organization administrator.',
+    type: 'info',
+  });
+  router.replace('/login');
 });
 </script>

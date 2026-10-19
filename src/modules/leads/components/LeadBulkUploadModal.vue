@@ -1,14 +1,15 @@
 <template>
   <AppDrawer
     :isOpen="isOpen"
-    :title="isEducation ? 'Bulk Import Student Leads' : 'Bulk Import Sales Leads'"
-    :subtitle="isEducation ? 'Upload Excel or CSV spreadsheets to batch enroll admissions prospects.' : 'Upload Excel or CSV spreadsheets to batch import property sales leads.'"
+    :title="modalTitle"
+    :subtitle="modalSubtitle"
     width="760px"
     @close="handleClose"
   >
     <div class="space-y-6 text-xs">
-      <!-- Top Action: Download Sample Template & Column Controls Card -->
-      <div class="bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-2xl p-4 space-y-3.5">
+      <!-- Top Action: Download Sample Template Card -->
+      <!-- Top Action: Download Sample Template Card & Inline Customizer -->
+      <div class="bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-2xl p-3.5 sm:p-4 space-y-3">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50 flex items-center justify-center text-emerald-600 shrink-0">
@@ -16,272 +17,157 @@
             </div>
             <div>
               <h4 class="font-bold text-slate-800 dark:text-slate-100 text-xs">
-                Spreadsheet Template & Column Controls
+                Spreadsheet Template ({{ target === 'students' ? 'Enrolled Students' : (isEducation ? 'Student Leads' : 'Sales Leads') }})
               </h4>
               <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                Download a pre-structured spreadsheet or customize column headers to match your file.
+                {{ enabledTemplateColumnsCount }} of {{ availableColumns.length }} columns active. Customize headers or download.
               </p>
             </div>
           </div>
-          <div class="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
+          <div class="flex items-center gap-2 w-full sm:w-auto">
             <button
               type="button"
-              @click="isDesignerOpen = !isDesignerOpen"
-              class="btn-sm font-semibold text-xs gap-1.5 justify-center transition-colors"
-              :class="isDesignerOpen
-                ? 'bg-primary text-white hover:bg-primary-600 border border-primary'
-                : 'btn-secondary text-slate-700 dark:text-slate-200 hover:border-primary/60'"
+              @click="showCustomizeTemplate = !showCustomizeTemplate"
+              class="btn-sm btn-secondary font-semibold text-xs gap-1.5 justify-center hover:border-primary/60 transition-colors w-full sm:w-auto"
+              :class="{ 'bg-primary-50 dark:bg-primary-950/30 border-primary text-primary': showCustomizeTemplate }"
+              title="Customize template headers and active columns"
             >
               <PhSlidersHorizontal :size="14" weight="bold" />
-              <span class="truncate">{{ isDesignerOpen ? 'Hide' : 'Columns' }}</span>
-              <span
-                class="px-1.5 py-0.2 rounded-full text-[10px] font-bold shrink-0"
-                :class="isDesignerOpen ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'"
-              >
-                {{ enabledColumnsCount }}
-              </span>
+              <span>{{ showCustomizeTemplate ? 'Hide Customizer' : 'Customize Columns' }}</span>
             </button>
             <button
               type="button"
               @click="downloadTemplate"
-              class="btn-sm btn-secondary font-bold text-xs gap-1.5 justify-center hover:border-emerald-500 hover:text-emerald-600 transition-colors"
+              class="btn-sm btn-primary font-bold text-xs gap-1.5 justify-center hover:bg-primary-600 shadow-xs transition-colors w-full sm:w-auto"
             >
               <PhDownloadSimple :size="14" weight="bold" />
-              <span class="truncate">Download .XLSX</span>
+              <span>Download .XLSX</span>
             </button>
           </div>
         </div>
 
-        <!-- Collapsible Template Designer Section -->
-        <div v-if="isDesignerOpen" class="pt-3 border-t border-slate-200/80 dark:border-slate-700/60 space-y-3">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px]">
-            <div class="flex items-center gap-2">
-              <span class="font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[10px]">
-                Template Columns ({{ enabledColumnsCount }} of {{ availableColumns.length }} enabled)
-              </span>
+        <!-- Inline Customizer Collapsible Panel -->
+        <div v-if="showCustomizeTemplate" class="pt-3 border-t border-slate-200 dark:border-slate-700/60 space-y-3">
+          <!-- Toolbar -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div class="relative flex-1">
+              <input
+                v-model="templateSearchQuery"
+                type="text"
+                placeholder="Filter columns..."
+                class="w-full bg-surface border border-default rounded-lg pl-8 pr-3 py-1.5 text-xs outline-none focus:border-primary"
+              />
+              <PhMagnifyingGlass :size="13" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             </div>
-            <div class="flex items-center gap-2 flex-wrap">
+            <div class="flex items-center gap-2 shrink-0">
               <button
                 type="button"
                 @click="selectAllColumns"
-                class="text-[11px] font-semibold text-primary hover:underline"
+                class="btn-sm btn-secondary text-[11px] font-semibold py-1 px-2.5"
               >
                 Select All
               </button>
-              <span class="text-slate-300 dark:text-slate-600">|</span>
               <button
                 type="button"
-                @click="resetToDefaultColumns"
-                class="text-[11px] font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                @click="resetColumnsToDefault"
+                class="btn-sm btn-secondary text-[11px] font-semibold py-1 px-2.5"
               >
-                Reset to Defaults
+                Reset Defaults
               </button>
-              <span class="text-slate-300 dark:text-slate-600">|</span>
               <button
                 type="button"
-                @click="showAddColumnModal = true"
-                class="btn-xs btn-primary gap-1 font-semibold"
+                @click="showAddColumnRow = !showAddColumnRow"
+                class="btn-sm btn-secondary text-[11px] font-semibold py-1 px-2.5 gap-1 text-primary"
               >
                 <PhPlus :size="12" weight="bold" />
-                <span>Add Custom Column</span>
+                <span>Add Column</span>
               </button>
             </div>
           </div>
 
-          <!-- Inline New Column Creator -->
-          <div
-            v-if="showAddColumnModal"
-            class="p-3 bg-white dark:bg-slate-900 border border-primary/40 rounded-xl space-y-2.5 shadow-xs"
-          >
-            <div class="flex items-center justify-between">
-              <span class="font-bold text-slate-800 dark:text-slate-100 text-xs">Add New Column to Template</span>
+          <!-- Add custom column inline form -->
+          <div v-if="showAddColumnRow" class="p-2.5 bg-surface rounded-xl border border-primary/30 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <input
+              v-model="newColumnHeader"
+              type="text"
+              placeholder="New column header (e.g. Bus Route No.)"
+              class="flex-1 bg-white dark:bg-slate-900 border border-default rounded-lg px-2.5 py-1 text-xs outline-none focus:border-primary"
+            />
+            <input
+              v-model="newColumnSample"
+              type="text"
+              placeholder="Sample value (e.g. Route 42)"
+              class="flex-1 bg-white dark:bg-slate-900 border border-default rounded-lg px-2.5 py-1 text-xs outline-none focus:border-primary"
+            />
+            <div class="flex items-center gap-1.5 shrink-0">
               <button
                 type="button"
-                @click="showAddColumnModal = false; newColName = ''; newColSample = ''"
-                class="text-slate-400 hover:text-slate-600 p-0.5"
+                @click="handleAddInlineColumn"
+                class="btn-sm btn-primary font-bold text-xs py-1 px-3"
               >
-                <PhX :size="14" weight="bold" />
+                Save
+              </button>
+              <button
+                type="button"
+                @click="showAddColumnRow = false"
+                class="btn-sm btn-secondary text-xs py-1 px-2"
+              >
+                Cancel
               </button>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <div>
-                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Column Header Name *</label>
-                <input
-                  v-model="newColName"
-                  type="text"
-                  placeholder="e.g. City / Transport Required / Target Exam"
-                  class="w-full bg-surface border border-default rounded-lg px-2.5 py-1.5 text-xs outline-none focus:border-primary text-slate-800 dark:text-slate-200 font-semibold"
-                  @keydown.enter.prevent="handleAddCustomColumn"
-                />
-              </div>
-              <div>
-                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Sample Value (Optional)</label>
-                <input
-                  v-model="newColSample"
-                  type="text"
-                  placeholder="e.g. Mumbai / Yes / JEE Main"
-                  class="w-full bg-surface border border-default rounded-lg px-2.5 py-1.5 text-xs outline-none focus:border-primary text-slate-800 dark:text-slate-200"
-                  @keydown.enter.prevent="handleAddCustomColumn"
-                />
-              </div>
-            </div>
-            <div class="flex items-center justify-between pt-1 flex-wrap gap-2">
-              <label class="inline-flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-400 cursor-pointer select-none">
-                <input v-model="newColRequired" type="checkbox" class="rounded text-primary focus:ring-primary w-3.5 h-3.5" />
-                <span>Mark column as required during upload</span>
-              </label>
-              <div class="flex items-center gap-2">
-                <button
-                  type="button"
-                  @click="showAddColumnModal = false"
-                  class="btn-xs btn-secondary"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  @click="handleAddCustomColumn"
-                  class="btn-xs btn-primary gap-1 font-semibold"
-                  :disabled="!newColName.trim()"
-                >
-                  <PhCheck :size="12" weight="bold" />
-                  <span>Add to Template</span>
-                </button>
-              </div>
-            </div>
           </div>
 
-          <!-- Column Editor List (Desktop Table >= 640px) -->
-          <div class="hidden sm:block border border-default rounded-xl overflow-hidden bg-white dark:bg-slate-900 max-h-56 overflow-y-auto">
-            <table class="w-full text-left text-xs">
-              <thead class="text-[10px] uppercase font-bold text-slate-400 border-b border-default bg-slate-50 dark:bg-slate-850 sticky top-0 z-10">
-                <tr>
-                  <th class="py-1.5 px-3 w-12 text-center">Include</th>
-                  <th class="py-1.5 px-3">Column Header in Excel</th>
-                  <th class="py-1.5 px-3">Mapped Attribute</th>
-                  <th class="py-1.5 px-3">Sample Value</th>
-                  <th class="py-1.5 px-3 w-16 text-center">Action</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                <tr
-                  v-for="(col, idx) in availableColumns"
-                  :key="col.key || idx"
-                  class="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors"
-                >
-                  <!-- Checkbox -->
-                  <td class="py-1.5 px-3 text-center">
-                    <input
-                      v-model="col.enabled"
-                      type="checkbox"
-                      :disabled="col.isLockedRequired"
-                      class="rounded text-primary focus:ring-primary w-3.5 h-3.5 disabled:opacity-50"
-                    />
-                  </td>
-                  <!-- Editable Header Title -->
-                  <td class="py-1.5 px-3">
-                    <div class="flex items-center gap-1.5">
-                      <input
-                        v-model="col.header"
-                        type="text"
-                        class="bg-transparent border border-transparent hover:border-slate-300 dark:hover:border-slate-700 focus:border-primary focus:bg-white dark:focus:bg-slate-800 rounded px-1.5 py-0.5 text-xs font-semibold text-slate-800 dark:text-slate-100 w-full outline-none transition-colors"
-                        placeholder="Column header"
-                      />
-                      <span
-                        v-if="col.isLockedRequired"
-                        class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/60 shrink-0"
-                      >
-                        Required
-                      </span>
-                    </div>
-                  </td>
-                  <!-- Mapped Attribute Badge -->
-                  <td class="py-1.5 px-3 text-slate-500 dark:text-slate-400">
-                    <span
-                      class="px-1.5 py-0.2 rounded text-[10px] font-mono"
-                      :class="col.isCustomField
-                        ? 'bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200/50'
-                        : col.isUserAdded
-                          ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/50'
-                          : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'"
-                    >
-                      {{ col.fieldLabel || col.key }}
-                    </span>
-                  </td>
-                  <!-- Sample Value Preview -->
-                  <td class="py-1.5 px-3 text-slate-400 text-[11px] truncate max-w-[140px]">
-                    {{ col.sample || '—' }}
-                  </td>
-                  <!-- Action (Remove for user-added) -->
-                  <td class="py-1.5 px-3 text-center">
-                    <button
-                      v-if="col.isUserAdded"
-                      type="button"
-                      @click="removeCustomColumn(idx)"
-                      class="text-slate-400 hover:text-red-500 p-0.5 rounded transition-colors"
-                      title="Remove custom column"
-                    >
-                      <PhTrash :size="13" />
-                    </button>
-                    <span v-else class="text-slate-300 dark:text-slate-600 text-[10px] select-none" title="Built-in standard field">
-                      <PhLock :size="11" />
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Column Editor Mobile List (< 640px) -->
-          <div class="block sm:hidden border border-default rounded-xl divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900 max-h-56 overflow-y-auto">
+          <!-- Columns List -->
+          <div class="max-h-56 overflow-y-auto space-y-1.5 pr-1 divide-y divide-slate-100 dark:divide-slate-800/60">
             <div
-              v-for="(col, idx) in availableColumns"
+              v-for="(col, idx) in filteredTemplateColumns"
               :key="col.key || idx"
-              class="p-2.5 flex flex-col gap-1.5"
-              :class="col.enabled ? 'bg-white dark:bg-slate-900' : 'bg-slate-50/70 dark:bg-slate-850/40 opacity-70'"
+              class="pt-1.5 first:pt-0 flex items-center gap-2"
             >
-              <div class="flex items-center gap-2">
-                <input
-                  v-model="col.enabled"
-                  type="checkbox"
-                  :disabled="col.isLockedRequired"
-                  class="rounded text-primary focus:ring-primary w-4 h-4 disabled:opacity-50 shrink-0"
-                />
+              <input
+                v-model="col.enabled"
+                type="checkbox"
+                :disabled="col.isLockedRequired"
+                @change="persistTemplateColumns"
+                class="rounded text-primary focus:ring-primary w-4 h-4 disabled:opacity-50 cursor-pointer shrink-0"
+              />
+              <div class="flex-1 min-w-0">
                 <input
                   v-model="col.header"
                   type="text"
-                  class="bg-surface border border-default focus:border-primary rounded px-2 py-1 text-xs font-bold text-slate-800 dark:text-slate-100 w-full outline-none"
+                  @input="persistTemplateColumns"
+                  class="w-full bg-surface border border-default focus:border-primary rounded px-2 py-0.5 text-xs font-semibold text-slate-800 dark:text-slate-100 outline-none"
                   placeholder="Column header"
                 />
-                <button
-                  v-if="col.isUserAdded"
-                  type="button"
-                  @click="removeCustomColumn(idx)"
-                  class="text-red-500 p-1 shrink-0"
-                >
-                  <PhTrash :size="14" />
-                </button>
               </div>
-              <div class="flex items-center justify-between text-[10px] text-slate-400 pl-6">
-                <span class="font-mono text-slate-600 dark:text-slate-300">{{ col.fieldLabel || col.key }}</span>
-                <span v-if="col.isLockedRequired" class="text-amber-600 font-bold">Required</span>
-                <span v-else-if="col.sample" class="truncate max-w-[120px]">Sample: {{ col.sample }}</span>
-              </div>
+              <span
+                v-if="col.isLockedRequired"
+                class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200/60 uppercase shrink-0"
+              >
+                Required
+              </span>
+              <span
+                v-else-if="col.isCustomField"
+                class="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200/50 uppercase shrink-0"
+              >
+                Custom Field
+              </span>
+              <span
+                v-else-if="col.isUserAdded"
+                class="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/50 uppercase shrink-0"
+              >
+                Added
+              </span>
+              <button
+                v-if="col.isUserAdded"
+                type="button"
+                @click="removeTemplateColumn(col)"
+                class="p-1 rounded text-red-500 hover:bg-red-50 dark:hover:bg-red-950 shrink-0"
+                title="Remove column"
+              >
+                <PhTrash :size="13" />
+              </button>
             </div>
-          </div>
-
-          <div class="flex items-center justify-between pt-1">
-            <p class="text-[10px] text-slate-400">
-              Columns checked will be included in the template. Click any header name above to rename it.
-            </p>
-            <button
-              type="button"
-              @click="downloadTemplate"
-              class="btn-xs btn-primary gap-1 font-bold shrink-0"
-            >
-              <PhDownloadSimple :size="13" weight="bold" />
-              <span>Download Customized .XLSX</span>
-            </button>
           </div>
         </div>
       </div>
@@ -292,19 +178,18 @@
         @dragover.prevent="isDragging = true"
         @dragleave.prevent="isDragging = false"
         @drop.prevent="handleDrop"
-        class="border-2 border-dashed rounded-2xl p-5 sm:p-8 text-center transition-all cursor-pointer select-none"
+        class="border-2 border-dashed rounded-2xl p-5 sm:p-8 text-center transition-all cursor-pointer select-none relative overflow-hidden"
         :class="[
           isDragging
             ? 'border-primary bg-primary/5 scale-[0.99]'
             : 'border-slate-300 dark:border-slate-700 hover:border-primary/60 bg-surface hover:bg-slate-50/50 dark:hover:bg-slate-800/20 active:scale-[0.99]'
         ]"
-        @click="triggerFileInput"
       >
         <input
           ref="fileInput"
           type="file"
-          accept=".xlsx, .xls, .csv"
-          class="hidden"
+          accept=".xlsx, .xls, .csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel, text/csv, text/plain, application/csv, application/x-csv"
+          class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
           @change="handleFileSelect"
         />
         <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 flex items-center justify-center mx-auto mb-2.5 sm:mb-3 shadow-xs">
@@ -508,7 +393,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useStore } from 'vuex';
 import {
   PhFileXls,
@@ -521,18 +406,20 @@ import {
   PhSlidersHorizontal,
   PhPlus,
   PhTrash,
-  PhLock,
   PhX,
   PhCheck,
+  PhMagnifyingGlass,
 } from '@phosphor-icons/vue';
 
 import AppDrawer from '@/components/AppDrawer.vue';
 import apiClient from '@/api/client';
-import { createEducationLead } from '@/modules/education/api/endpoints';
+import { createEducationLead, createEducationStudent } from '@/modules/education/api/endpoints';
 import { fetchCustomFields } from '@/api/customFields';
+import { downloadExcelWorkbook } from '@/utils/fileDownload';
 
 const props = defineProps({
   isOpen: { type: Boolean, default: false },
+  target: { type: String, default: 'leads' }, // 'leads' | 'students'
   availableClasses: { type: Array, default: () => [] },
 });
 
@@ -540,6 +427,20 @@ const emit = defineEmits(['close', 'success']);
 
 const store = useStore();
 const isEducation = computed(() => store.getters['organization/isEducationTenant']);
+
+const modalTitle = computed(() => {
+  if (props.target === 'students') return 'Bulk Import Enrolled Students';
+  return isEducation.value ? 'Bulk Import Student Leads' : 'Bulk Import Sales Leads';
+});
+
+const modalSubtitle = computed(() => {
+  if (props.target === 'students') {
+    return 'Upload Excel or CSV spreadsheets to batch enroll admitted students into the database.';
+  }
+  return isEducation.value
+    ? 'Upload Excel or CSV spreadsheets to batch enroll admissions prospects.'
+    : 'Upload Excel or CSV spreadsheets to batch import property sales leads.';
+});
 
 // Drawer & upload state
 const fileInput = ref(null);
@@ -549,13 +450,6 @@ const parsedRows = ref([]);
 const detectedHeaders = ref([]);
 const isUploading = ref(false);
 const uploadedCount = ref(0);
-
-// Template Designer State
-const isDesignerOpen = ref(false);
-const showAddColumnModal = ref(false);
-const newColName = ref('');
-const newColSample = ref('');
-const newColRequired = ref(false);
 
 // Column Definitions List
 const availableColumns = ref([]);
@@ -821,7 +715,121 @@ function getDefaultColumns() {
   ];
 }
 
-const enabledColumnsCount = computed(() => availableColumns.value.filter((c) => c.enabled).length);
+function getDefaultStudentsColumns() {
+  return [
+    { key: 'firstName', header: 'First Name', fieldLabel: 'First Name', isLockedRequired: true, enabled: true, sample: 'Rahul', sample2: 'Pooja', sample3: 'Ankit' },
+    { key: 'lastName', header: 'Last Name', fieldLabel: 'Last Name', isLockedRequired: false, enabled: true, sample: 'Sharma', sample2: 'Deshmukh', sample3: 'Joshi' },
+    { key: 'mobile', header: 'Primary Mobile', fieldLabel: 'Primary Mobile', isLockedRequired: true, enabled: true, sample: '9876543210', sample2: '9876543211', sample3: '9876543212' },
+    { key: 'alternativeMobile', header: 'Alternate Phone', fieldLabel: 'Alternate Phone', isLockedRequired: false, enabled: true, sample: '9876543299', sample2: '', sample3: '' },
+    { key: 'schoolName', header: 'College / School Name', fieldLabel: 'School Name', isLockedRequired: true, enabled: true, sample: 'St. Xavier High School', sample2: 'DPS Pune', sample3: 'National College' },
+    { key: 'institutionType', header: 'Institution Type', fieldLabel: 'Institution Type', isLockedRequired: false, enabled: true, sample: 'School', sample2: 'School', sample3: 'Private Classes' },
+    { key: 'educationBoard', header: 'Education Board', fieldLabel: 'Education Board', isLockedRequired: false, enabled: true, sample: 'CBSE', sample2: 'State Board', sample3: 'ICSE' },
+    { key: 'standard', header: 'Standard / Grade', fieldLabel: 'Standard / Grade', isLockedRequired: false, enabled: true, sample: '11', sample2: '12', sample3: '10' },
+    { key: 'academicStream', header: 'Academic Stream', fieldLabel: 'Academic Stream', isLockedRequired: false, enabled: true, sample: 'Science', sample2: 'Commerce', sample3: 'Science' },
+    { key: 'parentName', header: 'Parent Name', fieldLabel: 'Parent Name', isLockedRequired: false, enabled: true, sample: 'Suresh Sharma', sample2: 'Nitin Deshmukh', sample3: 'Manoj Joshi' },
+    { key: 'parentMobile', header: 'Parent Mobile', fieldLabel: 'Parent Mobile', isLockedRequired: false, enabled: true, sample: '9876543200', sample2: '9876543201', sample3: '9876543202' },
+    { key: 'email', header: 'Email Address', fieldLabel: 'Email Address', isLockedRequired: false, enabled: true, sample: 'rahul.s@example.com', sample2: 'pooja.d@example.com', sample3: '' },
+    { key: 'status', header: 'Student Status', fieldLabel: 'Student Status', isLockedRequired: false, enabled: true, sample: 'active', sample2: 'active', sample3: 'active' },
+    { key: 'notes', header: 'Academic Notes', fieldLabel: 'Academic Notes', isLockedRequired: false, enabled: true, sample: 'Enrolled in full-year batch', sample2: 'Targeting IIT JEE', sample3: 'Scholarship student' },
+  ];
+}
+
+function loadTemplateColumns() {
+  const key = props.target === 'students'
+    ? 'trackdeal_template_columns_students'
+    : (isEducation.value ? 'trackdeal_template_columns_leads' : 'trackdeal_template_columns_sales_leads');
+
+  const saved = localStorage.getItem(key);
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        availableColumns.value = parsed;
+        return;
+      }
+    } catch (e) {}
+  }
+  availableColumns.value = props.target === 'students' ? getDefaultStudentsColumns() : getDefaultColumns();
+}
+
+function persistTemplateColumns() {
+  try {
+    const key = props.target === 'students'
+      ? 'trackdeal_template_columns_students'
+      : (isEducation.value ? 'trackdeal_template_columns_leads' : 'trackdeal_template_columns_sales_leads');
+    localStorage.setItem(key, JSON.stringify(availableColumns.value));
+  } catch (e) {}
+}
+
+const showCustomizeTemplate = ref(false);
+const templateSearchQuery = ref('');
+const showAddColumnRow = ref(false);
+const newColumnHeader = ref('');
+const newColumnSample = ref('');
+
+const enabledTemplateColumnsCount = computed(() => {
+  return availableColumns.value.filter((c) => c.enabled).length;
+});
+
+const filteredTemplateColumns = computed(() => {
+  const q = templateSearchQuery.value.trim().toLowerCase();
+  if (!q) return availableColumns.value;
+  return availableColumns.value.filter(
+    (c) =>
+      (c.header && c.header.toLowerCase().includes(q)) ||
+      (c.key && c.key.toLowerCase().includes(q)) ||
+      (c.fieldLabel && c.fieldLabel.toLowerCase().includes(q))
+  );
+});
+
+function selectAllColumns() {
+  availableColumns.value.forEach((c) => {
+    c.enabled = true;
+  });
+  persistTemplateColumns();
+}
+
+function resetColumnsToDefault() {
+  if (props.target === 'students') {
+    availableColumns.value = getDefaultStudentsColumns();
+  } else {
+    availableColumns.value = getDefaultColumns();
+  }
+  loadCustomFieldsForTemplate();
+  persistTemplateColumns();
+}
+
+function removeTemplateColumn(col) {
+  const idx = availableColumns.value.findIndex((c) => c === col || (c.key === col.key && c.isUserAdded));
+  if (idx !== -1) {
+    availableColumns.value.splice(idx, 1);
+    persistTemplateColumns();
+  }
+}
+
+function handleAddInlineColumn() {
+  const name = newColumnHeader.value.trim();
+  if (!name) return;
+  const slugKey = name.toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '');
+  availableColumns.value.push({
+    key: slugKey || `col_${Date.now()}`,
+    header: name,
+    fieldLabel: `Custom: ${name}`,
+    isCustomField: false,
+    isUserAdded: true,
+    isLockedRequired: false,
+    enabled: true,
+    required: false,
+    sample: newColumnSample.value.trim() || 'Sample value',
+    sample2: '',
+    sample3: '',
+  });
+  persistTemplateColumns();
+  newColumnHeader.value = '';
+  newColumnSample.value = '';
+  showAddColumnRow.value = false;
+}
+
 const validRowsCount = computed(() => parsedRows.value.filter((r) => r._isValid).length);
 const invalidRowsCount = computed(() => parsedRows.value.filter((r) => !r._isValid).length);
 const uploadProgress = computed(() => {
@@ -841,7 +849,8 @@ function getOptionString(opt) {
 
 async function loadCustomFieldsForTemplate() {
   try {
-    const list = await fetchCustomFields('leads');
+    const mod = props.target === 'students' ? 'students' : 'leads';
+    const list = await fetchCustomFields(mod);
     const customFields = (Array.isArray(list) ? list : []).filter(
       (f) => !f.isStandard && f.isActive !== false
     );
@@ -867,45 +876,6 @@ async function loadCustomFieldsForTemplate() {
   } catch (err) {
     // Custom fields optional fallback
   }
-}
-
-function handleAddCustomColumn() {
-  const name = newColName.value.trim();
-  if (!name) return;
-  const slugKey = name.toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '');
-  availableColumns.value.push({
-    key: slugKey || `col_${Date.now()}`,
-    header: name,
-    fieldLabel: `Custom: ${name}`,
-    isCustomField: false,
-    isUserAdded: true,
-    isLockedRequired: false,
-    enabled: true,
-    required: newColRequired.value,
-    sample: newColSample.value.trim() || 'Sample value',
-    sample2: '',
-    sample3: '',
-  });
-
-  newColName.value = '';
-  newColSample.value = '';
-  newColRequired.value = false;
-  showAddColumnModal.value = false;
-}
-
-function removeCustomColumn(index) {
-  availableColumns.value.splice(index, 1);
-}
-
-function selectAllColumns() {
-  availableColumns.value.forEach((c) => {
-    c.enabled = true;
-  });
-}
-
-function resetToDefaultColumns() {
-  availableColumns.value = getDefaultColumns();
-  loadCustomFieldsForTemplate();
 }
 
 function cleanMobileNumber(raw) {
@@ -1176,13 +1146,16 @@ async function downloadTemplate() {
   }));
 
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Leads');
+  const sheetName = props.target === 'students' ? 'Students' : 'Leads';
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
-  const filename = isEducation.value
-    ? 'TrackDeal_Student_Leads_Template.xlsx'
-    : 'TrackDeal_Sales_Leads_Template.xlsx';
+  const filename = props.target === 'students'
+    ? 'TrackDeal_Enrolled_Students_Template.xlsx'
+    : (isEducation.value
+        ? 'TrackDeal_Student_Leads_Template.xlsx'
+        : 'TrackDeal_Sales_Leads_Template.xlsx');
 
-  XLSX.writeFile(wb, filename);
+  await downloadExcelWorkbook(wb, filename);
 }
 
 function resetFile() {
@@ -1218,7 +1191,44 @@ async function executeImport() {
 
   for (const row of validRows) {
     try {
-      if (isEducation.value) {
+      if (props.target === 'students') {
+        let classId = undefined;
+        if (row.classInterest && props.availableClasses?.length) {
+          const target = row.classInterest.toLowerCase().trim();
+          const match = props.availableClasses.find(
+            (c) =>
+              c.name?.toLowerCase().trim() === target ||
+              c.name?.toLowerCase().includes(target) ||
+              target.includes(c.name?.toLowerCase() || '')
+          );
+          if (match) classId = match._id;
+        }
+
+        await createEducationStudent({
+          firstName: row.firstName,
+          lastName: row.lastName || '',
+          mobile: row.mobile,
+          alternativeMobile: row.alternativeMobile || undefined,
+          schoolName: row.schoolName,
+          institutionType: row.institutionType || undefined,
+          educationBoard: row.educationBoard || undefined,
+          standard: row.standard || undefined,
+          academicStream: row.academicStream || undefined,
+          currentCoaching: row.currentCoaching || undefined,
+          email: row.email || undefined,
+          parentName: row.parentName || undefined,
+          parentMobile: row.parentMobile || undefined,
+          source: row.source || 'walk_in',
+          classId: classId || undefined,
+          status: ['active', 'inactive', 'graduated', 'dropped'].includes(row.status?.toLowerCase())
+            ? row.status.toLowerCase()
+            : 'active',
+          notes: row.notes || undefined,
+          customFields: row.customFields && Object.keys(row.customFields).length > 0
+            ? row.customFields
+            : undefined,
+        });
+      } else if (isEducation.value) {
         let classInterestId = undefined;
         if (row.classInterest && props.availableClasses?.length) {
           const target = row.classInterest.toLowerCase().trim();
@@ -1302,8 +1312,9 @@ async function executeImport() {
 
   isUploading.value = false;
 
+  const entityLabel = props.target === 'students' ? 'students' : 'leads';
   store.dispatch('notifications/triggerToast', {
-    message: `Batch import finished. Successfully imported ${successCount} leads${failCount > 0 ? ` (${failCount} failed)` : ''}.`,
+    message: `Batch import finished. Successfully imported ${successCount} ${entityLabel}${failCount > 0 ? ` (${failCount} failed)` : ''}.`,
     type: successCount > 0 ? 'success' : 'error',
   });
 
@@ -1313,7 +1324,17 @@ async function executeImport() {
 }
 
 onMounted(() => {
-  availableColumns.value = getDefaultColumns();
+  loadTemplateColumns();
   loadCustomFieldsForTemplate();
 });
+
+watch(
+  () => props.isOpen,
+  (open) => {
+    if (open) {
+      loadTemplateColumns();
+      loadCustomFieldsForTemplate();
+    }
+  }
+);
 </script>

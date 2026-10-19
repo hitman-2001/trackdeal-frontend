@@ -13,8 +13,7 @@ export const authRoutes = [
   },
   {
     path: 'forgot-password',
-    name: 'ForgotPassword',
-    component: ForgotPassword
+    redirect: '/login'
   },
   {
     path: 'reset-password',
