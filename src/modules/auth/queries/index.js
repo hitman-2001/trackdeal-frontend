@@ -2,6 +2,7 @@ import { useMutation } from "@tanstack/vue-query";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import authApi from "../api/endpoints";
+import { syncPushTokenIfPermissionGranted } from "@/services/firebase";
 
 export function useLoginMutation() {
   const store = useStore();
@@ -17,6 +18,7 @@ export function useLoginMutation() {
         refreshToken: payload.refreshToken,
         profile: payload.user,
       });
+      syncPushTokenIfPermissionGranted().catch(() => {});
       store.dispatch("notifications/triggerToast", {
         message: "Successfully logged in. Welcome back!",
         type: "success",

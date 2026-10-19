@@ -520,7 +520,7 @@ async function handleSave() {
 
     const cleanDescription = remarks.value.trim() ? remarks.value.trim() : cleanSummary;
 
-    // Record an audit activity log entry
+    // Record an audit activity log entry (updateEducationLead already handles follow-up scheduling)
     try {
       const actPayload = {
         type: 'stage_change',
@@ -528,11 +528,10 @@ async function handleSave() {
         description: cleanDescription,
         customerResponse: selectedSubStatus.value,
         status: 'completed',
+        metadata: {
+          scheduledFollowUp: payload.nextFollowUpAt || null,
+        },
       };
-      if (payload.nextFollowUpAt) {
-        actPayload.nextFollowUpAt = payload.nextFollowUpAt;
-        actPayload.followUpNotes = remarks.value.trim() || `Follow-up: ${currentStatusLabel.value}${subText}`;
-      }
       await logEducationLeadActivity(leadId, actPayload);
     } catch (logErr) {
       console.warn('Failed to log activity entry:', logErr);
