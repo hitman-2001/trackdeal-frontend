@@ -78,9 +78,12 @@ export async function fetchUsers() {
 }
 
 export async function inviteUser(data) {
-  const nameParts = (data.name || '').trim().split(/\s+/);
-  const firstName = data.firstName || nameParts[0] || 'User';
-  const lastName = data.lastName || (nameParts.length > 1 ? nameParts.slice(1).join(' ') : firstName);
+  const formatWord = (w) => (w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : '');
+  const toTitleCase = (str) => (str || '').trim().split(/\s+/).filter(Boolean).map(formatWord).join(' ');
+
+  const nameParts = (data.name || '').trim().split(/\s+/).filter(Boolean);
+  const firstName = toTitleCase(data.firstName || nameParts[0] || 'User');
+  const lastName = toTitleCase(data.lastName || (nameParts.length > 1 ? nameParts.slice(1).join(' ') : ''));
 
   const payload = {
     email: data.email,
