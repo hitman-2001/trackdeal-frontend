@@ -1404,7 +1404,7 @@ function getDefaultLeadsColumns() {
       { key: 'mobile', header: 'Primary Mobile', fieldLabel: 'Primary Mobile', isLockedRequired: true, enabled: true, sample: '9876543210', sample2: '9876543211', sample3: '9876543212' },
       { key: 'alternativeMobile', header: 'Alternate Phone', fieldLabel: 'Alternate Phone', isLockedRequired: false, enabled: true, sample: '9876543299', sample2: '', sample3: '9812345678' },
       { key: 'schoolName', header: 'School Name', fieldLabel: 'School Name', isLockedRequired: true, enabled: true, sample: 'Delhi Public School', sample2: 'St. Xavier High School', sample3: 'Balmohan Vidyamandir' },
-      { key: 'institutionType', header: 'Institution Type', fieldLabel: 'Institution Type', isLockedRequired: false, enabled: true, sample: 'School', sample2: 'School', sample3: 'Private Classes' },
+      { key: 'institutionType', header: 'Institution Type', fieldLabel: 'Institution Type', isLockedRequired: false, enabled: true, sample: 'School', sample2: 'College', sample3: 'Private' },
       { key: 'educationBoard', header: 'Education Board', fieldLabel: 'Education Board', isLockedRequired: false, enabled: true, sample: 'CBSE', sample2: 'ICSE', sample3: 'State Board' },
       { key: 'standard', header: 'Standard / Grade', fieldLabel: 'Standard / Grade', isLockedRequired: false, enabled: true, sample: '10', sample2: '8', sample3: '10' },
       { key: 'academicStream', header: 'Academic Stream', fieldLabel: 'Academic Stream', isLockedRequired: false, enabled: true, sample: 'Science', sample2: '', sample3: 'Commerce' },

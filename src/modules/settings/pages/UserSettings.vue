@@ -416,7 +416,7 @@
 
       <!-- 2. Audit logs Tab -->
       <div v-if="activeTab === 'audit'">
-        <AuditTimeline :logs="auditLogs || []" />
+        <AuditTimeline :logs="auditLogs || []" :users="users || []" />
       </div>
     </div>
 
@@ -509,7 +509,7 @@ const isOrgAdmin = computed(() => {
 const { data: users } = useUsersQuery();
 const { data: roles } = useRolesQuery();
 const { data: branches } = useBranchesQuery();
-const { data: auditLogs } = useAuditLogsQuery();
+const { data: auditLogs } = useAuditLogsQuery({ limit: 200 });
 const { data: orgData } = useOrgSettingsQuery();
 const { mutateAsync: updateUserStatus } = useUpdateUserStatusMutation();
 const { mutateAsync: deleteUserMutation } = useDeleteUserMutation();

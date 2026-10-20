@@ -69,7 +69,7 @@
           <input
             v-model="search"
             type="text"
-            placeholder="Search student lead..."
+            placeholder="Search student, school, mobile..."
             class="w-full h-10 pl-9 pr-8 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 placeholder:text-slate-400 shadow-2xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all"
             @input="handleSearch"
           />
@@ -188,7 +188,7 @@
             <input
               v-model="search"
               type="text"
-              placeholder="Search student lead..."
+              placeholder="Search student, school, mobile..."
               class="w-full bg-slate-50 dark:bg-slate-850 border border-default rounded-xl pl-9 pr-3 py-2 text-xs focus:border-primary outline-none text-slate-800 dark:text-slate-200 placeholder:text-slate-400"
               @input="handleSearch"
             />
@@ -1377,7 +1377,9 @@ const tempAcademicStream = ref("");
 
 const availableInstitutionTypes = [
   { value: "School", label: "School" },
-  { value: "Private Classes", label: "Private Classes" },
+  { value: "College", label: "College" },
+  { value: "Private", label: "Private" },
+  { value: "Integrated", label: "Integrated" },
 ];
 
 const availableEducationBoards = [
@@ -1804,7 +1806,7 @@ function getOptionLabel(opt) {
   return String(opt);
 }
 
-const institutionTypeOptions = computed(() => getFieldOptions('institutionType', ['School', 'Private Classes']));
+const institutionTypeOptions = computed(() => getFieldOptions('institutionType', ['School', 'College', 'Private', 'Integrated']));
 const educationBoardOptions = computed(() => getFieldOptions('educationBoard', ['CBSE', 'ICSE', 'State Board']));
 const standardOptions = computed(() => getFieldOptions('standard', ['8', '9', '10', '11', '12']));
 const streamOptions = computed(() => getFieldOptions('academicStream', ['Science', 'Commerce']));

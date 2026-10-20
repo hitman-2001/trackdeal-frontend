@@ -514,8 +514,8 @@ function getDefaultColumns() {
         isLockedRequired: false,
         enabled: true,
         sample: 'School',
-        sample2: 'School',
-        sample3: 'Private Classes',
+        sample2: 'College',
+        sample3: 'Private',
       },
       {
         key: 'educationBoard',
@@ -722,7 +722,7 @@ function getDefaultStudentsColumns() {
     { key: 'mobile', header: 'Primary Mobile', fieldLabel: 'Primary Mobile', isLockedRequired: true, enabled: true, sample: '9876543210', sample2: '9876543211', sample3: '9876543212' },
     { key: 'alternativeMobile', header: 'Alternate Phone', fieldLabel: 'Alternate Phone', isLockedRequired: false, enabled: true, sample: '9876543299', sample2: '', sample3: '' },
     { key: 'schoolName', header: 'College / School Name', fieldLabel: 'School Name', isLockedRequired: true, enabled: true, sample: 'St. Xavier High School', sample2: 'DPS Pune', sample3: 'National College' },
-    { key: 'institutionType', header: 'Institution Type', fieldLabel: 'Institution Type', isLockedRequired: false, enabled: true, sample: 'School', sample2: 'School', sample3: 'Private Classes' },
+    { key: 'institutionType', header: 'Institution Type', fieldLabel: 'Institution Type', isLockedRequired: false, enabled: true, sample: 'School', sample2: 'College', sample3: 'Private' },
     { key: 'educationBoard', header: 'Education Board', fieldLabel: 'Education Board', isLockedRequired: false, enabled: true, sample: 'CBSE', sample2: 'State Board', sample3: 'ICSE' },
     { key: 'standard', header: 'Standard / Grade', fieldLabel: 'Standard / Grade', isLockedRequired: false, enabled: true, sample: '11', sample2: '12', sample3: '10' },
     { key: 'academicStream', header: 'Academic Stream', fieldLabel: 'Academic Stream', isLockedRequired: false, enabled: true, sample: 'Science', sample2: 'Commerce', sample3: 'Science' },
@@ -1008,7 +1008,14 @@ function normalizeRow(row) {
   const rawAltMobile = getColVal('alternativeMobile', ['altmobile', 'alternatemobile', 'altphone', 'alternatephone', 'secondarymobile', 'secondaryphone', 'otherphone']);
   const alternativeMobile = cleanMobileNumber(rawAltMobile);
   const schoolName = getColVal('schoolName', ['schoolname', 'school', 'institute', 'institution', 'college', 'collegename', 'schoolcollege']);
-  const institutionType = getColVal('institutionType', ['institutiontype', 'insttype', 'schooltype']);
+  let institutionType = getColVal('institutionType', ['institutiontype', 'insttype', 'schooltype']);
+  if (institutionType) {
+    const itLower = institutionType.trim().toLowerCase();
+    if (itLower === 'school') institutionType = 'School';
+    else if (itLower === 'college') institutionType = 'College';
+    else if (itLower === 'private' || itLower === 'private classes' || itLower === 'classes' || itLower === 'tuition' || itLower === 'coaching') institutionType = 'Private';
+    else if (itLower === 'integrated' || itLower === 'integrated college' || itLower === 'integrated school') institutionType = 'Integrated';
+  }
   const educationBoard = getColVal('educationBoard', ['educationboard', 'board', 'boardname', 'syllabus']);
   const standard = getColVal('standard', ['standard', 'grade', 'standardgrade', 'class', 'std']);
   const academicStream = getColVal('academicStream', ['academicstream', 'stream', 'academic']);

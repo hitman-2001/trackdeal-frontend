@@ -348,7 +348,7 @@ function getOptionLabel(opt) {
   return String(opt);
 }
 
-const institutionTypeOptions = computed(() => getFieldOptions('institutionType', ['School', 'Private Classes']));
+const institutionTypeOptions = computed(() => getFieldOptions('institutionType', ['School', 'College', 'Private', 'Integrated']));
 const educationBoardOptions = computed(() => getFieldOptions('educationBoard', ['CBSE', 'ICSE', 'State Board']));
 const standardOptions = computed(() => getFieldOptions('standard', ['8', '9', '10', '11', '12']));
 const streamOptions = computed(() => getFieldOptions('academicStream', ['Science', 'Commerce']));
