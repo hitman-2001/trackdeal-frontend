@@ -13,6 +13,10 @@ export function useLoginMutation() {
     onSuccess: (response) => {
       // API wrapper response: response = { success: true, data: { accessToken, refreshToken, user } }
       const payload = response.data || {};
+      if (payload.mfaRequired) {
+        // MFA is required for Super Admin; wait for code verification
+        return;
+      }
       store.dispatch("auth/loginUser", {
         accessToken: payload.accessToken,
         refreshToken: payload.refreshToken,
@@ -28,6 +32,29 @@ export function useLoginMutation() {
       } else {
         router.push("/app/dashboard");
       }
+    },
+  });
+}
+
+export function useVerifyMfaMutation() {
+  const store = useStore();
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: authApi.verifyMfa,
+    onSuccess: (response) => {
+      const payload = response.data || {};
+      store.dispatch("auth/loginUser", {
+        accessToken: payload.accessToken,
+        refreshToken: payload.refreshToken,
+        profile: payload.user,
+      });
+      syncPushTokenIfPermissionGranted().catch(() => {});
+      store.dispatch("notifications/triggerToast", {
+        message: "MFA verified. Welcome to Super Admin console!",
+        type: "success",
+      });
+      router.push("/admin");
     },
   });
 }

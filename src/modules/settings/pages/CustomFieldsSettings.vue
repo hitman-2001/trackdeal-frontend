@@ -680,10 +680,10 @@
                       <PhPencilSimple :size="14" />
                     </button>
                     <button
-                      v-if="!field.isSystemLocked"
+                      v-if="!field.isStandard && !field.isSystemLocked"
                       type="button"
                       @click="openDeleteDialog(field)"
-                      title="Delete field"
+                      title="Delete custom field"
                       class="p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-950 text-red-600 dark:text-red-400 transition-colors"
                     >
                       <PhTrash :size="14" />
@@ -691,7 +691,7 @@
                     <span
                       v-else
                       class="text-slate-300 dark:text-slate-600 p-1"
-                      title="Core identity field"
+                      title="Default system field"
                     >
                       <PhLockSimple :size="13" />
                     </span>
@@ -780,18 +780,18 @@
                   <PhPencilSimple :size="14" />
                 </button>
                 <button
-                  v-if="!field.isSystemLocked"
+                  v-if="!field.isStandard && !field.isSystemLocked"
                   type="button"
                   @click="openDeleteDialog(field)"
                   class="p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-950 text-red-600 dark:text-red-400 transition-colors"
-                  title="Delete field"
+                  title="Delete custom field"
                 >
                   <PhTrash :size="14" />
                 </button>
                 <span
                   v-else
                   class="text-slate-300 dark:text-slate-600 p-0.5"
-                  title="Core identity field"
+                  title="Default system field"
                 >
                   <PhLockSimple :size="12" />
                 </span>
@@ -1890,13 +1890,13 @@ async function onSaveField() {
 }
 
 function openDeleteDialog(field) {
-  if (field.isSystemLocked) return;
+  if (field.isStandard || field.isSystemLocked) return;
   fieldToDelete.value = field;
   isDeleteModalOpen.value = true;
 }
 
 async function handleConfirmDelete() {
-  if (!fieldToDelete.value || fieldToDelete.value.isSystemLocked) return;
+  if (!fieldToDelete.value || fieldToDelete.value.isStandard || fieldToDelete.value.isSystemLocked) return;
   const fieldId = fieldToDelete.value._id || fieldToDelete.value.id;
   isDeleting.value = true;
   try {

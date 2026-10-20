@@ -1,12 +1,28 @@
 <template>
   <div class="space-y-6">
-    <!-- Header Section -->
-    <div class="login-header text-left">
+    <!-- Header Section (Standard Login) -->
+    <div v-if="!isMfaStep" class="login-header text-left">
       <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-[#213c31] font-heading">
         Sign in to your workspace
       </h2>
       <p class="text-sm text-[#70776f] mt-1.5 leading-relaxed">
         Enter your organization and account details to access your leads and pipelines.
+      </p>
+    </div>
+
+    <!-- Header Section (Super Admin MFA) -->
+    <div v-else class="login-header text-left">
+      <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-900/50 text-[11px] font-semibold mb-2">
+        <PhShieldCheck :size="14" weight="bold" class="text-amber-600" />
+        <span>Super Admin Security</span>
+      </div>
+      <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-[#213c31] font-heading">
+        Two-Factor Authentication
+      </h2>
+      <p class="text-sm text-[#70776f] mt-1.5 leading-relaxed">
+        Enter the 6-digit verification code sent to
+        <span class="font-mono font-bold text-slate-800 dark:text-slate-100">{{ mfaEmail }}</span>
+        to authorize your session.
       </p>
     </div>
 
@@ -29,8 +45,74 @@
       </button>
     </div>
 
-    <!-- Login Form -->
-    <form @submit.prevent="onSubmit" class="space-y-4">
+    <!-- MFA Verification Form -->
+    <form v-if="isMfaStep" @submit.prevent="onVerifyMfa" class="space-y-4">
+      <div class="space-y-2">
+        <label for="mfaCode" class="block text-xs font-semibold text-[#0f172a]">
+          Verification Code <span class="text-red-500">*</span>
+        </label>
+        <div class="relative">
+          <input
+            id="mfaCode"
+            v-model="mfaCode"
+            type="text"
+            maxlength="6"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            placeholder="••••••"
+            autocomplete="one-time-code"
+            autofocus
+            class="w-full h-14 px-4 rounded-xl border border-[#e2e8f0] bg-[#f8fafc] text-[#0f172a] text-center text-2xl font-mono font-bold tracking-[8px] focus:bg-white focus:border-[#0a6ef0] focus:ring-2 focus:ring-[#0a6ef0]/15 outline-none transition-all placeholder:tracking-normal placeholder:font-normal placeholder:text-slate-300"
+            :disabled="isVerifyingMfa"
+          />
+        </div>
+        <p class="text-[11px] text-[#94a3b8]">
+          The verification code is valid for 10 minutes. Please check your inbox and spam folder.
+        </p>
+      </div>
+
+      <!-- Verify Button -->
+      <button
+        type="submit"
+        class="w-full h-11 mt-2 bg-[#0a6ef0] hover:bg-[#0056cc] active:scale-[0.99] text-white rounded-xl font-semibold text-sm transition-all duration-200 shadow-[0_3px_8px_rgba(10,110,240,0.25)] hover:shadow-[0_6px_20px_rgba(10,110,240,0.32)] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        :disabled="isVerifyingMfa || mfaCode.trim().length !== 6"
+      >
+        <AppSpinner v-if="isVerifyingMfa" size="xs" color="white" />
+        <span v-if="isVerifyingMfa">Verifying Code...</span>
+        <template v-else>
+          <span>Verify &amp; Sign In</span>
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </template>
+      </button>
+
+      <!-- Actions: Back and Resend -->
+      <div class="flex items-center justify-between pt-2 text-xs">
+        <button
+          type="button"
+          @click="onCancelMfa"
+          class="text-[#64748b] hover:text-[#0f172a] font-medium transition-colors flex items-center gap-1"
+        >
+          <PhArrowLeft :size="13" />
+          <span>Back to sign in</span>
+        </button>
+
+        <button
+          type="button"
+          @click="onResendMfa"
+          :disabled="isResendingMfa || resendCooldown > 0"
+          class="text-[#0a6ef0] hover:text-[#0056cc] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span v-if="isResendingMfa">Sending...</span>
+          <span v-else-if="resendCooldown > 0">Resend in {{ resendCooldown }}s</span>
+          <span v-else>Resend Code</span>
+        </button>
+      </div>
+    </form>
+
+    <!-- Standard Login Form -->
+    <form v-else @submit.prevent="onSubmit" class="space-y-4">
       <!-- Organization Input -->
       <div class="space-y-1.5">
         <label for="organization" class="block text-xs font-semibold text-[#213c31]">
@@ -154,17 +236,29 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
+import { useStore } from "vuex";
 import { useForm, useField } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
-import { PhEye, PhEyeSlash, PhX } from "@phosphor-icons/vue";
+import { PhEye, PhEyeSlash, PhX, PhShieldCheck, PhArrowLeft } from "@phosphor-icons/vue";
 import AppSpinner from "@/components/AppSpinner.vue";
 import { getErrorMessage } from "@/utils/errorHandler";
 import { loginSchema } from "../schemas/validation";
-import { useLoginMutation } from "../queries";
+import { useLoginMutation, useVerifyMfaMutation } from "../queries";
+import authApi from "../api/endpoints";
 
+const store = useStore();
 const showPassword = ref(false);
 const errorMessage = ref("");
+
+// MFA State
+const isMfaStep = ref(false);
+const mfaToken = ref("");
+const mfaEmail = ref("integration@swarajyaconsultancy.in");
+const mfaCode = ref("");
+const isResendingMfa = ref(false);
+const resendCooldown = ref(0);
+let cooldownTimer = null;
 
 // Bind schemas to VeeValidate
 const { errors, handleSubmit } = useForm({
@@ -182,8 +276,21 @@ const { value: email } = useField("email");
 const { value: password } = useField("password");
 const { value: rememberMe } = useField("rememberMe");
 
-// Throttled mutations hook
+// Mutations
 const { mutate, isPending } = useLoginMutation();
+const { mutate: verifyMfaMutate, isPending: isVerifyingMfa } = useVerifyMfaMutation();
+
+function startCooldown(seconds = 60) {
+  resendCooldown.value = seconds;
+  if (cooldownTimer) clearInterval(cooldownTimer);
+  cooldownTimer = setInterval(() => {
+    resendCooldown.value -= 1;
+    if (resendCooldown.value <= 0) {
+      clearInterval(cooldownTimer);
+      cooldownTimer = null;
+    }
+  }, 1000);
+}
 
 onMounted(() => {
   // Pre-fill email if stored in local storage
@@ -200,6 +307,10 @@ onMounted(() => {
   }
 });
 
+onUnmounted(() => {
+  if (cooldownTimer) clearInterval(cooldownTimer);
+});
+
 const onSubmit = handleSubmit((values) => {
   errorMessage.value = "";
 
@@ -211,7 +322,7 @@ const onSubmit = handleSubmit((values) => {
   }
   localStorage.setItem("remembered_organization", values.organization.trim());
 
-  // Trigger mutation
+  // Trigger login mutation
   mutate(
     {
       organization: values.organization.trim(),
@@ -219,8 +330,18 @@ const onSubmit = handleSubmit((values) => {
       password: values.password,
     },
     {
+      onSuccess: (response) => {
+        const payload = response.data || {};
+        if (payload.mfaRequired) {
+          isMfaStep.value = true;
+          mfaToken.value = payload.mfaToken;
+          mfaEmail.value = payload.email || "integration@swarajyaconsultancy.in";
+          mfaCode.value = "";
+          startCooldown(60);
+          return;
+        }
+      },
       onError: (err) => {
-        // Render sanitized, user-friendly error message
         errorMessage.value = getErrorMessage(
           err,
           "Invalid credentials. Please verify your organization, email and password."
@@ -229,7 +350,65 @@ const onSubmit = handleSubmit((values) => {
     },
   );
 });
+
+function onVerifyMfa() {
+  if (!mfaCode.value || mfaCode.value.trim().length !== 6) return;
+  errorMessage.value = "";
+
+  verifyMfaMutate(
+    {
+      mfaToken: mfaToken.value,
+      code: mfaCode.value.trim(),
+    },
+    {
+      onError: (err) => {
+        errorMessage.value = getErrorMessage(
+          err,
+          "Invalid or expired verification code. Please check your email and try again."
+        );
+      },
+    },
+  );
+}
+
+async function onResendMfa() {
+  if (isResendingMfa.value || resendCooldown.value > 0) return;
+  errorMessage.value = "";
+  isResendingMfa.value = true;
+
+  try {
+    const res = await authApi.resendMfa({ mfaToken: mfaToken.value });
+    store.dispatch("notifications/triggerToast", {
+      message: res.message || `A new verification code was sent to ${mfaEmail.value}`,
+      type: "info",
+    });
+    startCooldown(60);
+  } catch (err) {
+    errorMessage.value = getErrorMessage(err, "Failed to resend verification code.");
+  } finally {
+    isResendingMfa.value = false;
+  }
+}
+
+function onCancelMfa() {
+  isMfaStep.value = false;
+  mfaCode.value = "";
+  mfaToken.value = "";
+  errorMessage.value = "";
+}
 </script>
+
+<style scoped>
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+.animate-shake {
+  animation: shake 0.35s ease-in-out;
+}
+</style>
 
 <style scoped>
 @keyframes shake {

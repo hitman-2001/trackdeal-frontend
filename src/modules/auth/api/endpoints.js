@@ -38,8 +38,20 @@ export async function refreshTokens(refreshToken) {
   return response.data;
 }
 
+export async function verifyMfa({ mfaToken, code }) {
+  const response = await apiClient.post('/auth/mfa/verify', { mfaToken, code });
+  return response.data;
+}
+
+export async function resendMfa({ mfaToken }) {
+  const response = await apiClient.post('/auth/mfa/resend', { mfaToken });
+  return response.data;
+}
+
 export default {
   login,
+  verifyMfa,
+  resendMfa,
   forgotPassword,
   resetPassword,
   validateInvitationToken,
