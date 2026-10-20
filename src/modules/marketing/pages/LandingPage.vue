@@ -11,6 +11,7 @@
           <a href="#features">Platform</a>
           <a href="#workflow">How it works</a>
           <a href="#faq">FAQ</a>
+          <a href="mailto:contact@trackdeal.in?subject=TrackDeal%20Demo%20%26%20Inquiry">Contact & Demo</a>
         </nav>
 
         <div class="lp-nav-actions">
@@ -52,6 +53,7 @@
             <a href="#features" class="lp-mobile-nav-link">Platform</a>
             <a href="#workflow" class="lp-mobile-nav-link">How it works</a>
             <a href="#faq" class="lp-mobile-nav-link">FAQ</a>
+            <a href="mailto:contact@trackdeal.in?subject=TrackDeal%20Demo%20%26%20Inquiry" class="lp-mobile-nav-link">Contact & Demo</a>
           </div>
           <div class="lp-mobile-actions">
             <router-link to="/login" class="lp-btn-ghost lp-mobile-btn-ghost">Sign in</router-link>
@@ -345,11 +347,19 @@
             <h2 class="lp-cta-h2">Stop losing leads to slow follow-ups.<br /><em>Start closing faster with TrackDeal.</em></h2>
             <p>Join fast-moving businesses that have transformed their sales, client conversion, and team productivity.</p>
             <div class="cta-actions">
-              <router-link to="/login" class="lp-btn-primary lp-btn-lg cta-btn">
-                Open your workspace free
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </router-link>
-              <p class="cta-footnote">Fast setup · Works seamlessly on mobile and desktop.</p>
+              <div class="cta-btns-row">
+                <router-link to="/login" class="lp-btn-primary lp-btn-lg cta-btn">
+                  Open your workspace free
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </router-link>
+                <a href="mailto:contact@trackdeal.in?subject=TrackDeal%20Demo%20%26%20Inquiry" class="cta-demo-btn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                  Book a Demo
+                </a>
+              </div>
+              <p class="cta-footnote">
+                Fast setup · Works seamlessly on mobile & desktop · Direct inquiries: <a href="mailto:contact@trackdeal.in" class="cta-email-link">contact@trackdeal.in</a>
+              </p>
             </div>
           </div>
         </div>
@@ -364,11 +374,16 @@
             <img src="/trackdeal_logo.png" alt="TrackDeal" class="lp-brand-logo" />
           </router-link>
           <p>Modern lead management & deal conversion workspace.</p>
+          <a href="mailto:contact@trackdeal.in?subject=TrackDeal%20Demo%20%26%20Inquiry" class="lp-footer-contact">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            contact@trackdeal.in
+          </a>
         </div>
         <nav class="lp-footer-links">
           <a href="#features">Platform</a>
           <a href="#workflow">How it works</a>
           <a href="#faq">FAQ</a>
+          <a href="mailto:contact@trackdeal.in?subject=TrackDeal%20Demo%20%26%20Inquiry">Contact & Demos</a>
           <router-link to="/login">Sign in</router-link>
         </nav>
         <div class="lp-footer-copy">
@@ -442,6 +457,11 @@ const faqs = reactive([
   {
     q: 'How quickly can our team get started?',
     a: 'Setup takes just minutes. Invite your team via email, define roles, and start managing and converting leads without tedious software training.',
+    open: false,
+  },
+  {
+    q: 'How can we request a live demo or contact the team for enterprise inquiries?',
+    a: 'You can write to us directly at contact@trackdeal.in. Our team will arrange a guided walkthrough demo and assist with custom onboarding tailored to your sales and counselling workflow.',
     open: false,
   },
 ]);
@@ -1573,14 +1593,69 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
+}
+.cta-btns-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 .cta-btn {
   box-shadow: 0 8px 32px rgba(37, 78, 59, 0.22);
 }
+.cta-demo-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(33, 60, 49, 0.16);
+  color: #213c31;
+  font-weight: 600;
+  border-radius: 9999px;
+  padding: 0 24px;
+  height: 52px;
+  text-decoration: none;
+  font-size: 14.5px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.cta-demo-btn:hover {
+  background: #ffffff;
+  border-color: rgba(33, 60, 49, 0.35);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
 .cta-footnote {
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--lp-muted-light);
+  text-align: center;
+}
+.cta-email-link {
+  color: #213c31;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: opacity 0.2s;
+}
+.cta-email-link:hover {
+  opacity: 0.8;
+}
+.lp-footer-contact {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--lp-text);
+  text-decoration: none;
+  margin-top: 2px;
+  transition: color 0.2s;
+}
+.lp-footer-contact:hover {
+  color: #213c31;
+  text-decoration: underline;
 }
 
 /* ─── FOOTER ──────────────────────────────── */
