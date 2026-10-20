@@ -161,6 +161,69 @@
       </div>
     </div>
 
+    <!-- Bulk Selection Toolbar (When Students are Selected) -->
+    <div
+      v-if="selectedRows.length > 0"
+      class="rounded-xl bg-surface border border-default shadow-sm p-3 sm:px-4 sm:py-2.5 transition-all space-y-2.5 sm:space-y-0 sm:flex sm:items-center sm:justify-between"
+    >
+      <!-- Left: Counter + Mobile Deselect -->
+      <div class="flex items-center justify-between sm:justify-start sm:gap-3">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold font-tabular shadow-2xs shrink-0">
+            {{ selectedRows.length }}
+          </span>
+          <span class="text-xs font-bold text-slate-900 dark:text-slate-100">
+            {{ selectedRows.length === 1 ? '1 student selected' : `${selectedRows.length} students selected` }}
+          </span>
+        </div>
+
+        <!-- Mobile Deselect button & Quick Select All -->
+        <div class="flex items-center gap-2">
+          <button
+            v-if="!isAllSelected && rows.length > selectedRows.length"
+            type="button"
+            @click="toggleSelectAll"
+            class="text-xs font-semibold text-primary hover:underline px-1 py-0.5 rounded cursor-pointer"
+          >
+            Select all ({{ rows.length }})
+          </button>
+          <button
+            type="button"
+            @click="selectedRows = []"
+            class="sm:hidden btn btn-ghost btn-sm h-8 px-2 text-xs font-medium"
+            title="Clear selection"
+          >
+            <PhX :size="13" weight="bold" />
+            <span>Deselect</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right: Action Buttons -->
+      <div class="flex items-center gap-2 w-full sm:w-auto min-w-0 justify-end">
+        <button
+          v-if="canDeleteStudent"
+          type="button"
+          @click="openBulkDelete"
+          class="btn btn-danger-outline btn-sm min-w-0 px-3 h-8.5 sm:h-9 flex items-center justify-center gap-1.5 shadow-xs font-semibold text-xs"
+          title="Delete selected enrolled students"
+        >
+          <PhTrash :size="14" weight="bold" class="shrink-0" />
+          <span class="truncate">Delete Selected ({{ selectedRows.length }})</span>
+        </button>
+
+        <!-- Desktop Deselect button -->
+        <button
+          type="button"
+          @click="selectedRows = []"
+          class="hidden sm:inline-flex btn btn-ghost btn-sm flex items-center gap-1 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 font-medium ml-1"
+        >
+          <PhX :size="13" weight="bold" />
+          <span>Deselect</span>
+        </button>
+      </div>
+    </div>
+
     <!-- AppTable Data Table Component -->
     <!-- Desktop Table (sm and above) -->
     <div class="hidden sm:block rounded-xl bg-surface border border-default overflow-hidden shadow-xs">
@@ -168,11 +231,14 @@
         :rows="rows"
         :columns="columns"
         :isLoading="loading"
+        :selectable="canDeleteStudent"
+        :selectedRows="selectedRows"
         :pagination="pagination"
         :sorting="sorting"
         row-actions-label="Actions"
         empty-title="No students enrolled yet"
         empty-subtext="No enrolled students match your filters. Directly add a student or enroll from Student Leads."
+        @selectionChange="handleSelectionChange"
         @rowClick="openView"
         @pageChange="handlePageChange"
         @pageSizeChange="handlePageSizeChange"
@@ -289,35 +355,66 @@
         </div>
       </div>
 
-      <!-- Enrolled Student Cards -->
-      <div
-        v-else
-        v-for="row in rows"
-        :key="row._id || row.id"
-        @click="openView(row)"
-        class="bg-white dark:bg-neutral-900 rounded-2xl border border-slate-200/80 dark:border-neutral-800 shadow-[0_2px_10px_rgba(0,0,0,0.03)] p-4 space-y-3 active:scale-[0.99] transition-all cursor-pointer"
-      >
-        <!-- Header: Student Name + Status Badge -->
-        <div class="flex items-start justify-between gap-3">
-          <div class="min-w-0 flex-1">
-            <h3 class="font-bold text-base text-slate-900 dark:text-slate-100 tracking-tight leading-snug break-words">
-              {{ row.firstName }} {{ row.lastName || '' }}
-            </h3>
-            <!-- Phone & Class/Batch tags directly below name -->
-            <div class="flex items-center flex-wrap gap-2 mt-1.5">
-              <a
-                v-if="row.mobile"
-                :href="'tel:' + row.mobile"
-                @click.stop
-                class="inline-flex items-center gap-1 text-xs font-mono font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400"
-              >
-                <PhPhone :size="12" weight="bold" />
-                <span>{{ row.mobile }}</span>
-              </a>
-            </div>
-          </div>
+      <template v-else>
+        <!-- Mobile Bulk Select & Total Counter Bar (< 640px) -->
+        <div
+          v-if="canDeleteStudent"
+          class="flex items-center justify-between px-3 py-2.5 bg-surface rounded-xl border border-default text-xs shadow-2xs"
+        >
+          <label class="inline-flex items-center gap-2 cursor-pointer font-bold text-slate-800 dark:text-slate-200 select-none active:opacity-75">
+            <input
+              type="checkbox"
+              :checked="isAllSelected"
+              @change="toggleSelectAll"
+              class="w-4.5 h-4.5 rounded text-primary border-slate-300 dark:border-neutral-700 focus:ring-primary cursor-pointer shrink-0"
+            />
+            <span>{{ isAllSelected ? 'Deselect All' : `Select All (${rows.length})` }}</span>
+          </label>
+          <span class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+            {{ pagination.total || rows.length }} students
+          </span>
+        </div>
 
-          <!-- Status Badge -->
+        <!-- Enrolled Student Cards -->
+        <div
+          v-for="row in rows"
+          :key="row._id || row.id"
+          @click="openView(row)"
+          class="bg-white dark:bg-neutral-900 rounded-2xl border transition-all cursor-pointer p-4 space-y-3 active:scale-[0.99]"
+          :class="isRowSelected(row)
+            ? 'border-indigo-400 dark:border-indigo-600 ring-2 ring-indigo-500/20 bg-indigo-50/15 dark:bg-indigo-950/20 shadow-md'
+            : 'border-slate-200/80 dark:border-neutral-800 shadow-[0_2px_10px_rgba(0,0,0,0.03)]'"
+        >
+          <!-- Header: Selection Checkbox + Student Name + Status Badge -->
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-start gap-2.5 min-w-0 flex-1">
+              <input
+                v-if="canDeleteStudent"
+                type="checkbox"
+                :checked="isRowSelected(row)"
+                @click.stop="toggleRowSelection(row)"
+                class="w-4.5 h-4.5 mt-0.5 rounded text-indigo-600 border-slate-300 dark:border-neutral-700 focus:ring-indigo-500 cursor-pointer shrink-0"
+              />
+              <div class="min-w-0 flex-1">
+                <h3 class="font-bold text-base text-slate-900 dark:text-slate-100 tracking-tight leading-snug break-words">
+                  {{ row.firstName }} {{ row.lastName || '' }}
+                </h3>
+                <!-- Phone & Class/Batch tags directly below name -->
+                <div class="flex items-center flex-wrap gap-2 mt-1.5">
+                  <a
+                    v-if="row.mobile"
+                    :href="'tel:' + row.mobile"
+                    @click.stop
+                    class="inline-flex items-center gap-1 text-xs font-mono font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400"
+                  >
+                    <PhPhone :size="12" weight="bold" />
+                    <span>{{ row.mobile }}</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Status Badge -->
           <span
             class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border inline-flex items-center gap-1 shrink-0"
             :class="getStatusClass(row.status)"
@@ -381,6 +478,7 @@
           </button>
         </div>
       </div>
+      </template>
 
       <!-- Mobile Pagination Controls -->
       <div v-if="pagination.totalPages > 1" class="flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm text-xs font-semibold">
@@ -905,7 +1003,8 @@ import {
   createEducationStudent, 
   fetchEducationStudents,
   updateEducationStudent,
-  deleteEducationStudent
+  deleteEducationStudent,
+  bulkDeleteEducationStudents
 } from '../api/endpoints';
 import { fetchCustomFields } from '@/api/customFields';
 import { formatLeadSource } from '@/utils/formatters';
@@ -921,7 +1020,10 @@ const canEditStudent = computed(() => {
 });
 
 const canDeleteStudent = computed(() => {
-  return Boolean(store.getters['permissions/hasCapability']?.('students.delete'));
+  return Boolean(
+    store.getters['permissions/hasCapability']?.('students.delete') ||
+    store.getters['permissions/hasCapability']?.('students.bulk_delete')
+  );
 });
 
 const columns = [
@@ -933,6 +1035,37 @@ const columns = [
 ];
 
 const rows = ref([]);
+const selectedRows = ref([]);
+
+const isAllSelected = computed(() => {
+  return rows.value.length > 0 && selectedRows.value.length === rows.value.length;
+});
+
+function toggleSelectAll() {
+  if (isAllSelected.value) {
+    selectedRows.value = [];
+  } else {
+    selectedRows.value = [...rows.value];
+  }
+}
+
+function handleSelectionChange(newSelected) {
+  selectedRows.value = newSelected;
+}
+
+function isRowSelected(row) {
+  const rowId = row._id || row.id;
+  return selectedRows.value.some((r) => (r._id || r.id) === rowId);
+}
+
+function toggleRowSelection(row) {
+  const rowId = row._id || row.id;
+  if (isRowSelected(row)) {
+    selectedRows.value = selectedRows.value.filter((r) => (r._id || r.id) !== rowId);
+  } else {
+    selectedRows.value.push(row);
+  }
+}
 const loading = ref(false);
 const search = ref('');
 const statusFilter = ref('');
@@ -1133,6 +1266,7 @@ function getStatusDotClass(status) {
 
 async function load() {
   loading.value = true;
+  selectedRows.value = [];
   try {
     const statusParam = selectedStatuses.value.length > 0
       ? selectedStatuses.value.join(',')
@@ -1279,6 +1413,52 @@ async function save() {
     error.value = err.data?.message || err.message || 'Unable to save student.';
   } finally {
     saving.value = false;
+  }
+}
+
+async function openBulkDelete() {
+  if (selectedRows.value.length === 0) return;
+  if (!canDeleteStudent.value) {
+    Swal.fire({
+      title: 'Access Restricted',
+      text: 'You do not have permission to delete student records.',
+      icon: 'error',
+    });
+    return;
+  }
+
+  const count = selectedRows.value.length;
+  const result = await Swal.fire({
+    title: `Delete ${count} Enrolled ${count === 1 ? 'Student' : 'Students'}?`,
+    text: `Are you sure you want to delete these ${count} student records? This action will archive their enrollments.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#ef4444',
+    cancelButtonColor: '#64748b',
+    confirmButtonText: `Yes, delete ${count} ${count === 1 ? 'student' : 'students'}`,
+    cancelButtonText: 'Cancel',
+  });
+
+  if (!result.isConfirmed) return;
+
+  try {
+    const ids = selectedRows.value.map(r => r._id || r.id);
+    await bulkDeleteEducationStudents(ids);
+    selectedRows.value = [];
+    Swal.fire({
+      title: 'Deleted!',
+      text: `${count} student record(s) deleted successfully.`,
+      icon: 'success',
+      timer: 1500,
+      showConfirmButton: false,
+    });
+    await load();
+  } catch (err) {
+    Swal.fire({
+      title: 'Error',
+      text: err.response?.data?.message || err.message || 'Failed to delete student records.',
+      icon: 'error',
+    });
   }
 }
 

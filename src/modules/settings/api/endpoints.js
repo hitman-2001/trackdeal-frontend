@@ -90,7 +90,7 @@ export async function inviteUser(data) {
     roleId: data.role || data.roleId,
     name: data.name,
     firstName,
-    lastName
+    lastName: lastName || undefined,
   };
   if (data.branch || data.branchId) {
     payload.branchId = data.branch || data.branchId;

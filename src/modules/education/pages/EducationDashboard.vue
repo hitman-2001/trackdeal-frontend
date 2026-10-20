@@ -579,7 +579,7 @@
               </div>
             </div>
 
-            <div class="space-y-3">
+            <div v-if="leadSourcesList.length > 0" class="space-y-3">
               <div
                 v-for="source in leadSourcesList"
                 :key="source.label"
@@ -601,6 +601,13 @@
                   ></div>
                 </div>
               </div>
+            </div>
+
+            <!-- Empty State when no source data exists -->
+            <div v-else class="text-center py-8 px-4">
+              <PhGlobe :size="30" class="mx-auto text-slate-300 dark:text-slate-600 mb-2" />
+              <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">No inquiry channels recorded yet</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">When student inquiries are captured, source distribution will display here.</p>
             </div>
           </div>
 
@@ -1271,50 +1278,33 @@ const hasAlerts = computed(() =>
   (summary.value.staleLeads || 0) > 0
 );
 
-// Team Members List
+// Team Members List (Strictly Derived Data)
 const teamMembersList = computed(() => {
-  const fromTeam = teamActivity.value?.teamMembers || [];
-  if (fromTeam.length > 0) return fromTeam;
-
-  const counselorPerf = analytics.value?.counselorPerformanceData || [];
-  return counselorPerf.map((c, i) => ({
-    userId: `user-${i}`,
-    name: c.label || 'Counselor',
-    designation: 'Counselor',
-    assigned: c.target || 0,
-    contacted: Math.round((c.target || 0) * 0.8),
-    inCounseling: Math.round((c.target || 0) * 0.4),
-    enrolled: c.value || 0,
-    conversionRate: c.target ? Math.round((c.value / c.target) * 100) : 0,
-  }));
+  return teamActivity.value?.teamMembers || [];
 });
 
 // Live Team Activities
 const teamActivitiesList = computed(() => teamActivity.value?.recentActivities || []);
 const teamNotesList = computed(() => teamActivity.value?.recentNotes || []);
 
-// Lead Sources (Sober Business Palette)
+// Lead Sources (Strictly Derived Data)
 const leadSourcesList = computed(() => {
+  if (!summary.value?.totalLeads || Number(summary.value.totalLeads) === 0) {
+    return [];
+  }
   const fromAnalytics = analytics.value?.sourceChartData || [];
-  if (fromAnalytics.length > 0) {
-    return fromAnalytics.map((s) => ({
+  return fromAnalytics
+    .filter((s) => Number(s.value) > 0)
+    .map((s) => ({
       ...s,
       label: formatLeadSource(s.label),
     }));
-  }
-
-  return [
-    { label: 'Campus Walk-in', value: 34, percent: 34, color: '#0284c7' },
-    { label: 'Website & Digital', value: 28, percent: 28, color: '#0f766e' },
-    { label: 'Direct Referral', value: 20, percent: 20, color: '#15803d' },
-    { label: 'Social Media Ads', value: 18, percent: 18, color: '#475569' },
-  ];
 });
 
 // Simplified 5-Stage Funnel with Clean Phosphor Icons (No Emojis)
 const simplifiedFunnelStages = computed(() => {
   const b = summary.value.stageBreakdown || {};
-  const total = summary.value.totalLeads || 1;
+  const total = summary.value.totalLeads || 0;
 
   const newCount = b.new || 0;
   const contactedCount = (b.contacted || 0) + (b.assigned || 0);
@@ -1323,11 +1313,11 @@ const simplifiedFunnelStages = computed(() => {
   const enrolledCount = (b.converted || 0) + (b.enrolled || 0) || summary.value.enrolledLeads || 0;
 
   return [
-    { key: 'new', label: 'New Inquiries', icon: PhTray, count: newCount, percent: Math.round((newCount / total) * 100) },
-    { key: 'contacted', label: 'Contacted', icon: PhPhoneCall, count: contactedCount, percent: Math.round((contactedCount / total) * 100) },
-    { key: 'meeting_scheduled', label: 'Demo / Counseling', icon: PhChalkboardTeacher, count: counselingCount, percent: Math.round((counselingCount / total) * 100) },
-    { key: 'application_trial', label: 'Trial Class', icon: PhFileText, count: trialCount, percent: Math.round((trialCount / total) * 100) },
-    { key: 'converted', label: 'Enrolled Students', icon: PhGraduationCap, count: enrolledCount, percent: Math.round((enrolledCount / total) * 100) },
+    { key: 'new', label: 'New Inquiries', icon: PhTray, count: newCount, percent: total > 0 ? Math.round((newCount / total) * 100) : 0 },
+    { key: 'contacted', label: 'Contacted', icon: PhPhoneCall, count: contactedCount, percent: total > 0 ? Math.round((contactedCount / total) * 100) : 0 },
+    { key: 'meeting_scheduled', label: 'Demo / Counseling', icon: PhChalkboardTeacher, count: counselingCount, percent: total > 0 ? Math.round((counselingCount / total) * 100) : 0 },
+    { key: 'application_trial', label: 'Trial Class', icon: PhFileText, count: trialCount, percent: total > 0 ? Math.round((trialCount / total) * 100) : 0 },
+    { key: 'converted', label: 'Enrolled Students', icon: PhGraduationCap, count: enrolledCount, percent: total > 0 ? Math.round((enrolledCount / total) * 100) : 0 },
   ];
 });
 

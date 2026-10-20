@@ -50,6 +50,11 @@ export async function updateEducationStudent(id, data) {
   return res.data;
 }
 
+export async function bulkDeleteEducationStudents(ids) {
+  const res = await apiClient.post('/education/students/bulk-delete', { ids });
+  return res.data;
+}
+
 export async function deleteEducationStudent(id) {
   const res = await apiClient.delete(`/education/students/${id}`);
   return res.data;
