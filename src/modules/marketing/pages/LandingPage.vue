@@ -11,6 +11,7 @@
           <a href="#features">Platform</a>
           <a href="#workflow">How it works</a>
           <a href="#faq">FAQ</a>
+          <router-link to="/privacy">Privacy</router-link>
           <a href="mailto:contact@trackdeal.in?subject=TrackDeal%20Demo%20%26%20Inquiry">Contact & Demo</a>
         </nav>
 
@@ -53,6 +54,7 @@
             <a href="#features" class="lp-mobile-nav-link">Platform</a>
             <a href="#workflow" class="lp-mobile-nav-link">How it works</a>
             <a href="#faq" class="lp-mobile-nav-link">FAQ</a>
+            <router-link to="/privacy" class="lp-mobile-nav-link">Privacy Policy</router-link>
             <a href="mailto:contact@trackdeal.in?subject=TrackDeal%20Demo%20%26%20Inquiry" class="lp-mobile-nav-link">Contact & Demo</a>
           </div>
           <div class="lp-mobile-actions">
@@ -383,6 +385,7 @@
           <a href="#features">Platform</a>
           <a href="#workflow">How it works</a>
           <a href="#faq">FAQ</a>
+          <router-link to="/privacy">Privacy Policy</router-link>
           <a href="mailto:contact@trackdeal.in?subject=TrackDeal%20Demo%20%26%20Inquiry">Contact & Demos</a>
           <router-link to="/login">Sign in</router-link>
         </nav>

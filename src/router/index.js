@@ -40,6 +40,16 @@ const routes = [
     meta: { public: true },
   },
   {
+    path: "/privacy",
+    name: "PrivacyPolicy",
+    component: () => import("@/modules/marketing/pages/PrivacyPolicy.vue"),
+    meta: { public: true },
+  },
+  {
+    path: "/privacy-policy",
+    redirect: "/privacy",
+  },
+  {
     path: "/",
     component: AuthLayout,
     children: authRoutes,
