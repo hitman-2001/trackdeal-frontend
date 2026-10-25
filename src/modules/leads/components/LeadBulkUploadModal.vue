@@ -257,6 +257,17 @@
               {{ hdr }}
             </span>
           </div>
+          <div v-if="missingRequiredColumns.length > 0" class="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800">
+            <span class="text-[10px] font-bold text-rose-600 dark:text-rose-400">Missing Required Column(s):</span>
+            <span
+              v-for="col in missingRequiredColumns"
+              :key="col.key"
+              class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border border-rose-200/60 inline-flex items-center gap-1"
+            >
+              <PhX :size="10" weight="bold" />
+              {{ col.header }} (Column Mismatch)
+            </span>
+          </div>
         </div>
 
         <!-- Incomplete Rows Notice -->
@@ -448,6 +459,8 @@ const file = ref(null);
 const isDragging = ref(false);
 const parsedRows = ref([]);
 const detectedHeaders = ref([]);
+const rawJsonData = ref([]);
+const cachedDuplicates = ref(new Map());
 const isUploading = ref(false);
 const uploadedCount = ref(0);
 
@@ -719,16 +732,16 @@ function getDefaultStudentsColumns() {
   return [
     { key: 'firstName', header: 'First Name', fieldLabel: 'First Name', isLockedRequired: true, enabled: true, sample: 'Rahul', sample2: 'Pooja', sample3: 'Ankit' },
     { key: 'lastName', header: 'Last Name', fieldLabel: 'Last Name', isLockedRequired: false, enabled: true, sample: 'Sharma', sample2: 'Deshmukh', sample3: 'Joshi' },
-    { key: 'mobile', header: 'Primary Mobile', fieldLabel: 'Primary Mobile', isLockedRequired: true, enabled: true, sample: '9876543210', sample2: '9876543211', sample3: '9876543212' },
-    { key: 'alternativeMobile', header: 'Alternate Phone', fieldLabel: 'Alternate Phone', isLockedRequired: false, enabled: true, sample: '9876543299', sample2: '', sample3: '' },
+    { key: 'mobile', header: 'Primary Mobile', fieldLabel: 'Primary Mobile', type: 'phone', isLockedRequired: true, enabled: true, sample: '9876543210', sample2: '9876543211', sample3: '9876543212' },
+    { key: 'alternativeMobile', header: 'Alternate Phone', fieldLabel: 'Alternate Phone', type: 'phone', isLockedRequired: false, enabled: true, sample: '9876543299', sample2: '', sample3: '' },
     { key: 'schoolName', header: 'College / School Name', fieldLabel: 'School Name', isLockedRequired: true, enabled: true, sample: 'St. Xavier High School', sample2: 'DPS Pune', sample3: 'National College' },
     { key: 'institutionType', header: 'Institution Type', fieldLabel: 'Institution Type', isLockedRequired: false, enabled: true, sample: 'School', sample2: 'College', sample3: 'Private' },
     { key: 'educationBoard', header: 'Education Board', fieldLabel: 'Education Board', isLockedRequired: false, enabled: true, sample: 'CBSE', sample2: 'State Board', sample3: 'ICSE' },
-    { key: 'standard', header: 'Standard / Grade', fieldLabel: 'Standard / Grade', isLockedRequired: false, enabled: true, sample: '11', sample2: '12', sample3: '10' },
+    { key: 'standard', header: 'Standard / Grade', fieldLabel: 'Standard / Grade', type: 'select', options: ['8', '9', '10', '11', '12'], isLockedRequired: false, enabled: true, sample: '11', sample2: '12', sample3: '10' },
     { key: 'academicStream', header: 'Academic Stream', fieldLabel: 'Academic Stream', isLockedRequired: false, enabled: true, sample: 'Science', sample2: 'Commerce', sample3: 'Science' },
     { key: 'parentName', header: 'Parent Name', fieldLabel: 'Parent Name', isLockedRequired: false, enabled: true, sample: 'Suresh Sharma', sample2: 'Nitin Deshmukh', sample3: 'Manoj Joshi' },
-    { key: 'parentMobile', header: 'Parent Mobile', fieldLabel: 'Parent Mobile', isLockedRequired: false, enabled: true, sample: '9876543200', sample2: '9876543201', sample3: '9876543202' },
-    { key: 'email', header: 'Email Address', fieldLabel: 'Email Address', isLockedRequired: false, enabled: true, sample: 'rahul.s@example.com', sample2: 'pooja.d@example.com', sample3: '' },
+    { key: 'parentMobile', header: 'Parent Mobile', fieldLabel: 'Parent Mobile', type: 'phone', isLockedRequired: false, enabled: true, sample: '9876543200', sample2: '9876543201', sample3: '9876543202' },
+    { key: 'email', header: 'Email Address', fieldLabel: 'Email Address', type: 'email', isLockedRequired: false, enabled: true, sample: 'rahul.s@example.com', sample2: 'pooja.d@example.com', sample3: '' },
     { key: 'status', header: 'Student Status', fieldLabel: 'Student Status', isLockedRequired: false, enabled: true, sample: 'active', sample2: 'active', sample3: 'active' },
     { key: 'notes', header: 'Academic Notes', fieldLabel: 'Academic Notes', isLockedRequired: false, enabled: true, sample: 'Enrolled in full-year batch', sample2: 'Targeting IIT JEE', sample3: 'Scholarship student' },
   ];
@@ -759,6 +772,7 @@ function persistTemplateColumns() {
       : (isEducation.value ? 'trackdeal_template_columns_leads' : 'trackdeal_template_columns_sales_leads');
     localStorage.setItem(key, JSON.stringify(availableColumns.value));
   } catch (e) {}
+  revalidateParsedRows();
 }
 
 const showCustomizeTemplate = ref(false);
@@ -766,6 +780,7 @@ const templateSearchQuery = ref('');
 const showAddColumnRow = ref(false);
 const newColumnHeader = ref('');
 const newColumnSample = ref('');
+const newColumnType = ref('text');
 
 const enabledTemplateColumnsCount = computed(() => {
   return availableColumns.value.filter((c) => c.enabled).length;
@@ -837,6 +852,48 @@ const uploadProgress = computed(() => {
   return Math.round((uploadedCount.value / validRowsCount.value) * 100);
 });
 
+const missingRequiredColumns = computed(() => {
+  if (detectedHeaders.value.length === 0) return [];
+
+  const detectedClean = detectedHeaders.value.map((h) =>
+    h.toLowerCase().replace(/[^a-z0-9]/g, '')
+  );
+
+  return availableColumns.value.filter((col) => {
+    if (!col.enabled || !col.required) return false;
+
+    const cleanHeader = (col.header || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const cleanKey = (col.key || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    const aliases = [cleanHeader, cleanKey];
+    if (col.key === 'firstName') aliases.push('firstname', 'studentname', 'name', 'first');
+    else if (col.key === 'mobile') aliases.push('mobile', 'phone', 'contact', 'cell', 'primaryphone', 'primarymobile');
+    else if (col.key === 'schoolName') aliases.push('schoolname', 'school', 'institute', 'institution', 'college', 'collegename');
+
+    const matched = detectedClean.some((dh) =>
+      aliases.some((alias) => dh === alias || dh.includes(alias) || alias.includes(dh))
+    );
+
+    return !matched;
+  });
+});
+
+const invalidReasonsSummary = computed(() => {
+  const reasons = new Set();
+  parsedRows.value
+    .filter((r) => !r._isValid && r._errorReason)
+    .forEach((r) => reasons.add(r._errorReason));
+  return Array.from(reasons);
+});
+
+function revalidateParsedRows() {
+  if (rawJsonData.value.length === 0) return;
+  const seenMobilesInFile = new Map();
+  parsedRows.value = rawJsonData.value.map((row, idx) =>
+    normalizeRow(row, idx, { seenMobilesInFile, existingDbMobiles: cachedDuplicates.value })
+  );
+}
+
 const hasDetectedCustomAttributes = computed(() => {
   return parsedRows.value.some((r) => r.customFields && Object.keys(r.customFields).length > 0);
 });
@@ -862,6 +919,8 @@ async function loadCustomFieldsForTemplate() {
           key: cf.key,
           header: cf.label,
           fieldLabel: `Custom: ${cf.label}`,
+          type: cf.type || 'text',
+          options: cf.options || [],
           isCustomField: true,
           isUserAdded: false,
           isLockedRequired: Boolean(cf.required),
@@ -876,6 +935,16 @@ async function loadCustomFieldsForTemplate() {
   } catch (err) {
     // Custom fields optional fallback
   }
+}
+
+function hasLetters(val) {
+  if (!val) return false;
+  return /[a-zA-Z]/.test(String(val).trim());
+}
+
+function cleanDigitsOnly(val) {
+  if (!val) return '';
+  return String(val).replace(/[^0-9]/g, '');
 }
 
 function cleanMobileNumber(raw) {
@@ -929,6 +998,8 @@ function handleDrop(e) {
 function parseSpreadsheet(selectedFile) {
   file.value = selectedFile;
   parsedRows.value = [];
+  rawJsonData.value = [];
+  cachedDuplicates.value = new Map();
   detectedHeaders.value = [];
   uploadedCount.value = 0;
 
@@ -941,6 +1012,7 @@ function parseSpreadsheet(selectedFile) {
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
       const rawJson = XLSX.utils.sheet_to_json(worksheet, { defval: '', raw: false });
+      rawJsonData.value = rawJson;
 
       if (rawJson.length > 0) {
         detectedHeaders.value = Object.keys(rawJson[0]).map((h) => h.trim()).filter(Boolean);
@@ -974,7 +1046,7 @@ function isStandardProperty(cleanName) {
   return standardTokens.some((token) => cleanName === token || cleanName.includes(token));
 }
 
-function normalizeRow(row) {
+function normalizeRow(row, rowIndex = 0, context = {}) {
   const rowKeys = Object.keys(row);
 
   // Helper: Find value from row matching given keywords
@@ -1069,38 +1141,171 @@ function normalizeRow(row) {
   let isValid = false;
   let errorReason = '';
 
-  if (isEducation.value) {
-    if (!mobile) {
-      errorReason = 'Missing primary phone number';
-    } else if (mobile.length < 7) {
-      errorReason = 'Primary phone number too short (minimum 7 digits)';
-    } else if (!firstName || firstName === 'Unknown') {
-      errorReason = 'Missing student name';
-    } else if (!schoolName) {
-      errorReason = 'Missing school name';
-    } else {
-      isValid = true;
-    }
+  const mobileDigits = cleanDigitsOnly(rawMobile);
+
+  // Salesforce-grade field validation:
+  // 1. Primary Mobile Validation (Format & Letters Check)
+  if (!rawMobile || !rawMobile.trim()) {
+    errorReason = isEducation.value ? 'Missing primary phone number' : 'Missing mobile number';
+  } else if (hasLetters(rawMobile)) {
+    errorReason = `Invalid primary phone: "${rawMobile}" contains letters or text. Mobile number must be numeric.`;
+  } else if (mobileDigits.length < 10 || mobileDigits.length > 15) {
+    errorReason = `Invalid primary phone: "${rawMobile}". Must be a valid 10-digit mobile number.`;
+  } else if (!firstName || firstName === 'Unknown') {
+    errorReason = isEducation.value ? 'Missing student name' : 'Missing name';
+  } else if (isEducation.value && !schoolName) {
+    errorReason = 'Missing school name';
   } else {
-    if (!mobile) {
-      errorReason = 'Missing mobile number';
-    } else if (mobile.length < 7) {
-      errorReason = 'Mobile number too short (minimum 7 digits)';
-    } else if (!firstName || firstName === 'Unknown') {
-      errorReason = 'Missing name';
-    } else {
-      isValid = true;
+    isValid = true;
+  }
+
+  // 2. Duplicate Phone Check (Spreadsheet In-file & Database Lookup)
+  if (isValid && mobileDigits) {
+    const s10 = mobileDigits.slice(-10);
+    if (context.seenMobilesInFile && context.seenMobilesInFile.has(s10)) {
+      const prevRow = context.seenMobilesInFile.get(s10);
+      isValid = false;
+      errorReason = `Duplicate in spreadsheet: Phone "${rawMobile}" was already found in row ${prevRow}`;
+    } else if (context.existingDbMobiles && context.existingDbMobiles.has(s10)) {
+      const existingName = context.existingDbMobiles.get(s10);
+      isValid = false;
+      errorReason = `Duplicate record: Phone "${rawMobile}" is already registered in TrackDeal (${existingName})`;
+    } else if (context.seenMobilesInFile) {
+      context.seenMobilesInFile.set(s10, (rowIndex ?? 0) + 2);
     }
   }
 
-  // Check required custom columns
+  // 3. Class / Standard Validation in Education
+  if (isValid && isEducation.value && standard && standard.trim()) {
+    const standardCol = availableColumns.value.find((c) => c.key === 'standard');
+    const allowedStandards = standardCol?.options?.length
+      ? standardCol.options.map((o) => getOptionString(o).trim().toLowerCase())
+      : ['8', '9', '10', '11', '12'];
+
+    const stdClean = standard.trim().toLowerCase();
+    const isAllowed = allowedStandards.some((opt) => opt === stdClean);
+
+    if (!isAllowed) {
+      isValid = false;
+      const allowedDisplay = standardCol?.options?.length
+        ? standardCol.options.map(getOptionString).join(', ')
+        : '8, 9, 10, 11, 12';
+      errorReason = `Invalid Standard / Grade: "${standard}". Allowed values are: ${allowedDisplay}`;
+    }
+  }
+
+  // 4. Alternate Phone Validation
+  if (isValid && rawAltMobile && rawAltMobile.trim()) {
+    if (hasLetters(rawAltMobile)) {
+      isValid = false;
+      errorReason = `Invalid alternate phone: "${rawAltMobile}" contains letters. Mobile number must be numeric.`;
+    } else if (cleanDigitsOnly(rawAltMobile).length < 10) {
+      isValid = false;
+      errorReason = `Invalid alternate phone: "${rawAltMobile}". Must be a valid 10-digit mobile number.`;
+    }
+  }
+
+  // 5. Parent Mobile Validation
+  if (isValid && rawParentMobile && rawParentMobile.trim()) {
+    if (hasLetters(rawParentMobile)) {
+      isValid = false;
+      errorReason = `Invalid parent mobile: "${rawParentMobile}" contains letters. Mobile number must be numeric.`;
+    } else if (cleanDigitsOnly(rawParentMobile).length < 10) {
+      isValid = false;
+      errorReason = `Invalid parent mobile: "${rawParentMobile}". Must be a valid 10-digit mobile number.`;
+    }
+  }
+
+  // 6. Email Address Validation
+  if (isValid && email && email.trim()) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      isValid = false;
+      errorReason = `Invalid email address format: "${email}"`;
+    }
+  }
+
+  // 7. Institution Type & Board Validation
+  if (isValid && isEducation.value && institutionType && institutionType.trim()) {
+    const allowedInst = ['School', 'College', 'Private', 'Integrated'];
+    if (!allowedInst.some((a) => a.toLowerCase() === institutionType.toLowerCase())) {
+      isValid = false;
+      errorReason = `Invalid Institution Type: "${institutionType}". Allowed: ${allowedInst.join(', ')}`;
+    }
+  }
+
+  if (isValid && isEducation.value && educationBoard && educationBoard.trim()) {
+    const allowedBoards = ['CBSE', 'ICSE', 'State Board'];
+    if (!allowedBoards.some((b) => b.toLowerCase() === educationBoard.toLowerCase())) {
+      isValid = false;
+      errorReason = `Invalid Education Board: "${educationBoard}". Allowed: ${allowedBoards.join(', ')}`;
+    }
+  }
+
+  // 8. Custom Columns Data Type Validation
   if (isValid) {
-    for (const col of availableColumns.value.filter((c) => c.enabled && c.required)) {
+    for (const col of availableColumns.value.filter((c) => c.enabled)) {
+      if (isEducation.value || props.target === 'students') {
+        if (['budget', 'propertyType'].includes(col.key)) continue;
+      }
       const val = customFields[col.key] || customFields[col.header];
-      if (!val) {
+      if (col.required && (!val || !String(val).trim())) {
         isValid = false;
-        errorReason = `Missing required column: ${col.header}`;
+        const isHeaderMissing = !detectedHeaders.value.some((h) => {
+          const cleanH = h.toLowerCase().replace(/[^a-z0-9]/g, '');
+          const cleanHeader = (col.header || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+          const cleanKey = (col.key || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+          return cleanH === cleanHeader || cleanH === cleanKey || cleanH.includes(cleanKey) || cleanH.includes(cleanHeader);
+        });
+
+        if (isHeaderMissing) {
+          errorReason = `Column header mismatch: "${col.header}" is required in template but not found in spreadsheet`;
+        } else {
+          errorReason = `Missing required field: "${col.header}"`;
+        }
         break;
+      }
+      if (val && col.type) {
+        const type = String(col.type).toLowerCase();
+        if (type === 'number') {
+          const numClean = String(val).replace(/,/g, '').trim();
+          if (isNaN(Number(numClean))) {
+            isValid = false;
+            errorReason = `Invalid number in "${col.header}": "${val}". Expected numeric value.`;
+            break;
+          }
+        } else if (type === 'phone') {
+          if (hasLetters(val)) {
+            isValid = false;
+            errorReason = `Invalid phone in "${col.header}": "${val}". Cannot contain letters.`;
+            break;
+          } else if (cleanDigitsOnly(val).length < 10) {
+            isValid = false;
+            errorReason = `Invalid phone in "${col.header}": "${val}". Must be a valid 10-digit number.`;
+            break;
+          }
+        } else if (type === 'email') {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(String(val).trim())) {
+            isValid = false;
+            errorReason = `Invalid email in "${col.header}": "${val}".`;
+            break;
+          }
+        } else if (type === 'date') {
+          if (isNaN(Date.parse(val))) {
+            isValid = false;
+            errorReason = `Invalid date format in "${col.header}": "${val}".`;
+            break;
+          }
+        } else if (type === 'select' && Array.isArray(col.options) && col.options.length > 0) {
+          const optStrings = col.options.map(getOptionString).map((s) => s.toLowerCase().trim());
+          const valLower = String(val).toLowerCase().trim();
+          if (!optStrings.includes(valLower)) {
+            isValid = false;
+            errorReason = `Invalid option in "${col.header}": "${val}". Allowed: ${col.options.map(getOptionString).join(', ')}`;
+            break;
+          }
+        }
       }
     }
   }
@@ -1312,6 +1517,9 @@ async function executeImport() {
       successCount++;
     } catch (err) {
       failCount++;
+      const errMsg = err?.response?.data?.message || err?.message || 'Import failed';
+      row._isValid = false;
+      row._errorReason = errMsg;
     } finally {
       uploadedCount.value++;
     }

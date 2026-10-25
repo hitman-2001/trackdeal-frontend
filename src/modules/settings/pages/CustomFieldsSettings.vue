@@ -1180,6 +1180,28 @@
           </div>
         </div>
 
+        <!-- Data Type Validation for Excel Column -->
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+            Data Type Validation <span class="text-rose-500">*</span>
+          </label>
+          <select
+            v-model="excelColForm.type"
+            :disabled="!excelColForm.isUserAdded && excelColForm.isLockedRequired"
+            class="w-full bg-surface border border-default rounded-lg px-3 py-2 outline-none focus:border-primary text-xs font-semibold text-slate-800 dark:text-slate-200 disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:cursor-not-allowed"
+          >
+            <option value="text">Text (General)</option>
+            <option value="number">Number (Digits Only)</option>
+            <option value="phone">Phone Number (10 Digits)</option>
+            <option value="email">Email Address</option>
+            <option value="date">Date</option>
+            <option value="select">Dropdown Options</option>
+          </select>
+          <p class="text-[10px] text-slate-400 mt-1">
+            Validates format during spreadsheet upload (e.g. letters in phone number will be rejected).
+          </p>
+        </div>
+
         <!-- Toggles: Included in Template & Mark as Required -->
         <div class="space-y-2.5 pt-1">
           <!-- Include Toggle -->
@@ -1255,6 +1277,10 @@ import {
   PhSlidersHorizontal,
   PhTextT,
   PhListBullets,
+  PhHash,
+  PhPhone,
+  PhEnvelopeSimple,
+  PhCalendar,
   PhPencilSimple,
   PhTrash,
   PhX,
@@ -1356,6 +1382,24 @@ const editingField = ref(null);
 const saving = ref(false);
 const formError = ref('');
 const newOptionInput = ref('');
+
+
+function getTypeBadgeInfo(type) {
+  switch (String(type || '').toLowerCase()) {
+    case 'phone':
+      return { label: 'Phone Number', icon: PhPhone, class: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/50' };
+    case 'email':
+      return { label: 'Email Address', icon: PhEnvelopeSimple, class: 'bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200/50' };
+    case 'number':
+      return { label: 'Number', icon: PhHash, class: 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/50' };
+    case 'date':
+      return { label: 'Date', icon: PhCalendar, class: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200/50' };
+    case 'select':
+      return { label: 'Dropdown', icon: PhListBullets, class: 'bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200/50' };
+    default:
+      return { label: 'Text Input', icon: PhTextT, class: 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200/50' };
+  }
+}
 
 const fieldForm = ref({
   module: 'leads',
