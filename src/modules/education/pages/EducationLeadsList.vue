@@ -342,9 +342,20 @@
         <button
           v-if="canAssignLeads"
           type="button"
+          @click="openEqualDistribute"
+          class="btn btn-secondary btn-sm min-w-0 px-1.5 sm:px-3 h-8.5 sm:h-9 flex items-center justify-center gap-1 sm:gap-1.5 shadow-xs font-semibold text-[11px] sm:text-xs"
+          title="Distribute leads equally across selected staff"
+        >
+          <PhScales :size="14" weight="bold" class="shrink-0 text-emerald-600 dark:text-emerald-400" />
+          <span class="truncate">Equal Split</span>
+        </button>
+
+        <button
+          v-if="canAssignLeads"
+          type="button"
           @click="openRoundRobinAssign"
           class="btn btn-secondary btn-sm min-w-0 px-1.5 sm:px-3 h-8.5 sm:h-9 flex items-center justify-center gap-1 sm:gap-1.5 shadow-xs font-semibold text-[11px] sm:text-xs"
-          title="Distribute in fixed batches of 10 cyclically"
+          title="Distribute in fixed batches cyclically"
         >
           <PhArrowsClockwise :size="14" weight="bold" class="shrink-0" />
           <span class="truncate">Round-Robin</span>
@@ -1206,6 +1217,7 @@ import {
   PhTrash,
   PhMagnifyingGlass,
   PhArrowsClockwise,
+  PhScales,
   PhPhone,
   PhPhoneCall,
   PhWhatsappLogo,
@@ -1592,6 +1604,11 @@ const openAssign = (row) => {
 const openBulkAssign = () => {
   targetAssignIds.value = selectedRows.value.map((r) => r._id || r.id);
   assignModalMode.value = "single";
+  isAssignOpen.value = true;
+};
+const openEqualDistribute = () => {
+  targetAssignIds.value = selectedRows.value.map((r) => r._id || r.id);
+  assignModalMode.value = "equal";
   isAssignOpen.value = true;
 };
 const openRoundRobinAssign = () => {

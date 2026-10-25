@@ -36,8 +36,8 @@ export async function bulkAssignLeads({ leadIds, assignedTo, reason }) {
   return response.data;
 }
 
-export async function distributeLeadsBatchRoundRobin({ leadIds, staffIds, batchSize = 10, reason }) {
-  const response = await apiClient.post('/leads/distribute-batch-round-robin', { leadIds, staffIds, batchSize, reason });
+export async function distributeLeadsBatchRoundRobin({ leadIds, staffIds, mode = 'round_robin', batchSize = 10, reason }) {
+  const response = await apiClient.post('/leads/distribute-batch-round-robin', { leadIds, staffIds, mode, batchSize, reason });
   return response.data;
 }
 

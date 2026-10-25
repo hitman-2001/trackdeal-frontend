@@ -2,34 +2,47 @@
   <AppModal
     :isOpen="isOpen"
     :title="modalTitle"
-    maxSize="500px"
+    maxSize="520px"
     @cancel="$emit('close')"
     @confirm="handleConfirm"
   >
     <div class="space-y-4 text-xs">
-      <!-- Bulk Mode Tabs (Single Staff Assignment vs Batch Round-Robin) -->
-      <div v-if="isBulk" class="grid grid-cols-2 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 gap-1 shadow-inner">
+      <!-- Bulk Mode Tabs (Single Staff Assignment vs Equal Split vs Batch Round-Robin) -->
+      <div v-if="isBulk" class="grid grid-cols-3 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 gap-1 shadow-inner">
         <button
           type="button"
           @click="assignMode = 'single'"
-          class="flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all text-center cursor-pointer"
+          class="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-bold transition-all text-center cursor-pointer"
           :class="assignMode === 'single'
             ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs border border-slate-200 dark:border-slate-700 ring-1 ring-black/5 dark:ring-white/5'
             : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-800 border border-transparent'"
         >
-          <PhUser :size="15" weight="bold" class="shrink-0" :class="assignMode === 'single' ? 'text-primary' : 'text-slate-400'" />
-          <span>Single Staff Assignment</span>
+          <PhUser :size="14" weight="bold" class="shrink-0" :class="assignMode === 'single' ? 'text-primary' : 'text-slate-400'" />
+          <span class="truncate">Single Staff</span>
         </button>
+
+        <button
+          type="button"
+          @click="assignMode = 'equal'"
+          class="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-bold transition-all text-center cursor-pointer"
+          :class="assignMode === 'equal'
+            ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs border border-slate-200 dark:border-slate-700 ring-1 ring-black/5 dark:ring-white/5'
+            : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-800 border border-transparent'"
+        >
+          <PhScales :size="14" weight="bold" class="shrink-0" :class="assignMode === 'equal' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'" />
+          <span class="truncate">Equal Split</span>
+        </button>
+
         <button
           type="button"
           @click="assignMode = 'round_robin'"
-          class="flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all text-center cursor-pointer"
+          class="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-bold transition-all text-center cursor-pointer"
           :class="assignMode === 'round_robin'
             ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs border border-slate-200 dark:border-slate-700 ring-1 ring-black/5 dark:ring-white/5'
             : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-800 border border-transparent'"
         >
-          <PhArrowsClockwise :size="15" weight="bold" class="shrink-0" :class="assignMode === 'round_robin' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'" />
-          <span>Batch Round-Robin</span>
+          <PhArrowsClockwise :size="14" weight="bold" class="shrink-0" :class="assignMode === 'round_robin' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'" />
+          <span class="truncate">Round-Robin</span>
         </button>
       </div>
 
@@ -82,7 +95,110 @@
         </div>
       </div>
 
-      <!-- Mode 2: Batch Round-Robin Assignment -->
+      <!-- Mode 2: Equal Split Distribution -->
+      <div v-else-if="assignMode === 'equal'" class="space-y-3.5">
+        <div
+          class="bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 rounded-xl p-3 text-emerald-900 dark:text-emerald-200 space-y-1.5"
+        >
+          <div class="font-bold text-[11px] flex items-center justify-between">
+            <span class="flex items-center gap-1.5">
+              <PhScales :size="14" weight="bold" class="text-emerald-600 dark:text-emerald-400" />
+              <span>Equal Lead Split</span>
+            </span>
+            <span v-if="selectedStaffIds.length > 0" class="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-bold">
+              ~{{ equalBaseCount }} leads / staff
+            </span>
+          </div>
+          <p class="text-[10px] leading-relaxed text-emerald-800 dark:text-emerald-300">
+            Total <b>{{ leadIds.length }} {{ entityLabel }}s</b> will be divided equally among the <b>{{ selectedStaffIds.length }} selected staff members</b>.
+            <span v-if="equalRemainder > 0" class="block mt-1 text-[10px] font-medium text-emerald-700 dark:text-emerald-400">
+              * Exact split: <b>{{ equalRemainder }} staff</b> will receive <b>{{ equalBaseCount + 1 }} leads</b>, and remaining <b>{{ selectedStaffIds.length - equalRemainder }} staff</b> will receive <b>{{ equalBaseCount }} leads</b> (100% accounted for).
+            </span>
+          </p>
+        </div>
+
+        <!-- Staff Multi-Selection -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label class="modal-form-label mb-0">
+              Select Staff Members ({{ selectedStaffIds.length }} of {{ staffMembers.length }} selected) <span class="required-star">*</span>
+            </label>
+            <div class="flex items-center gap-2 text-[10px]">
+              <button
+                type="button"
+                @click="selectAllStaff"
+                class="text-blue-600 dark:text-blue-400 font-semibold hover:underline cursor-pointer"
+              >
+                Select all
+              </button>
+              <span class="text-slate-300">|</span>
+              <button
+                type="button"
+                @click="selectedStaffIds = []"
+                class="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:underline cursor-pointer"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+
+          <div class="max-h-40 overflow-y-auto border border-default rounded-xl p-2 space-y-1 bg-surface">
+            <label
+              v-for="member in staffMembers"
+              :key="member._id || member.id"
+              class="flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors"
+              :class="selectedStaffIds.includes(member._id || member.id)
+                ? 'bg-emerald-50/60 dark:bg-emerald-950/30'
+                : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'"
+            >
+              <div class="flex items-center gap-2.5">
+                <input
+                  type="checkbox"
+                  :value="member._id || member.id"
+                  v-model="selectedStaffIds"
+                  class="rounded text-emerald-600 border-slate-300 focus:ring-emerald-500 cursor-pointer"
+                />
+                <span class="font-medium text-slate-800 dark:text-slate-100">
+                  {{ member.firstName }} {{ member.lastName || '' }}
+                </span>
+              </div>
+              <span class="text-[10px] text-slate-400">
+                {{ formatRoleLabel(member) }}
+              </span>
+            </label>
+          </div>
+          <span v-if="errors.selectedStaff" class="text-[9px] text-red-500 block">
+            {{ errors.selectedStaff }}
+          </span>
+        </div>
+
+        <!-- Live Equal Split Breakdown Card -->
+        <div v-if="selectedStaffIds.length > 0" class="p-3 bg-slate-50 dark:bg-slate-850 border border-default rounded-xl space-y-2">
+          <div class="flex items-center justify-between text-[11px] font-bold text-slate-700 dark:text-slate-200">
+            <span>Equal Allocation Preview</span>
+            <span class="font-medium text-slate-500 dark:text-slate-400">{{ leadIds.length }} leads &bull; {{ selectedStaffIds.length }} staff</span>
+          </div>
+          <div class="space-y-1.5 pt-1">
+            <div
+              v-for="calc in equalSplitPreview"
+              :key="calc.id"
+              class="flex items-center justify-between text-[11px] bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-100 dark:border-slate-700/60"
+            >
+              <span class="font-semibold text-slate-800 dark:text-slate-200">{{ calc.name }}</span>
+              <div class="flex items-center gap-2">
+                <span v-if="calc.isExtra" class="text-[9px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
+                  +1 remainder
+                </span>
+                <span class="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full text-[10px]">
+                  {{ calc.count }} leads
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mode 3: Batch Round-Robin Assignment -->
       <div v-else class="space-y-3.5">
         <!-- Customizable Batch Size Setting -->
         <div class="p-3 bg-slate-50 dark:bg-slate-850 border border-default rounded-xl space-y-2.5">
@@ -244,8 +360,8 @@
           v-model="reason"
           type="text"
           :placeholder="staffMode
-            ? (assignMode === 'round_robin' ? 'Round-Robin batch allocation' : 'e.g. Counselling handoff, batch allocation...')
-            : (assignMode === 'round_robin' ? 'Round-Robin batch distribution' : 'e.g. Allocation re-balancing, lead rotation...')"
+            ? (assignMode === 'equal' ? 'Equal distribution across staff' : assignMode === 'round_robin' ? 'Round-Robin batch allocation' : 'e.g. Counselling handoff, batch allocation...')
+            : (assignMode === 'equal' ? 'Equal lead distribution' : assignMode === 'round_robin' ? 'Round-Robin batch distribution' : 'e.g. Allocation re-balancing, lead rotation...')"
           class="modal-form-input"
           :class="errors.reason ? '!border-red-500' : ''"
         />
@@ -270,6 +386,7 @@
         @click="handleConfirm"
       >
         <span v-if="isPending">Processing...</span>
+        <span v-else-if="assignMode === 'equal'">Distribute Equally</span>
         <span v-else-if="assignMode === 'round_robin'">Distribute Batches</span>
         <span v-else>Confirm assignment</span>
       </button>
@@ -280,7 +397,7 @@
 <script setup>
 import { ref, computed, reactive, watch } from 'vue';
 import { useStore } from 'vuex';
-import { PhUser, PhArrowsClockwise, PhPlus, PhMinus } from '@phosphor-icons/vue';
+import { PhUser, PhArrowsClockwise, PhScales, PhPlus, PhMinus } from '@phosphor-icons/vue';
 import apiClient from '@/api/client';
 import AppModal from '@/components/AppModal.vue';
 import {
@@ -294,7 +411,7 @@ const props = defineProps({
   leadIds: { type: Array, default: () => [] },
   /** Education vertical: staff wording and institute-focused copy */
   staffMode: { type: Boolean, default: false },
-  /** Initial mode: 'single' | 'round_robin' */
+  /** Initial mode: 'single' | 'round_robin' | 'equal' */
   initialMode: { type: String, default: 'single' },
 });
 
@@ -318,6 +435,9 @@ const isBulk = computed(() => props.leadIds.length > 1);
 const entityLabel = computed(() => (props.staffMode ? 'student lead' : 'lead'));
 const ownerLabel = computed(() => (props.staffMode ? 'staff owner' : 'owner agent'));
 const modalTitle = computed(() => {
+  if (assignMode.value === 'equal') {
+    return 'Equal Lead Distribution';
+  }
   if (assignMode.value === 'round_robin') {
     return 'Round-Robin Lead Distribution';
   }
@@ -338,7 +458,7 @@ const currentUser = computed(() => store.state.auth.user || {});
 
 const { mutateAsync: assignOwner, isPending: assignPending } = useAssignLeadMutation();
 const { mutateAsync: bulkAssign, isPending: bulkPending } = useBulkAssignLeadsMutation();
-const { mutateAsync: distributeRoundRobin, isPending: distributePending } = useDistributeLeadsBatchRoundRobinMutation();
+const { mutateAsync: distributeBatchOrEqual, isPending: distributePending } = useDistributeLeadsBatchRoundRobinMutation();
 
 const isPending = computed(() => assignPending.value || bulkPending.value || distributePending.value);
 
@@ -350,6 +470,38 @@ const validBatchSize = computed(() => {
 const totalBatchesCount = computed(() => {
   if (!props.leadIds.length) return 0;
   return Math.ceil(props.leadIds.length / validBatchSize.value);
+});
+
+// Equal split calculations
+const equalBaseCount = computed(() => {
+  const staffCount = selectedStaffIds.value.length;
+  if (!staffCount || !props.leadIds.length) return 0;
+  return Math.floor(props.leadIds.length / staffCount);
+});
+
+const equalRemainder = computed(() => {
+  const staffCount = selectedStaffIds.value.length;
+  if (!staffCount || !props.leadIds.length) return 0;
+  return props.leadIds.length % staffCount;
+});
+
+const equalSplitPreview = computed(() => {
+  if (!selectedStaffIds.value.length || !props.leadIds.length) return [];
+  const base = equalBaseCount.value;
+  const rem = equalRemainder.value;
+
+  return selectedStaffIds.value.map((sid, idx) => {
+    const member = staffMembers.value.find((m) => (m._id || m.id) === sid);
+    const name = member ? [member.firstName, member.lastName].filter(Boolean).join(' ').trim() || member.email : sid;
+    const isExtra = idx < rem;
+    const count = isExtra ? base + 1 : base;
+    return {
+      id: sid,
+      name,
+      count,
+      isExtra,
+    };
+  });
 });
 
 function incrementBatchSize() {
@@ -450,10 +602,20 @@ watch(
   () => props.isOpen,
   (open) => {
     if (open) {
-      assignMode.value = props.initialMode === 'round_robin' && props.leadIds.length > 1 ? 'round_robin' : 'single';
+      if (['round_robin', 'equal'].includes(props.initialMode) && props.leadIds.length > 1) {
+        assignMode.value = props.initialMode;
+      } else {
+        assignMode.value = 'single';
+      }
       batchSize.value = 10;
       assignedTo.value = '';
-      reason.value = assignMode.value === 'round_robin' ? 'Round-Robin batch allocation (Batches of 10)' : '';
+      if (assignMode.value === 'equal') {
+        reason.value = `Equal lead distribution (${props.leadIds.length} leads)`;
+      } else if (assignMode.value === 'round_robin') {
+        reason.value = 'Round-Robin batch allocation (Batches of 10)';
+      } else {
+        reason.value = '';
+      }
       errors.assignedTo = '';
       errors.selectedStaff = '';
       errors.reason = '';
@@ -465,12 +627,16 @@ watch(
 watch(
   () => [assignMode.value, validBatchSize.value],
   ([newMode, currentSize]) => {
-    if (newMode === 'round_robin') {
-      if (!reason.value || reason.value.startsWith('Round-Robin batch allocation')) {
+    if (newMode === 'equal') {
+      if (!reason.value || reason.value.includes('Round-Robin') || reason.value.startsWith('Equal lead distribution')) {
+        reason.value = `Equal lead distribution (${props.leadIds.length} leads)`;
+      }
+    } else if (newMode === 'round_robin') {
+      if (!reason.value || reason.value.startsWith('Equal lead distribution') || reason.value.startsWith('Round-Robin batch allocation')) {
         reason.value = `Round-Robin batch allocation (Batches of ${currentSize})`;
       }
     } else {
-      if (reason.value.includes('Round-Robin')) {
+      if (reason.value.includes('Round-Robin') || reason.value.includes('Equal lead distribution')) {
         reason.value = '';
       }
     }
@@ -483,7 +649,7 @@ const handleConfirm = async () => {
   errors.reason = '';
   let valid = true;
 
-  if (assignMode.value === 'round_robin') {
+  if (assignMode.value === 'round_robin' || assignMode.value === 'equal') {
     if (selectedStaffIds.value.length === 0) {
       errors.selectedStaff = 'Please select at least one staff member for distribution.';
       valid = false;
@@ -505,10 +671,23 @@ const handleConfirm = async () => {
   if (!valid) return;
 
   try {
-    if (assignMode.value === 'round_robin') {
-      await distributeRoundRobin({
+    if (assignMode.value === 'equal') {
+      await distributeBatchOrEqual({
         leadIds: props.leadIds,
         staffIds: selectedStaffIds.value,
+        mode: 'equal',
+        reason: reason.value,
+      });
+
+      store.dispatch('notifications/triggerToast', {
+        message: `Successfully distributed ${props.leadIds.length} leads equally among ${selectedStaffIds.value.length} staff members.`,
+        type: 'success',
+      });
+    } else if (assignMode.value === 'round_robin') {
+      await distributeBatchOrEqual({
+        leadIds: props.leadIds,
+        staffIds: selectedStaffIds.value,
+        mode: 'round_robin',
         batchSize: validBatchSize.value,
         reason: reason.value,
       });
