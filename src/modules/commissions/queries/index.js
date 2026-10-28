@@ -32,8 +32,12 @@ export function useCreateInvoiceMutation() {
   return useMutation({
     mutationFn: commissionsApi.createInvoice,
     onSuccess: (data, variables) => {
+      const targetId = typeof variables === 'object' ? variables?.id : variables;
       queryClient.invalidateQueries({ queryKey: ['commissions'] });
-      queryClient.invalidateQueries({ queryKey: ['commissions', 'details', variables.id] });
+      if (targetId) queryClient.invalidateQueries({ queryKey: ['commissions', 'details', targetId] });
+      queryClient.invalidateQueries({ queryKey: ['analytics'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboards'] });
+      queryClient.invalidateQueries({ queryKey: ['reports'] });
     }
   });
 }
@@ -66,8 +70,12 @@ export function useProcessClawbackMutation() {
   return useMutation({
     mutationFn: commissionsApi.processClawback,
     onSuccess: (data, variables) => {
+      const targetId = typeof variables === 'object' ? variables?.id : variables;
       queryClient.invalidateQueries({ queryKey: ['commissions'] });
-      queryClient.invalidateQueries({ queryKey: ['commissions', 'details', variables.id] });
+      if (targetId) queryClient.invalidateQueries({ queryKey: ['commissions', 'details', targetId] });
+      queryClient.invalidateQueries({ queryKey: ['analytics'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboards'] });
+      queryClient.invalidateQueries({ queryKey: ['reports'] });
     }
   });
 }
@@ -77,8 +85,12 @@ export function useTransitionStageMutation() {
   return useMutation({
     mutationFn: commissionsApi.transitionStage,
     onSuccess: (data, variables) => {
+      const targetId = typeof variables === 'object' ? variables?.id : variables;
       queryClient.invalidateQueries({ queryKey: ['commissions'] });
-      queryClient.invalidateQueries({ queryKey: ['commissions', 'details', variables.id] });
+      if (targetId) queryClient.invalidateQueries({ queryKey: ['commissions', 'details', targetId] });
+      queryClient.invalidateQueries({ queryKey: ['analytics'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboards'] });
+      queryClient.invalidateQueries({ queryKey: ['reports'] });
     }
   });
 }

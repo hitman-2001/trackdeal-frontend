@@ -35,8 +35,13 @@ export async function processClawback({ id, ...data }) {
   return response.data;
 }
 
-export async function transitionStage({ id, stage, notes }) {
-  const response = await apiClient.post(`/commissions/${id}/transition`, { stage, notes });
+export async function transitionStage({ id, stage, status, notes }) {
+  const targetStatus = status || stage;
+  const response = await apiClient.post(`/commissions/${id}/transition`, {
+    status: targetStatus,
+    stage: targetStatus,
+    notes,
+  });
   return response.data;
 }
 

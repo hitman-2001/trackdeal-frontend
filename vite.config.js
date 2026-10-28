@@ -13,5 +13,17 @@ export default defineConfig({
     port: 5173,
     host: true,
     strictPort: true
+  },
+  build: {
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-core': ['vue', 'vue-router', 'vuex', '@tanstack/vue-query'],
+          'vendor-icons': ['@phosphor-icons/vue'],
+          'vendor-heavy': ['xlsx', 'mammoth', 'jimp'],
+        },
+      },
+    },
   }
 });
