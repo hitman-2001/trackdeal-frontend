@@ -33,8 +33,12 @@ export function useAddOfferMutation() {
   return useMutation({
     mutationFn: dealsApi.addOffer,
     onSuccess: (data, variables) => {
+      const targetId = typeof variables === 'object' ? variables?.id : variables;
       queryClient.invalidateQueries({ queryKey: ['deals'] });
-      queryClient.invalidateQueries({ queryKey: ['deals', 'details', variables.id] });
+      if (targetId) queryClient.invalidateQueries({ queryKey: ['deals', 'details', targetId] });
+      queryClient.invalidateQueries({ queryKey: ['analytics'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboards'] });
+      queryClient.invalidateQueries({ queryKey: ['reports'] });
     }
   });
 }
@@ -44,8 +48,12 @@ export function useExtendReservationMutation() {
   return useMutation({
     mutationFn: dealsApi.extendReservation,
     onSuccess: (data, variables) => {
+      const targetId = typeof variables === 'object' ? variables?.id : variables;
       queryClient.invalidateQueries({ queryKey: ['deals'] });
-      queryClient.invalidateQueries({ queryKey: ['deals', 'details', variables.id] });
+      if (targetId) queryClient.invalidateQueries({ queryKey: ['deals', 'details', targetId] });
+      queryClient.invalidateQueries({ queryKey: ['analytics'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboards'] });
+      queryClient.invalidateQueries({ queryKey: ['reports'] });
     }
   });
 }
@@ -77,8 +85,12 @@ export function useAddPaymentMutation() {
   return useMutation({
     mutationFn: dealsApi.addPayment,
     onSuccess: (data, variables) => {
+      const targetId = typeof variables === 'object' ? variables?.id : variables;
       queryClient.invalidateQueries({ queryKey: ['deals'] });
-      queryClient.invalidateQueries({ queryKey: ['deals', 'details', variables.id] });
+      if (targetId) queryClient.invalidateQueries({ queryKey: ['deals', 'details', targetId] });
+      queryClient.invalidateQueries({ queryKey: ['analytics'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboards'] });
+      queryClient.invalidateQueries({ queryKey: ['reports'] });
     }
   });
 }
@@ -88,8 +100,12 @@ export function useAddRefundMutation() {
   return useMutation({
     mutationFn: dealsApi.addRefund,
     onSuccess: (data, variables) => {
+      const targetId = typeof variables === 'object' ? variables?.id : variables;
       queryClient.invalidateQueries({ queryKey: ['deals'] });
-      queryClient.invalidateQueries({ queryKey: ['deals', 'details', variables.id] });
+      if (targetId) queryClient.invalidateQueries({ queryKey: ['deals', 'details', targetId] });
+      queryClient.invalidateQueries({ queryKey: ['analytics'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboards'] });
+      queryClient.invalidateQueries({ queryKey: ['reports'] });
     }
   });
 }
@@ -99,8 +115,12 @@ export function useUploadDocumentMutation() {
   return useMutation({
     mutationFn: dealsApi.uploadDocument,
     onSuccess: (data, variables) => {
+      const targetId = typeof variables === 'object' ? variables?.id : variables;
       queryClient.invalidateQueries({ queryKey: ['deals'] });
-      queryClient.invalidateQueries({ queryKey: ['deals', 'details', variables.id] });
+      if (targetId) queryClient.invalidateQueries({ queryKey: ['deals', 'details', targetId] });
+      queryClient.invalidateQueries({ queryKey: ['analytics'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboards'] });
+      queryClient.invalidateQueries({ queryKey: ['reports'] });
     }
   });
 }
@@ -110,8 +130,12 @@ export function useVerifyDocumentMutation() {
   return useMutation({
     mutationFn: dealsApi.verifyDocument,
     onSuccess: (data, variables) => {
+      const targetId = typeof variables === 'object' ? variables?.id : variables;
       queryClient.invalidateQueries({ queryKey: ['deals'] });
-      queryClient.invalidateQueries({ queryKey: ['deals', 'details', variables.id] });
+      if (targetId) queryClient.invalidateQueries({ queryKey: ['deals', 'details', targetId] });
+      queryClient.invalidateQueries({ queryKey: ['analytics'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboards'] });
+      queryClient.invalidateQueries({ queryKey: ['reports'] });
     }
   });
 }
@@ -121,8 +145,12 @@ export function useTransitionStageMutation() {
   return useMutation({
     mutationFn: dealsApi.transitionStage,
     onSuccess: (data, variables) => {
+      const targetId = typeof variables === 'object' ? variables?.id : variables;
       queryClient.invalidateQueries({ queryKey: ['deals'] });
-      queryClient.invalidateQueries({ queryKey: ['deals', 'details', variables.id] });
+      if (targetId) queryClient.invalidateQueries({ queryKey: ['deals', 'details', targetId] });
+      queryClient.invalidateQueries({ queryKey: ['analytics'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboards'] });
+      queryClient.invalidateQueries({ queryKey: ['reports'] });
     }
   });
 }
