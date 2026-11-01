@@ -115,7 +115,7 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config;
 
     if (!error.response) {
-      if (storeInstance) {
+      if (storeInstance && !originalRequest?.silent && !originalRequest?.skipErrorToast) {
         storeInstance.dispatch('notifications/triggerToast', {
           message: 'Network connection failed. Please check your internet connectivity.',
           type: 'error'

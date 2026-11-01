@@ -423,8 +423,8 @@ import {
 } from '@phosphor-icons/vue';
 
 import AppDrawer from '@/components/AppDrawer.vue';
-import apiClient from '@/api/client';
-import { createEducationLead, createEducationStudent } from '@/modules/education/api/endpoints';
+import { bulkImportEducationLeads, bulkImportEducationStudents } from '@/modules/education/api/endpoints';
+import { bulkImportLeads } from '@/modules/leads/api/endpoints';
 import { fetchCustomFields } from '@/api/customFields';
 import { downloadExcelWorkbook } from '@/utils/fileDownload';
 
@@ -1392,150 +1392,144 @@ function formatFileSize(bytes) {
   return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
 }
 
+function resolveClassId(row) {
+  if (!row.classInterest || !props.availableClasses?.length) return undefined;
+  const target = row.classInterest.toLowerCase().trim();
+  return props.availableClasses.find(
+    (item) =>
+      item.name?.toLowerCase().trim() === target ||
+      item.name?.toLowerCase().includes(target) ||
+      target.includes(item.name?.toLowerCase() || '')
+  )?._id;
+}
+
+function educationStudentImportRow(row) {
+  return {
+    firstName: row.firstName,
+    lastName: row.lastName || '',
+    mobile: row.mobile,
+    alternativeMobile: row.alternativeMobile || undefined,
+    schoolName: row.schoolName,
+    institutionType: row.institutionType || undefined,
+    educationBoard: row.educationBoard || undefined,
+    standard: row.standard || undefined,
+    academicStream: row.academicStream || undefined,
+    currentCoaching: row.currentCoaching || undefined,
+    email: row.email || undefined,
+    parentName: row.parentName || undefined,
+    parentMobile: row.parentMobile || undefined,
+    source: row.source || 'walk_in',
+    classId: resolveClassId(row),
+    status: ['active', 'inactive', 'graduated', 'dropped'].includes(row.status?.toLowerCase())
+      ? row.status.toLowerCase()
+      : 'active',
+    notes: row.notes || undefined,
+    customFields: row.customFields && Object.keys(row.customFields).length > 0
+      ? row.customFields
+      : undefined,
+  };
+}
+
+function educationLeadImportRow(row) {
+  const classInterestId = resolveClassId(row);
+  const notes = [];
+  if (row.classInterest && !classInterestId) notes.push(`Interested in: ${row.classInterest}`);
+  if (row.notes) notes.push(row.notes);
+  return {
+    firstName: row.firstName,
+    lastName: row.lastName || '',
+    mobile: row.mobile,
+    alternativeMobile: row.alternativeMobile || undefined,
+    schoolName: row.schoolName,
+    institutionType: row.institutionType || undefined,
+    educationBoard: row.educationBoard || undefined,
+    standard: row.standard || undefined,
+    academicStream: row.academicStream || undefined,
+    currentCoaching: row.currentCoaching || undefined,
+    email: row.email || undefined,
+    parentName: row.parentName || undefined,
+    parentMobile: row.parentMobile || undefined,
+    source: row.source || 'manual_entry',
+    classInterestId,
+    status: ['new', 'assigned', 'contacted', 'follow_up', 'interested', 'demo_scheduled', 'demo_completed', 'negotiation', 'enrolled', 'lost'].includes(row.status?.toLowerCase())
+      ? row.status.toLowerCase()
+      : 'new',
+    notes: notes.join(' | ') || undefined,
+    customFields: row.customFields && Object.keys(row.customFields).length > 0
+      ? row.customFields
+      : undefined,
+  };
+}
+
+function salesLeadImportRow(row) {
+  const propertyType = normalizePropertyType(row.propertyType);
+  const budget = row.budget ? Number(String(row.budget).replace(/[^0-9.]/g, '')) : undefined;
+  const notes = [];
+  if (row.propertyType && !propertyType) notes.push(`Property Interest: ${row.propertyType}`);
+  if (row.notes) notes.push(row.notes);
+  return {
+    firstName: row.firstName,
+    lastName: row.lastName || '',
+    mobile: row.mobile,
+    email: row.email || undefined,
+    source: row.source || 'manual_entry',
+    status: row.status || 'new',
+    notes: notes.join(' | ') || undefined,
+    requirements: {
+      propertyType: propertyType ? [propertyType] : undefined,
+      budgetMax: budget && !isNaN(budget) ? budget : undefined,
+    },
+    customFields: row.customFields && Object.keys(row.customFields).length > 0
+      ? row.customFields
+      : undefined,
+  };
+}
+
 async function executeImport() {
   const validRows = parsedRows.value.filter((r) => r._isValid);
   if (validRows.length === 0) return;
 
   isUploading.value = true;
   uploadedCount.value = 0;
-  let successCount = 0;
-  let failCount = 0;
-
-  for (const row of validRows) {
-    try {
-      if (props.target === 'students') {
-        let classId = undefined;
-        if (row.classInterest && props.availableClasses?.length) {
-          const target = row.classInterest.toLowerCase().trim();
-          const match = props.availableClasses.find(
-            (c) =>
-              c.name?.toLowerCase().trim() === target ||
-              c.name?.toLowerCase().includes(target) ||
-              target.includes(c.name?.toLowerCase() || '')
-          );
-          if (match) classId = match._id;
-        }
-
-        await createEducationStudent({
-          firstName: row.firstName,
-          lastName: row.lastName || '',
-          mobile: row.mobile,
-          alternativeMobile: row.alternativeMobile || undefined,
-          schoolName: row.schoolName,
-          institutionType: row.institutionType || undefined,
-          educationBoard: row.educationBoard || undefined,
-          standard: row.standard || undefined,
-          academicStream: row.academicStream || undefined,
-          currentCoaching: row.currentCoaching || undefined,
-          email: row.email || undefined,
-          parentName: row.parentName || undefined,
-          parentMobile: row.parentMobile || undefined,
-          source: row.source || 'walk_in',
-          classId: classId || undefined,
-          status: ['active', 'inactive', 'graduated', 'dropped'].includes(row.status?.toLowerCase())
-            ? row.status.toLowerCase()
-            : 'active',
-          notes: row.notes || undefined,
-          customFields: row.customFields && Object.keys(row.customFields).length > 0
-            ? row.customFields
-            : undefined,
-        });
-      } else if (isEducation.value) {
-        let classInterestId = undefined;
-        if (row.classInterest && props.availableClasses?.length) {
-          const target = row.classInterest.toLowerCase().trim();
-          const match = props.availableClasses.find(
-            (c) =>
-              c.name?.toLowerCase().trim() === target ||
-              c.name?.toLowerCase().includes(target) ||
-              target.includes(c.name?.toLowerCase() || '')
-          );
-          if (match) classInterestId = match._id;
-        }
-
-        const noteParts = [];
-        if (row.classInterest && !classInterestId) {
-          noteParts.push(`Interested in: ${row.classInterest}`);
-        }
-        if (row.notes) {
-          noteParts.push(row.notes);
-        }
-
-        await createEducationLead({
-          firstName: row.firstName,
-          lastName: row.lastName || '',
-          mobile: row.mobile,
-          alternativeMobile: row.alternativeMobile || undefined,
-          schoolName: row.schoolName,
-          institutionType: row.institutionType || undefined,
-          educationBoard: row.educationBoard || undefined,
-          standard: row.standard || undefined,
-          academicStream: row.academicStream || undefined,
-          currentCoaching: row.currentCoaching || undefined,
-          email: row.email || undefined,
-          parentName: row.parentName || undefined,
-          parentMobile: row.parentMobile || undefined,
-          source: row.source || 'manual_entry',
-          classInterestId: classInterestId || undefined,
-          status: ['new', 'assigned', 'contacted', 'follow_up', 'interested', 'demo_scheduled', 'demo_completed', 'negotiation', 'enrolled', 'lost'].includes(row.status?.toLowerCase())
-            ? row.status.toLowerCase()
-            : 'new',
-          notes: noteParts.join(' | ') || undefined,
-          customFields: row.customFields && Object.keys(row.customFields).length > 0
-            ? row.customFields
-            : undefined,
-        });
-      } else {
-        const propType = normalizePropertyType(row.propertyType);
-        const budgetNumber = row.budget ? Number(String(row.budget).replace(/[^0-9.]/g, '')) : undefined;
-
-        const noteParts = [];
-        if (row.propertyType && !propType) {
-          noteParts.push(`Property Interest: ${row.propertyType}`);
-        }
-        if (row.notes) {
-          noteParts.push(row.notes);
-        }
-
-        await apiClient.post('/leads', {
-          firstName: row.firstName,
-          lastName: row.lastName || '',
-          mobile: row.mobile,
-          email: row.email || undefined,
-          source: row.source || 'manual_entry',
-          status: row.status || 'new',
-          notes: noteParts.join(' | ') || undefined,
-          requirements: {
-            propertyType: propType ? [propType] : undefined,
-            budgetMax: budgetNumber && !isNaN(budgetNumber) ? budgetNumber : undefined,
-          },
-          customFields: row.customFields && Object.keys(row.customFields).length > 0
-            ? row.customFields
-            : undefined,
-        });
+  try {
+    const rows = validRows.map((row) =>
+      props.target === 'students'
+        ? educationStudentImportRow(row)
+        : isEducation.value
+          ? educationLeadImportRow(row)
+          : salesLeadImportRow(row)
+    );
+    const response = props.target === 'students'
+      ? await bulkImportEducationStudents(rows)
+      : isEducation.value
+        ? await bulkImportEducationLeads(rows)
+        : await bulkImportLeads(rows);
+    const result = response.data || response;
+    uploadedCount.value = validRows.length;
+    (result.errors || []).forEach((error) => {
+      const row = validRows[error.index];
+      if (row) {
+        row._isValid = false;
+        row._errorReason = error.message;
       }
-      successCount++;
-    } catch (err) {
-      failCount++;
-      const errMsg = err?.response?.data?.message || err?.message || 'Import failed';
-      row._isValid = false;
-      row._errorReason = errMsg;
-    } finally {
-      uploadedCount.value++;
-    }
+    });
+
+    const entityLabel = props.target === 'students' ? 'students' : 'leads';
+    store.dispatch('notifications/triggerToast', {
+      message: `Batch import finished. Successfully imported ${result.importedCount} ${entityLabel}${result.failedCount > 0 ? ` (${result.failedCount} failed)` : ''}.`,
+      type: result.importedCount > 0 ? 'success' : 'error',
+    });
+    resetFile();
+    emit('success');
+    emit('close');
+  } catch (err) {
+    store.dispatch('notifications/triggerToast', {
+      message: err?.response?.data?.error?.message || err?.userMessage || err?.message || 'Bulk import failed. Please try again.',
+      type: 'error',
+    });
+  } finally {
+    isUploading.value = false;
   }
-
-  isUploading.value = false;
-
-  const entityLabel = props.target === 'students' ? 'students' : 'leads';
-  store.dispatch('notifications/triggerToast', {
-    message: `Batch import finished. Successfully imported ${successCount} ${entityLabel}${failCount > 0 ? ` (${failCount} failed)` : ''}.`,
-    type: successCount > 0 ? 'success' : 'error',
-  });
-
-  resetFile();
-  emit('success');
-  emit('close');
 }
 
 onMounted(() => {

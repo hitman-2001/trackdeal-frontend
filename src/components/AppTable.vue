@@ -123,7 +123,7 @@ const props = defineProps({
   rowKey: { type: String, default: '_id' },
   pagination: { type: Object, default: null },
   paginate: { type: Boolean, default: true },
-  pageSize: { type: Number, default: 20 },
+  pageSize: { type: [Number, String], default: 20 },
   pageSizeOptions: { type: Array, default: () => [10, 20, 50] },
   showPageSize: { type: Boolean, default: true },
   rowActionsLabel: { type: String, default: 'Actions' },
@@ -137,15 +137,15 @@ const internalPageSize = ref(props.pageSize);
 const selectAllCheckbox = ref(null);
 const isServerPaginated = computed(() => Boolean(props.pagination));
 const currentPage = computed(() => Number(props.pagination?.page || internalPage.value));
-const currentPageSize = computed(() => Number(props.pagination?.limit || props.pagination?.pageSize || internalPageSize.value));
+const currentPageSize = computed(() => props.pagination?.limit || props.pagination?.pageSize || internalPageSize.value);
 const paginationTotal = computed(() => Number(props.pagination?.total ?? props.rows.length));
-const paginationPages = computed(() => Number(props.pagination?.totalPages || props.pagination?.pages || Math.max(Math.ceil(paginationTotal.value / currentPageSize.value), 1)));
+const paginationPages = computed(() => currentPageSize.value === 'all' ? 1 : Number(props.pagination?.totalPages || props.pagination?.pages || Math.max(Math.ceil(paginationTotal.value / currentPageSize.value), 1)));
 const showPagination = computed(() => props.paginate && (paginationPages.value > 1 || paginationTotal.value > 0));
 const tableColSpan = computed(
   () => props.columns.length + (props.selectable ? 1 : 0) + (hasRowActions.value ? 1 : 0),
 );
 const visibleRows = computed(() => {
-  if (!props.paginate || isServerPaginated.value) return props.rows;
+  if (!props.paginate || isServerPaginated.value || currentPageSize.value === 'all') return props.rows;
   const start = (internalPage.value - 1) * internalPageSize.value;
   return props.rows.slice(start, start + internalPageSize.value);
 });

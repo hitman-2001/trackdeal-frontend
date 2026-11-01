@@ -36,12 +36,30 @@ export async function deleteEducationClass(id) {
 }
 
 export async function fetchEducationStudents(params = {}) {
-  const res = await apiClient.get('/education/students', { params });
+  const res = await apiClient.get('/education/students', { params, paramsSerializer: { indexes: null } });
+  return res.data;
+}
+
+export async function fetchEducationStudentSchools() {
+  const res = await apiClient.get('/education/students/schools');
+  return res.data;
+}
+
+export async function fetchEducationLeadSchools() {
+  const res = await apiClient.get('/education/leads/schools');
   return res.data;
 }
 
 export async function createEducationStudent(data) {
   const res = await apiClient.post('/education/students', data);
+  return res.data;
+}
+
+export async function bulkImportEducationStudents(rows) {
+  const res = await apiClient.post('/education/students/bulk-import', { rows }, {
+    timeout: 120000,
+    skipErrorToast: true,
+  });
   return res.data;
 }
 
@@ -66,12 +84,25 @@ export async function fetchEducationLead(id) {
 }
 
 export async function fetchEducationLeads(params = {}) {
-  const res = await apiClient.get('/education/leads', { params });
+  const res = await apiClient.get('/education/leads', { params, paramsSerializer: { indexes: null } });
+  return res.data;
+}
+
+export async function fetchEducationLeadSelection(params = {}) {
+  const res = await apiClient.get('/education/leads/selection', { params, paramsSerializer: { indexes: null } });
   return res.data;
 }
 
 export async function createEducationLead(data) {
   const res = await apiClient.post('/education/leads', data);
+  return res.data;
+}
+
+export async function bulkImportEducationLeads(rows) {
+  const res = await apiClient.post('/education/leads/bulk-import', { rows }, {
+    timeout: 120000,
+    skipErrorToast: true,
+  });
   return res.data;
 }
 
@@ -82,6 +113,14 @@ export async function updateEducationLead(id, data) {
 
 export async function enrollEducationLead(id, data = {}) {
   const res = await apiClient.post(`/education/leads/${id}/enroll`, data);
+  return res.data;
+}
+
+export async function bulkDeleteEducationLeads(ids) {
+  const res = await apiClient.post('/education/leads/bulk-delete', { ids }, {
+    timeout: 120000,
+    skipErrorToast: true,
+  });
   return res.data;
 }
 

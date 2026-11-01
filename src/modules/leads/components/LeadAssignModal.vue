@@ -17,8 +17,8 @@
             ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs border border-slate-200 dark:border-slate-700 ring-1 ring-black/5 dark:ring-white/5'
             : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-800 border border-transparent'"
         >
-          <PhUser :size="14" weight="bold" class="shrink-0" :class="assignMode === 'single' ? 'text-primary' : 'text-slate-400'" />
-          <span class="truncate">Single Staff</span>
+          <PhUser :size="14" weight="bold" class="hidden sm:block shrink-0" :class="assignMode === 'single' ? 'text-primary' : 'text-slate-400'" />
+          <span class="whitespace-normal leading-tight">Single Staff</span>
         </button>
 
         <button
@@ -29,8 +29,8 @@
             ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs border border-slate-200 dark:border-slate-700 ring-1 ring-black/5 dark:ring-white/5'
             : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-800 border border-transparent'"
         >
-          <PhScales :size="14" weight="bold" class="shrink-0" :class="assignMode === 'equal' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'" />
-          <span class="truncate">Equal Split</span>
+          <PhScales :size="14" weight="bold" class="hidden sm:block shrink-0" :class="assignMode === 'equal' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'" />
+          <span class="whitespace-normal leading-tight">Equal Split</span>
         </button>
 
         <button
@@ -41,8 +41,8 @@
             ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs border border-slate-200 dark:border-slate-700 ring-1 ring-black/5 dark:ring-white/5'
             : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-800 border border-transparent'"
         >
-          <PhArrowsClockwise :size="14" weight="bold" class="shrink-0" :class="assignMode === 'round_robin' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'" />
-          <span class="truncate">Round-Robin</span>
+          <PhArrowsClockwise :size="14" weight="bold" class="hidden sm:block shrink-0" :class="assignMode === 'round_robin' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'" />
+          <span class="whitespace-normal leading-tight">Round-Robin</span>
         </button>
       </div>
 
@@ -399,6 +399,7 @@ import { ref, computed, reactive, watch } from 'vue';
 import { useStore } from 'vuex';
 import { PhUser, PhArrowsClockwise, PhScales, PhPlus, PhMinus } from '@phosphor-icons/vue';
 import apiClient from '@/api/client';
+import { getErrorMessage } from '@/utils/errorHandler';
 import AppModal from '@/components/AppModal.vue';
 import {
   useAssignLeadMutation,
@@ -727,8 +728,11 @@ const handleConfirm = async () => {
     emit('success');
     emit('close');
   } catch (error) {
+    const timedOut = ['ECONNABORTED', 'ETIMEDOUT'].includes(error.code);
     store.dispatch('notifications/triggerToast', {
-      message: error.response?.data?.message || 'Assignment update failed.',
+      message: timedOut
+        ? 'Assignment is taking longer than expected. Check the lead list before retrying; the server may still be processing it.'
+        : getErrorMessage(error, 'Assignment update failed.'),
       type: 'error',
     });
   }

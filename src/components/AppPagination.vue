@@ -11,8 +11,8 @@
     <div class="app-pagination__controls">
       <label v-if="showPageSize" class="app-pagination__size">
         <span class="hidden md:inline">Rows</span>
-        <select :value="pageSize" aria-label="Rows per page" @change="$emit('pageSizeChange', Number($event.target.value))">
-          <option v-for="option in pageSizeOptions" :key="option" :value="option">{{ option }}</option>
+        <select :value="pageSize" aria-label="Rows per page" @change="$emit('pageSizeChange', $event.target.value === 'all' ? 'all' : Number($event.target.value))">
+          <option v-for="option in pageSizeOptions" :key="option" :value="option">{{ option === 'all' ? 'All' : option }}</option>
         </select>
       </label>
       <button type="button" class="app-pagination__button" :disabled="page <= 1" aria-label="Previous page" @click="$emit('pageChange', page - 1)">
@@ -39,7 +39,7 @@ import { PhCaretLeft, PhCaretRight } from '@phosphor-icons/vue';
 
 const props = defineProps({
   page: { type: Number, default: 1 },
-  pageSize: { type: Number, default: 20 },
+  pageSize: { type: [Number, String], default: 20 },
   total: { type: Number, default: 0 },
   totalPages: { type: Number, default: 1 },
   pageSizeOptions: { type: Array, default: () => [10, 20, 50] },
@@ -47,8 +47,9 @@ const props = defineProps({
 });
 defineEmits(['pageChange', 'pageSizeChange']);
 
-const rangeStart = computed(() => Math.min((props.page - 1) * props.pageSize + 1, props.total));
-const rangeEnd = computed(() => Math.min(props.page * props.pageSize, props.total));
+const effectivePageSize = computed(() => props.pageSize === 'all' ? props.total : Number(props.pageSize));
+const rangeStart = computed(() => Math.min((props.page - 1) * effectivePageSize.value + 1, props.total));
+const rangeEnd = computed(() => Math.min(props.page * effectivePageSize.value, props.total));
 const visiblePages = computed(() => {
   const last = Math.max(props.totalPages, 1);
   const pages = [...new Set([1, last, props.page - 1, props.page, props.page + 1])]

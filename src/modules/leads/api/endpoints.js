@@ -16,6 +16,14 @@ export async function createLead(data) {
   return response.data;
 }
 
+export async function bulkImportLeads(rows) {
+  const response = await apiClient.post('/leads/bulk-import', { rows }, {
+    timeout: 120000,
+    skipErrorToast: true,
+  });
+  return response.data;
+}
+
 export async function updateLead({ id, ...data }) {
   const response = await apiClient.put(`/leads/${id}`, data);
   return response.data;
@@ -32,12 +40,16 @@ export async function assignLead({ id, assignedTo, reason }) {
 }
 
 export async function bulkAssignLeads({ leadIds, assignedTo, reason }) {
-  const response = await apiClient.post('/leads/bulk-assign', { leadIds, assignedTo, reason });
+  const response = await apiClient.post('/leads/bulk-assign', { leadIds, assignedTo, reason }, { timeout: 120000 });
   return response.data;
 }
 
 export async function distributeLeadsBatchRoundRobin({ leadIds, staffIds, mode = 'round_robin', batchSize = 10, reason }) {
-  const response = await apiClient.post('/leads/distribute-batch-round-robin', { leadIds, staffIds, mode, batchSize, reason });
+  const response = await apiClient.post(
+    '/leads/distribute-batch-round-robin',
+    { leadIds, staffIds, mode, batchSize, reason },
+    { timeout: 120000, skipErrorToast: true },
+  );
   return response.data;
 }
 

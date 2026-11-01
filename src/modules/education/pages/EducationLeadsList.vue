@@ -98,7 +98,7 @@
           <span>Filters</span>
           <span
             v-if="activeFilterCount > 0"
-            class="w-4.5 h-4.5 rounded-full bg-blue-600 text-white text-[10px] font-bold inline-flex items-center justify-center shrink-0"
+            class="min-w-[18px] h-[18px] px-1 rounded-full bg-blue-600 text-white text-[10px] font-bold inline-flex items-center justify-center shrink-0"
           >
             {{ activeFilterCount }}
           </span>
@@ -119,52 +119,63 @@
         </button>
 
         <button
-          v-if="staffFilter"
+          v-if="schoolFilter.length"
           type="button"
-          @click="staffFilter = ''; onFilterChange()"
+          :title="schoolFilter.join(', ')"
+          @click="schoolFilter = []; onFilterChange()"
+          class="h-6 max-w-full px-2.5 rounded-lg bg-sky-50 dark:bg-sky-950/60 border border-sky-200 dark:border-sky-800 text-[11px] font-semibold text-sky-700 dark:text-sky-300 inline-flex items-center gap-1"
+        >
+          <span class="truncate max-w-[12rem]">{{ schoolFilter.length === 1 ? 'School: ' + schoolFilter[0] : schoolFilter.length + ' schools' }}</span>
+          <PhX :size="11" weight="bold" class="shrink-0" />
+        </button>
+
+        <button
+          v-if="staffFilter.length"
+          type="button"
+          @click="staffFilter = []; onFilterChange()"
           class="h-6 px-2.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-[11px] font-semibold text-indigo-700 dark:text-indigo-300 inline-flex items-center gap-1 active:scale-95 transition-all"
         >
-          <span>Staff: {{ getStaffName(staffFilter) }}</span>
+          <span class="truncate max-w-[16rem]" :title="staffFilter.map(getStaffName).join(', ')">Staff: {{ staffFilter.map(getStaffName).join(', ') }}</span>
           <PhX :size="11" weight="bold" class="opacity-70 hover:opacity-100" />
         </button>
 
         <button
-          v-if="institutionTypeFilter"
+          v-if="institutionTypeFilter.length"
           type="button"
-          @click="institutionTypeFilter = ''; onFilterChange()"
+          @click="institutionTypeFilter = []; onFilterChange()"
           class="h-6 px-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 inline-flex items-center gap-1 active:scale-95 transition-all"
         >
-          <span>Type: {{ institutionTypeFilter }}</span>
+          <span class="truncate max-w-[16rem]" :title="institutionTypeFilter.join(', ')">Type: {{ institutionTypeFilter.join(', ') }}</span>
           <PhX :size="11" weight="bold" class="opacity-70 hover:opacity-100" />
         </button>
 
         <button
-          v-if="educationBoardFilter"
+          v-if="educationBoardFilter.length"
           type="button"
-          @click="educationBoardFilter = ''; onFilterChange()"
+          @click="educationBoardFilter = []; onFilterChange()"
           class="h-6 px-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-[11px] font-semibold text-amber-700 dark:text-amber-300 inline-flex items-center gap-1 active:scale-95 transition-all"
         >
-          <span>Board: {{ educationBoardFilter }}</span>
+          <span class="truncate max-w-[16rem]" :title="educationBoardFilter.join(', ')">Board: {{ educationBoardFilter.join(', ') }}</span>
           <PhX :size="11" weight="bold" class="opacity-70 hover:opacity-100" />
         </button>
 
         <button
-          v-if="standardFilter"
+          v-if="standardFilter.length"
           type="button"
-          @click="standardFilter = ''; onFilterChange()"
+          @click="standardFilter = []; onFilterChange()"
           class="h-6 px-2.5 rounded-lg bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 text-[11px] font-semibold text-purple-700 dark:text-purple-300 inline-flex items-center gap-1 active:scale-95 transition-all"
         >
-          <span>Grade: {{ standardFilter }}</span>
+          <span class="truncate max-w-[16rem]" :title="standardFilter.join(', ')">Grade: {{ standardFilter.join(', ') }}</span>
           <PhX :size="11" weight="bold" class="opacity-70 hover:opacity-100" />
         </button>
 
         <button
-          v-if="academicStreamFilter"
+          v-if="academicStreamFilter.length"
           type="button"
-          @click="academicStreamFilter = ''; onFilterChange()"
+          @click="academicStreamFilter = []; onFilterChange()"
           class="h-6 px-2.5 rounded-lg bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 text-[11px] font-semibold text-teal-700 dark:text-teal-300 inline-flex items-center gap-1 active:scale-95 transition-all"
         >
-          <span>Stream: {{ academicStreamFilter }}</span>
+          <span class="truncate max-w-[16rem]" :title="academicStreamFilter.join(', ')">Stream: {{ academicStreamFilter.join(', ') }}</span>
           <PhX :size="11" weight="bold" class="opacity-70 hover:opacity-100" />
         </button>
 
@@ -205,8 +216,21 @@
           </button>
         </div>
 
-        <!-- Results Pill -->
+        <!-- Bulk selection and results -->
         <div class="flex items-center gap-2 self-end sm:self-auto">
+          <button
+            v-if="pagination.total > 0 && !selectedRows.length && (canAssignLeads || canBulkDeleteLeads)"
+            type="button"
+            :disabled="loading || selectingAll"
+            :aria-label="`Select all ${pagination.total} matching student leads`"
+            :aria-busy="selectingAll"
+            @click="selectAllMatching"
+            class="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 text-xs font-semibold text-blue-700 shadow-xs transition-colors hover:border-blue-400 hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-950/70"
+          >
+            <PhArrowsClockwise v-if="selectingAll" :size="16" weight="bold" class="animate-spin shrink-0" />
+            <PhCheckSquare v-else :size="16" weight="bold" class="shrink-0" />
+            <span>{{ selectingAll ? 'Selecting...' : `Select all ${pagination.total}` }}</span>
+          </button>
           <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 font-tabular bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg border border-default/60">
             {{ pagination.total }} {{ pagination.total === 1 ? 'Student Lead' : 'Student Leads' }}
           </span>
@@ -229,52 +253,63 @@
         </button>
 
         <button
-          v-if="staffFilter"
+          v-if="schoolFilter.length"
           type="button"
-          @click="staffFilter = ''; onFilterChange()"
+          :title="schoolFilter.join(', ')"
+          @click="schoolFilter = []; onFilterChange()"
+          class="h-6 max-w-full px-2.5 rounded-lg bg-sky-50 dark:bg-sky-950/60 border border-sky-200 dark:border-sky-800 text-[11px] font-semibold text-sky-700 dark:text-sky-300 inline-flex items-center gap-1"
+        >
+          <span class="truncate max-w-[12rem]">{{ schoolFilter.length === 1 ? 'School: ' + schoolFilter[0] : schoolFilter.length + ' schools' }}</span>
+          <PhX :size="11" weight="bold" class="shrink-0" />
+        </button>
+
+        <button
+          v-if="staffFilter.length"
+          type="button"
+          @click="staffFilter = []; onFilterChange()"
           class="h-6 px-2.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-[11px] font-semibold text-indigo-700 dark:text-indigo-300 inline-flex items-center gap-1 hover:border-indigo-300 transition-all"
         >
-          <span>Staff: {{ getStaffName(staffFilter) }}</span>
+          <span class="truncate max-w-[16rem]" :title="staffFilter.map(getStaffName).join(', ')">Staff: {{ staffFilter.map(getStaffName).join(', ') }}</span>
           <PhX :size="11" weight="bold" class="opacity-70 hover:opacity-100" />
         </button>
 
         <button
-          v-if="institutionTypeFilter"
+          v-if="institutionTypeFilter.length"
           type="button"
-          @click="institutionTypeFilter = ''; onFilterChange()"
+          @click="institutionTypeFilter = []; onFilterChange()"
           class="h-6 px-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 inline-flex items-center gap-1 hover:border-emerald-300 transition-all"
         >
-          <span>Type: {{ institutionTypeFilter }}</span>
+          <span class="truncate max-w-[16rem]" :title="institutionTypeFilter.join(', ')">Type: {{ institutionTypeFilter.join(', ') }}</span>
           <PhX :size="11" weight="bold" class="opacity-70 hover:opacity-100" />
         </button>
 
         <button
-          v-if="educationBoardFilter"
+          v-if="educationBoardFilter.length"
           type="button"
-          @click="educationBoardFilter = ''; onFilterChange()"
+          @click="educationBoardFilter = []; onFilterChange()"
           class="h-6 px-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-[11px] font-semibold text-amber-700 dark:text-amber-300 inline-flex items-center gap-1 hover:border-amber-300 transition-all"
         >
-          <span>Board: {{ educationBoardFilter }}</span>
+          <span class="truncate max-w-[16rem]" :title="educationBoardFilter.join(', ')">Board: {{ educationBoardFilter.join(', ') }}</span>
           <PhX :size="11" weight="bold" class="opacity-70 hover:opacity-100" />
         </button>
 
         <button
-          v-if="standardFilter"
+          v-if="standardFilter.length"
           type="button"
-          @click="standardFilter = ''; onFilterChange()"
+          @click="standardFilter = []; onFilterChange()"
           class="h-6 px-2.5 rounded-lg bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 text-[11px] font-semibold text-purple-700 dark:text-purple-300 inline-flex items-center gap-1 hover:border-purple-300 transition-all"
         >
-          <span>Grade: {{ standardFilter }}</span>
+          <span class="truncate max-w-[16rem]" :title="standardFilter.join(', ')">Grade: {{ standardFilter.join(', ') }}</span>
           <PhX :size="11" weight="bold" class="opacity-70 hover:opacity-100" />
         </button>
 
         <button
-          v-if="academicStreamFilter"
+          v-if="academicStreamFilter.length"
           type="button"
-          @click="academicStreamFilter = ''; onFilterChange()"
+          @click="academicStreamFilter = []; onFilterChange()"
           class="h-6 px-2.5 rounded-lg bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 text-[11px] font-semibold text-teal-700 dark:text-teal-300 inline-flex items-center gap-1 hover:border-teal-300 transition-all"
         >
-          <span>Stream: {{ academicStreamFilter }}</span>
+          <span class="truncate max-w-[16rem]" :title="academicStreamFilter.join(', ')">Stream: {{ academicStreamFilter.join(', ') }}</span>
           <PhX :size="11" weight="bold" class="opacity-70 hover:opacity-100" />
         </button>
 
@@ -288,98 +323,53 @@
       </div>
     </div>
 
-    <!-- Bulk Selection Toolbar (When Leads are Selected) -->
+    <!-- Selection actions appear only when needed. Assignment modes live in the Assign dialog. -->
     <div
-      v-if="selectedRows.length > 0"
-      class="rounded-xl bg-surface border border-default shadow-sm p-3 sm:px-4 sm:py-2.5 transition-all space-y-2.5 sm:space-y-0 sm:flex sm:items-center sm:justify-between"
+      v-if="selectedRows.length > 0 || selectingAll"
+      class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-xl border border-indigo-100 bg-indigo-50/50 px-3 py-2.5 dark:border-indigo-900/50 dark:bg-indigo-950/20 sm:flex sm:flex-wrap sm:gap-x-3 sm:gap-y-2"
+      role="region"
+      aria-label="Selected lead actions"
+      :aria-busy="selectingAll"
     >
-      <!-- Left: Counter + Mobile Deselect -->
-      <div class="flex items-center justify-between sm:justify-start sm:gap-3">
-        <div class="flex items-center gap-2">
-          <span class="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold font-tabular shadow-2xs shrink-0">
-            {{ selectedRows.length }}
-          </span>
-          <span class="text-xs font-bold text-slate-900 dark:text-slate-100">
-            {{ selectedRows.length === 1 ? '1 lead selected' : `${selectedRows.length} leads selected` }}
-          </span>
-        </div>
-
-        <!-- Mobile Deselect button & Quick Select All -->
-        <div class="flex items-center gap-2">
-          <button
-            v-if="!isAllSelected && rows.length > selectedRows.length"
-            type="button"
-            @click="toggleSelectAll"
-            class="text-xs font-semibold text-primary hover:underline px-1 py-0.5 rounded cursor-pointer"
-          >
-            Select all ({{ rows.length }})
-          </button>
-          <button
-            type="button"
-            @click="selectedRows = []"
-            class="sm:hidden btn btn-ghost btn-sm h-8 px-2 text-xs font-medium"
-            title="Clear selection"
-          >
-            <PhX :size="13" weight="bold" />
-            <span>Deselect</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Right: Action Buttons (Equal width on mobile, inline on desktop) -->
-      <div class="grid grid-flow-col auto-cols-fr gap-1.5 sm:flex sm:items-center sm:gap-2 w-full sm:w-auto min-w-0">
+      <span class="min-w-0 truncate text-xs font-semibold text-slate-800 dark:text-slate-100" role="status">
+        {{ selectingAll ? 'Selecting leads...' : selectedRows.length + ' selected' }}
+      </span>
+      <button
+        v-if="selectedRows.length < pagination.total && !selectingAll"
+        type="button"
+        :disabled="loading"
+        @click="selectAllMatching"
+        :aria-label="`Select all ${pagination.total} matching student leads`"
+        class="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-lg border border-blue-200 bg-white px-2.5 text-xs font-semibold text-blue-700 transition-colors hover:border-blue-400 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50 dark:border-blue-800 dark:bg-neutral-900 dark:text-blue-300 dark:hover:bg-blue-950/40"
+      >
+        <PhCheckSquare :size="15" weight="bold" class="shrink-0" />
+        Select all {{ pagination.total }}
+      </button>
+      <div class="col-span-2 flex w-full items-center justify-end gap-1.5 border-t border-indigo-100 pt-2 dark:border-indigo-900/50 sm:col-auto sm:ml-auto sm:w-auto sm:border-0 sm:pt-0">
         <button
           v-if="canAssignLeads"
           type="button"
           @click="openBulkAssign"
-          class="btn btn-primary btn-sm min-w-0 px-2 sm:px-3 h-8.5 sm:h-9 flex items-center justify-center gap-1 sm:gap-1.5 shadow-xs font-semibold text-[11px] sm:text-xs"
-          title="Assign selected leads to staff"
+          :disabled="!selectedRows.length || selectingAll"
+          class="btn btn-primary btn-sm h-9 px-3.5 inline-flex items-center gap-1.5 text-xs sm:h-8 sm:px-3"
+          title="Assign to staff, split equally, or distribute round-robin"
         >
-          <PhUserPlus :size="14" weight="bold" class="shrink-0" />
-          <span class="truncate">Assign</span>
+          <PhUserPlus :size="14" weight="bold" />
+          Assign
         </button>
-
-        <button
-          v-if="canAssignLeads"
-          type="button"
-          @click="openEqualDistribute"
-          class="btn btn-secondary btn-sm min-w-0 px-1.5 sm:px-3 h-8.5 sm:h-9 flex items-center justify-center gap-1 sm:gap-1.5 shadow-xs font-semibold text-[11px] sm:text-xs"
-          title="Distribute leads equally across selected staff"
-        >
-          <PhScales :size="14" weight="bold" class="shrink-0 text-emerald-600 dark:text-emerald-400" />
-          <span class="truncate">Equal Split</span>
-        </button>
-
-        <button
-          v-if="canAssignLeads"
-          type="button"
-          @click="openRoundRobinAssign"
-          class="btn btn-secondary btn-sm min-w-0 px-1.5 sm:px-3 h-8.5 sm:h-9 flex items-center justify-center gap-1 sm:gap-1.5 shadow-xs font-semibold text-[11px] sm:text-xs"
-          title="Distribute in fixed batches cyclically"
-        >
-          <PhArrowsClockwise :size="14" weight="bold" class="shrink-0" />
-          <span class="truncate">Round-Robin</span>
-        </button>
-
         <button
           v-if="canBulkDeleteLeads"
           type="button"
           @click="openBulkDelete"
-          class="btn btn-danger-outline btn-sm min-w-0 px-2 sm:px-3 h-8.5 sm:h-9 flex items-center justify-center gap-1 sm:gap-1.5 shadow-xs font-semibold text-[11px] sm:text-xs"
+          :disabled="!selectedRows.length || selectingAll"
+          class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent text-slate-500 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40 dark:hover:border-rose-900 dark:hover:bg-rose-950/40 sm:h-8 sm:w-8"
           title="Delete selected leads"
+          aria-label="Delete selected leads"
         >
-          <PhTrash :size="14" weight="bold" class="shrink-0" />
-          <span class="truncate">Delete</span>
+          <PhTrash :size="16" />
         </button>
-
-        <!-- Desktop Deselect button -->
-        <button
-          type="button"
-          @click="selectedRows = []"
-          class="hidden sm:inline-flex btn btn-ghost btn-sm flex items-center gap-1 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 font-medium ml-1"
-        >
-          <PhX :size="13" weight="bold" />
-          <span>Deselect</span>
+        <button type="button" @click="clearSelection" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent text-slate-500 transition-colors hover:border-slate-200 hover:bg-slate-100 dark:hover:border-neutral-700 dark:hover:bg-neutral-800 sm:h-8 sm:w-8" title="Clear selection" aria-label="Clear selection">
+          <PhX :size="15" />
         </button>
       </div>
     </div>
@@ -390,6 +380,8 @@
         :rows="rows"
         :columns="columns"
         :isLoading="loading"
+        :pagination="pagination"
+        :page-size-options="[20, 50, 'all']"
         :selectable="canAssignLeads || canBulkDeleteLeads"
         :selectedRows="selectedRows"
         row-actions-label="Actions"
@@ -414,11 +406,16 @@
             </span>
           </div>
           <div class="text-slate-500 text-[11px] font-mono">{{ row.mobile }}</div>
-          <div v-if="row.schoolName || row.standard" class="text-[10px] text-slate-600 dark:text-slate-400 font-medium flex items-center gap-1.5 mt-0.5 truncate max-w-[15rem]">
-            <span v-if="row.schoolName" class="truncate font-semibold text-slate-700 dark:text-slate-300">{{ row.schoolName }}</span>
+          <div v-if="row.standard" class="text-[10px] text-slate-600 dark:text-slate-400 font-medium flex items-center gap-1.5 mt-0.5">
             <span v-if="row.standard" class="text-[9px] px-1.5 py-0.2 rounded bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200/50 shrink-0 font-bold">
               {{ row.standard }}
             </span>
+          </div>
+        </template>
+
+        <template #cell(schoolName)="{ row }">
+          <div class="w-48 lg:w-60 whitespace-normal [overflow-wrap:anywhere] text-xs leading-relaxed font-medium text-slate-700 dark:text-slate-300" :title="row.schoolName || ''">
+            {{ row.schoolName || '—' }}
           </div>
         </template>
 
@@ -501,11 +498,22 @@
               @change="toggleSelectAll"
               class="w-4.5 h-4.5 rounded text-primary border-slate-300 dark:border-neutral-700 focus:ring-primary cursor-pointer shrink-0"
             />
-            <span>{{ isAllSelected ? 'Deselect All' : `Select All (${rows.length})` }}</span>
+            <span>{{ isAllSelected ? 'Deselect page' : `Select page (${rows.length})` }}</span>
           </label>
-          <span class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-            {{ pagination.total || rows.length }} leads
-          </span>
+          <button
+            v-if="pagination.total > 0 && !selectedRows.length"
+            type="button"
+            :disabled="loading || selectingAll"
+            :aria-label="`Select all ${pagination.total} matching student leads`"
+            :aria-busy="selectingAll"
+            @click="selectAllMatching"
+            class="inline-flex min-h-8 items-center justify-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-2.5 text-xs font-semibold text-blue-700 transition-colors hover:border-blue-400 hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 active:scale-[0.98] disabled:opacity-50 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300"
+          >
+            <PhArrowsClockwise v-if="selectingAll" :size="15" weight="bold" class="animate-spin shrink-0" />
+            <PhCheckSquare v-else :size="15" weight="bold" class="shrink-0" />
+            <span>{{ selectingAll ? 'Selecting...' : 'Select all ' + pagination.total }}</span>
+          </button>
+          <span v-else class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{{ pagination.total }} leads</span>
         </div>
 
         <!-- Lead Cards Feed -->
@@ -533,6 +541,7 @@
                 <h3 class="font-bold text-base text-slate-900 dark:text-slate-100 tracking-tight leading-snug break-words">
                   {{ row.firstName }} {{ row.lastName || '' }}
                 </h3>
+                <p v-if="row.schoolName" class="mt-1 text-xs text-slate-500 whitespace-normal [overflow-wrap:anywhere]">{{ row.schoolName }}</p>
                 <span
                   v-if="!row.isAttended && !row.lastActionAt"
                   class="px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wide uppercase bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/80 dark:border-amber-900/60 shrink-0"
@@ -630,25 +639,15 @@
       </template>
 
       <!-- Mobile Pagination Controls -->
-      <div v-if="pagination.totalPages > 1" class="flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm text-xs font-semibold">
-        <button
-          type="button"
-          :disabled="pagination.page <= 1"
-          @click="handlePageChange(pagination.page - 1)"
-          class="h-9 px-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-40 transition-colors"
-        >
-          Previous
-        </button>
-        <span class="text-slate-400 font-medium">{{ pagination.page }} / {{ pagination.totalPages }}</span>
-        <button
-          type="button"
-          :disabled="pagination.page >= pagination.totalPages"
-          @click="handlePageChange(pagination.page + 1)"
-          class="h-9 px-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-40 transition-colors"
-        >
-          Next
-        </button>
-      </div>
+      <AppPagination
+        :page="pagination.page"
+        :page-size="pagination.limit"
+        :total="pagination.total"
+        :total-pages="pagination.totalPages"
+        :page-size-options="[20, 50, 'all']"
+        @page-change="handlePageChange"
+        @page-size-change="handlePageSizeChange"
+      />
     </div>
 
     <!-- Floating 3-Dots Action Dropdown Menu -->
@@ -983,7 +982,7 @@
       :message="deleteModalMessage"
       :itemName="deleteModalItemName"
       :loading="isDeleting"
-      @cancel="isDeleteOpen = false; isBulkDelete = false; leadToDelete = null"
+      @cancel="cancelDelete"
       @confirm="confirmDelete"
     />
 
@@ -999,7 +998,7 @@
     <AppModal
       :isOpen="isFilterModalOpen"
       title="Filter Leads"
-      subtitle="Refine by multiple lead statuses and assigned staff"
+      subtitle="Refine by school, lead statuses and assigned staff"
       maxSize="480px"
       @cancel="isFilterModalOpen = false"
     >
@@ -1048,135 +1047,13 @@
           </div>
         </div>
 
-        <!-- Staff Filter (if admin) -->
-        <div v-if="canFilterAllStaff" class="pt-2">
-          <div class="flex items-center justify-between pb-2 mb-2.5 border-b border-slate-100 dark:border-neutral-800">
-            <span class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-              Assigned Staff
-            </span>
-            <button
-              v-if="tempStaff"
-              type="button"
-              @click="tempStaff = ''"
-              class="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline"
-            >
-              Clear
-            </button>
-          </div>
-
-          <select
-            v-model="tempStaff"
-            class="w-full h-11 px-3.5 rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-xs font-medium text-slate-800 dark:text-slate-100 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
-          >
-            <option value="">All Staff</option>
-            <option v-for="s in staffList" :key="s._id || s.id" :value="s._id || s.id">
-              {{ s.firstName }} {{ s.lastName || '' }}
-            </option>
-          </select>
-        </div>
-
-        <!-- Institution Type -->
-        <div class="pt-2">
-          <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 dark:border-neutral-800">
-            <span class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-              Institution Type
-            </span>
-            <button
-              v-if="tempInstitutionType"
-              type="button"
-              @click="tempInstitutionType = ''"
-              class="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline"
-            >
-              Clear
-            </button>
-          </div>
-          <select
-            v-model="tempInstitutionType"
-            class="w-full h-11 px-3.5 rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-xs font-medium text-slate-800 dark:text-slate-100 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
-          >
-            <option value="">All Institution Types</option>
-            <option v-for="t in availableInstitutionTypes" :key="t.value" :value="t.value">
-              {{ t.label }}
-            </option>
-          </select>
-        </div>
-
-        <!-- Education Board -->
-        <div class="pt-2">
-          <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 dark:border-neutral-800">
-            <span class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-              Education Board
-            </span>
-            <button
-              v-if="tempEducationBoard"
-              type="button"
-              @click="tempEducationBoard = ''"
-              class="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline"
-            >
-              Clear
-            </button>
-          </div>
-          <select
-            v-model="tempEducationBoard"
-            class="w-full h-11 px-3.5 rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-xs font-medium text-slate-800 dark:text-slate-100 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
-          >
-            <option value="">All Education Boards</option>
-            <option v-for="b in availableEducationBoards" :key="b.value" :value="b.value">
-              {{ b.label }}
-            </option>
-          </select>
-        </div>
-
-        <!-- Standard / Grade -->
-        <div class="pt-2">
-          <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 dark:border-neutral-800">
-            <span class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-              Standard / Grade
-            </span>
-            <button
-              v-if="tempStandard"
-              type="button"
-              @click="tempStandard = ''"
-              class="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline"
-            >
-              Clear
-            </button>
-          </div>
-          <select
-            v-model="tempStandard"
-            class="w-full h-11 px-3.5 rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-xs font-medium text-slate-800 dark:text-slate-100 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
-          >
-            <option value="">All Standards / Grades</option>
-            <option v-for="std in availableStandards" :key="std.value" :value="std.value">
-              {{ std.label }}
-            </option>
-          </select>
-        </div>
-
-        <!-- Academic Stream -->
-        <div class="pt-2">
-          <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 dark:border-neutral-800">
-            <span class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-              Academic Stream
-            </span>
-            <button
-              v-if="tempAcademicStream"
-              type="button"
-              @click="tempAcademicStream = ''"
-              class="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline"
-            >
-              Clear
-            </button>
-          </div>
-          <select
-            v-model="tempAcademicStream"
-            class="w-full h-11 px-3.5 rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-xs font-medium text-slate-800 dark:text-slate-100 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
-          >
-            <option value="">All Academic Streams</option>
-            <option v-for="str in availableStreams" :key="str.value" :value="str.value">
-              {{ str.label }}
-            </option>
-          </select>
+        <div class="grid gap-3">
+          <SchoolFilter id="lead-school-filter" v-model="tempSchool" :options="schoolOptions" :loading="schoolOptionsLoading" :error="schoolOptionsError" @retry="loadSchoolOptions" />
+          <AppMultiSelect v-if="canFilterAllStaff" id="lead-staff-filter" v-model="tempStaff" label="Assigned Staff" :options="staffFilterOptions" searchable placeholder="All staff" />
+          <AppMultiSelect id="lead-institution-filter" v-model="tempInstitutionType" label="Institution Type" :options="availableInstitutionTypes" placeholder="All institution types" />
+          <AppMultiSelect id="lead-board-filter" v-model="tempEducationBoard" label="Education Board" :options="availableEducationBoards" placeholder="All education boards" />
+          <AppMultiSelect id="lead-grade-filter" v-model="tempStandard" label="Standard / Grade" :options="availableStandards" placeholder="All standards / grades" />
+          <AppMultiSelect id="lead-stream-filter" v-model="tempAcademicStream" label="Academic Stream" :options="availableStreams" placeholder="All academic streams" />
         </div>
       </div>
 
@@ -1215,9 +1092,9 @@ import {
   PhDotsThreeVertical,
   PhPlus,
   PhTrash,
+  PhCheckSquare,
   PhMagnifyingGlass,
   PhArrowsClockwise,
-  PhScales,
   PhPhone,
   PhPhoneCall,
   PhWhatsappLogo,
@@ -1229,6 +1106,9 @@ import {
   PhGraduationCap,
 } from "@phosphor-icons/vue";
 import AppTable from "@/components/AppTable.vue";
+import AppPagination from "@/components/AppPagination.vue";
+import SchoolFilter from "../components/SchoolFilter.vue";
+import AppMultiSelect from "@/components/AppMultiSelect.vue";
 import AppDrawer from "@/components/AppDrawer.vue";
 import AppModal from "@/components/AppModal.vue";
 import AppSpinner from "@/components/AppSpinner.vue";
@@ -1244,7 +1124,10 @@ import apiClient from "@/api/client";
 import {
   createEducationLead,
   deleteEducationLead,
+  bulkDeleteEducationLeads,
   fetchEducationLeads,
+  fetchEducationLeadSelection,
+  fetchEducationLeadSchools,
 } from "../api/endpoints";
 import { fetchCustomFields } from "@/api/customFields";
 
@@ -1288,6 +1171,7 @@ const canFilterAllStaff = computed(() => {
 const columns = computed(() => {
   const cols = [
     { key: "student", label: "Student" },
+    { key: "schoolName", label: "School / College" },
     { key: "parent", label: "Parent" },
   ];
   // Only show "Assigned staff" to admins/managers overseeing staff allocation
@@ -1334,7 +1218,36 @@ function statusClass(status) {
 }
 
 const selectedRows = ref([]);
+const selectingAll = ref(false);
+let selectionVersion = 0;
+function clearSelection() {
+  selectionVersion++;
+  selectingAll.value = false;
+  selectedRows.value = [];
+}
+
+async function selectAllMatching() {
+  const version = ++selectionVersion;
+  selectingAll.value = true;
+  try {
+    const res = await fetchEducationLeadSelection(getLeadFilters());
+    if (version !== selectionVersion) return;
+    selectedRows.value = res.data || [];
+  } catch (err) {
+    if (version === selectionVersion) {
+      store.dispatch("notifications/triggerToast", {
+        message: err.message || "Unable to select all leads. Please try again.",
+        type: "error",
+      });
+    }
+  } finally {
+    if (version === selectionVersion) selectingAll.value = false;
+  }
+}
+
 const handleSelectionChange = (selection) => {
+  selectionVersion++;
+  selectingAll.value = false;
   selectedRows.value = selection;
 };
 
@@ -1344,6 +1257,8 @@ const isRowSelected = (row) => {
 };
 
 const toggleRowSelection = (row) => {
+  selectionVersion++;
+  selectingAll.value = false;
   const rowId = row._id || row.id;
   const idx = selectedRows.value.findIndex((r) => (r._id || r.id) === rowId);
   if (idx >= 0) {
@@ -1359,11 +1274,9 @@ const isAllSelected = computed(() => {
 });
 
 const toggleSelectAll = () => {
-  if (isAllSelected.value) {
-    selectedRows.value = [];
-  } else {
-    selectedRows.value = [...rows.value];
-  }
+  const pageIds = new Set(rows.value.map((row) => row._id || row.id));
+  const outsidePage = selectedRows.value.filter((row) => !pageIds.has(row._id || row.id));
+  handleSelectionChange(isAllSelected.value ? outsidePage : [...outsidePage, ...rows.value]);
 };
 
 const showBulkUpload = ref(false);
@@ -1372,20 +1285,42 @@ const rows = ref([]);
 const loading = ref(false);
 const search = ref("");
 const statusFilter = ref("");
-const staffFilter = ref("");
+const staffFilter = ref([]);
+const schoolFilter = ref([]);
+const tempSchool = ref([]);
+const schoolOptions = ref([]);
+const schoolOptionsError = ref(false);
+const schoolOptionsLoading = ref(false);
+
+async function loadSchoolOptions() {
+  schoolOptionsLoading.value = true;
+  schoolOptionsError.value = false;
+  try {
+    const res = await fetchEducationLeadSchools();
+    schoolOptions.value = res.data || [];
+  } catch {
+    schoolOptionsError.value = true;
+  } finally {
+    schoolOptionsLoading.value = false;
+  }
+}
 const sourceFilter = ref("");
 const staffList = ref([]);
+const staffFilterOptions = computed(() => staffList.value.map(staff => ({
+  value: staff._id || staff.id,
+  label: [staff.firstName, staff.lastName].filter(Boolean).join(' ') || staff.email,
+})));
 
-const institutionTypeFilter = ref("");
-const educationBoardFilter = ref("");
-const standardFilter = ref("");
-const academicStreamFilter = ref("");
+const institutionTypeFilter = ref([]);
+const educationBoardFilter = ref([]);
+const standardFilter = ref([]);
+const academicStreamFilter = ref([]);
 
-const tempStaff = ref("");
-const tempInstitutionType = ref("");
-const tempEducationBoard = ref("");
-const tempStandard = ref("");
-const tempAcademicStream = ref("");
+const tempStaff = ref([]);
+const tempInstitutionType = ref([]);
+const tempEducationBoard = ref([]);
+const tempStandard = ref([]);
+const tempAcademicStream = ref([]);
 
 const availableInstitutionTypes = [
   { value: "School", label: "School" },
@@ -1429,16 +1364,17 @@ const tempStatuses = ref([]);
 
 const activeFilterCount = computed(() => {
   let count = selectedStatuses.value.length;
-  if (staffFilter.value) count += 1;
-  if (institutionTypeFilter.value) count += 1;
-  if (educationBoardFilter.value) count += 1;
-  if (standardFilter.value) count += 1;
-  if (academicStreamFilter.value) count += 1;
+  count += schoolFilter.value.length;
+  count += staffFilter.value.length;
+  count += institutionTypeFilter.value.length;
+  count += educationBoardFilter.value.length;
+  count += standardFilter.value.length;
+  count += academicStreamFilter.value.length;
   return count;
 });
 
 const filterButtonLabel = computed(() => {
-  if (activeFilterCount.value === 0) return "All statuses (Multi-select)";
+  if (activeFilterCount.value === 0) return "Filters (Multi-select)";
   if (selectedStatuses.value.length === 1 && activeFilterCount.value === 1) {
     return getStatusLabel(selectedStatuses.value[0]);
   }
@@ -1446,31 +1382,35 @@ const filterButtonLabel = computed(() => {
 });
 
 function openFilterModal() {
+  tempSchool.value = [...schoolFilter.value];
+  loadSchoolOptions();
   tempStatuses.value = [...selectedStatuses.value];
-  tempStaff.value = staffFilter.value;
-  tempInstitutionType.value = institutionTypeFilter.value;
-  tempEducationBoard.value = educationBoardFilter.value;
-  tempStandard.value = standardFilter.value;
-  tempAcademicStream.value = academicStreamFilter.value;
+  tempStaff.value = [...staffFilter.value];
+  tempInstitutionType.value = [...institutionTypeFilter.value];
+  tempEducationBoard.value = [...educationBoardFilter.value];
+  tempStandard.value = [...standardFilter.value];
+  tempAcademicStream.value = [...academicStreamFilter.value];
   isFilterModalOpen.value = true;
 }
 
 function clearFiltersInModal() {
+  tempSchool.value = [];
   tempStatuses.value = [];
-  tempStaff.value = "";
-  tempInstitutionType.value = "";
-  tempEducationBoard.value = "";
-  tempStandard.value = "";
-  tempAcademicStream.value = "";
+  tempStaff.value = [];
+  tempInstitutionType.value = [];
+  tempEducationBoard.value = [];
+  tempStandard.value = [];
+  tempAcademicStream.value = [];
 }
 
 function applyFiltersInModal() {
+  schoolFilter.value = [...tempSchool.value];
   selectedStatuses.value = [...tempStatuses.value];
-  staffFilter.value = tempStaff.value;
-  institutionTypeFilter.value = tempInstitutionType.value;
-  educationBoardFilter.value = tempEducationBoard.value;
-  standardFilter.value = tempStandard.value;
-  academicStreamFilter.value = tempAcademicStream.value;
+  staffFilter.value = [...tempStaff.value];
+  institutionTypeFilter.value = [...tempInstitutionType.value];
+  educationBoardFilter.value = [...tempEducationBoard.value];
+  standardFilter.value = [...tempStandard.value];
+  academicStreamFilter.value = [...tempAcademicStream.value];
   statusFilter.value = selectedStatuses.value.length === 1 ? selectedStatuses.value[0] : "";
   isFilterModalOpen.value = false;
   onFilterChange();
@@ -1483,13 +1423,14 @@ function removeStatusFilter(statusVal) {
 }
 
 function clearAllFilters() {
+  schoolFilter.value = [];
   selectedStatuses.value = [];
   statusFilter.value = "";
-  staffFilter.value = "";
-  institutionTypeFilter.value = "";
-  educationBoardFilter.value = "";
-  standardFilter.value = "";
-  academicStreamFilter.value = "";
+  staffFilter.value = [];
+  institutionTypeFilter.value = [];
+  educationBoardFilter.value = [];
+  standardFilter.value = [];
+  academicStreamFilter.value = [];
   search.value = "";
   onFilterChange();
 }
@@ -1560,15 +1501,24 @@ const openBulkDelete = () => {
   isDeleteOpen.value = true;
 };
 
+const cancelDelete = () => {
+  if (isDeleting.value) return;
+  isDeleteOpen.value = false;
+  isBulkDelete.value = false;
+  leadToDelete.value = null;
+};
+
 const confirmDelete = async () => {
+  if (isDeleting.value) return;
   isDeleting.value = true;
   try {
     if (isBulkDelete.value) {
       const ids = selectedRows.value.map((r) => r._id || r.id);
-      await Promise.all(ids.map((id) => deleteEducationLead(id)));
+      const response = await bulkDeleteEducationLeads(ids);
+      const { deletedCount, skippedCount } = response.data;
       store.dispatch("notifications/triggerToast", {
-        message: `${ids.length} student leads deleted successfully.`,
-        type: "success",
+        message: `${deletedCount} student leads deleted.${skippedCount ? ` ${skippedCount} already deleted or unavailable leads skipped.` : ""}`,
+        type: deletedCount ? "success" : "info",
       });
       selectedRows.value = [];
     } else if (leadToDelete.value) {
@@ -1582,10 +1532,11 @@ const confirmDelete = async () => {
     }
     isDeleteOpen.value = false;
     isBulkDelete.value = false;
+    pagination.value.page = 1;
     await load();
   } catch (err) {
     store.dispatch("notifications/triggerToast", {
-      message: err.data?.message || err.message || "Failed to delete student lead(s).",
+      message: err.response?.data?.error?.message || err.data?.error?.message || err.data?.message || err.message || "Failed to delete student lead(s).",
       type: "error",
     });
   } finally {
@@ -1604,16 +1555,6 @@ const openAssign = (row) => {
 const openBulkAssign = () => {
   targetAssignIds.value = selectedRows.value.map((r) => r._id || r.id);
   assignModalMode.value = "single";
-  isAssignOpen.value = true;
-};
-const openEqualDistribute = () => {
-  targetAssignIds.value = selectedRows.value.map((r) => r._id || r.id);
-  assignModalMode.value = "equal";
-  isAssignOpen.value = true;
-};
-const openRoundRobinAssign = () => {
-  targetAssignIds.value = selectedRows.value.map((r) => r._id || r.id);
-  assignModalMode.value = "round_robin";
   isAssignOpen.value = true;
 };
 const handleAssignSuccess = () => {
@@ -1730,39 +1671,58 @@ const handleReminderSuccess = () => {
   load();
 };
 
+function getLeadFilters() {
+  const statusParam = selectedStatuses.value.length > 0
+    ? selectedStatuses.value.join(",")
+    : (statusFilter.value || undefined);
+
+  return {
+    search: search.value.trim() || undefined,
+    status: statusParam,
+    assignedTo: staffFilter.value.length ? [...staffFilter.value] : undefined,
+    schoolName: schoolFilter.value.length ? [...schoolFilter.value] : undefined,
+    source: sourceFilter.value || undefined,
+    institutionType: institutionTypeFilter.value.length ? [...institutionTypeFilter.value] : undefined,
+    educationBoard: educationBoardFilter.value.length ? [...educationBoardFilter.value] : undefined,
+    standard: standardFilter.value.length ? [...standardFilter.value] : undefined,
+    academicStream: academicStreamFilter.value.length ? [...academicStreamFilter.value] : undefined,
+  };
+}
+
+let loadVersion = 0;
 async function load() {
+  const version = ++loadVersion;
+  const requestedLimit = pagination.value.limit;
   loading.value = true;
   try {
-    const statusParam = selectedStatuses.value.length > 0
-      ? selectedStatuses.value.join(",")
-      : (statusFilter.value || undefined);
-
     const res = await fetchEducationLeads({
-      search: search.value.trim() || undefined,
-      status: statusParam,
-      assignedTo: staffFilter.value || undefined,
-      source: sourceFilter.value || undefined,
-      institutionType: institutionTypeFilter.value || undefined,
-      educationBoard: educationBoardFilter.value || undefined,
-      standard: standardFilter.value || undefined,
-      academicStream: academicStreamFilter.value || undefined,
+      ...getLeadFilters(),
       page: pagination.value.page,
       limit: pagination.value.limit,
     });
+    if (version !== loadVersion) return;
     rows.value = res.data || [];
     const p = res.pagination || {};
     pagination.value = {
       page: Number(p.page) || pagination.value.page,
-      limit: Number(p.limit) || pagination.value.limit,
-      total: Number(p.total) || rows.value.length,
+      limit: requestedLimit === 'all' ? 'all' : Number(p.limit) || requestedLimit,
+      total: Number(p.total ?? rows.value.length),
       totalPages: Number(p.pages || p.totalPages) || 1,
     };
+  } catch (err) {
+    if (version === loadVersion) {
+      store.dispatch("notifications/triggerToast", {
+        message: err.message || "Unable to load leads. Please try again.",
+        type: "error",
+      });
+    }
   } finally {
-    loading.value = false;
+    if (version === loadVersion) loading.value = false;
   }
 }
 
 function handlePageChange(page) {
+  if (page < 1 || page > pagination.value.totalPages) return;
   pagination.value.page = page;
   load();
 }
@@ -1774,11 +1734,14 @@ function handlePageSizeChange(limit) {
 }
 
 function onFilterChange() {
+  clearTimeout(timer);
+  clearSelection();
   pagination.value.page = 1;
   load();
 }
 
 function handleSearch() {
+  clearSelection();
   clearTimeout(timer);
   timer = setTimeout(() => {
     pagination.value.page = 1;

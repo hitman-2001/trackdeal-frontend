@@ -97,7 +97,7 @@
           <span>Filters</span>
           <span
             v-if="activeFilterCount > 0"
-            class="w-4.5 h-4.5 rounded-full bg-blue-600 text-white text-[10px] font-bold inline-flex items-center justify-center shrink-0"
+            class="min-w-[18px] h-[18px] px-1 rounded-full bg-blue-600 text-white text-[10px] font-bold inline-flex items-center justify-center shrink-0"
           >
             {{ activeFilterCount }}
           </span>
@@ -118,6 +118,17 @@
         </button>
 
         <button
+          v-if="schoolFilter.length"
+          type="button"
+          :title="schoolFilter.join(', ')"
+          @click="schoolFilter = []; onFilterChange()"
+          class="h-6 max-w-full px-2.5 rounded-lg bg-sky-50 dark:bg-sky-950/60 border border-sky-200 dark:border-sky-800 text-[11px] font-semibold text-sky-700 dark:text-sky-300 inline-flex items-center gap-1"
+        >
+          <span class="truncate max-w-[12rem]">{{ schoolFilter.length === 1 ? 'School: ' + schoolFilter[0] : schoolFilter.length + ' schools' }}</span>
+          <PhX :size="11" weight="bold" class="shrink-0" />
+        </button>
+
+        <button
           type="button"
           @click="clearAllFilters"
           class="h-6 px-2 text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline inline-flex items-center"
@@ -128,36 +139,56 @@
     </div>
 
     <!-- Desktop Filter & Search Bar (sm and above) -->
-    <div class="hidden sm:flex p-3.5 rounded-2xl bg-surface border border-default shadow-xs flex-col sm:flex-row sm:items-center justify-between gap-3">
-      <div class="flex items-center gap-2.5 flex-1 flex-wrap">
-        <!-- Search Field -->
-        <div class="relative w-full sm:w-80">
-          <PhMagnifyingGlass :size="15" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input 
-            v-model="search" 
-            type="text" 
-            placeholder="Search student, school, mobile..." 
-            class="w-full bg-slate-50 dark:bg-slate-850 border border-default rounded-xl pl-9 pr-3 py-2 text-xs focus:border-primary outline-none text-slate-800 dark:text-slate-200 placeholder:text-slate-400" 
-            @input="handleSearch" 
-          />
+    <div class="hidden sm:block p-3.5 rounded-2xl bg-surface border border-default shadow-xs space-y-3">
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 flex-1 flex-wrap">
+          <!-- Search Field -->
+          <div class="relative w-full sm:w-80">
+            <PhMagnifyingGlass :size="15" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              v-model="search"
+              type="text"
+              placeholder="Search student, school, mobile..."
+              class="w-full bg-slate-50 dark:bg-slate-850 border border-default rounded-xl pl-9 pr-3 py-2 text-xs focus:border-primary outline-none text-slate-800 dark:text-slate-200 placeholder:text-slate-400"
+              @input="handleSearch"
+            />
+          </div>
+
+          <!-- Status Filter Button / Trigger -->
+          <button
+            type="button"
+            @click="openFilterModal"
+            class="bg-slate-50 dark:bg-slate-850 border border-default hover:border-blue-400 rounded-xl px-3 py-2 text-xs text-slate-700 dark:text-slate-300 outline-none inline-flex items-center gap-2 cursor-pointer transition-colors"
+          >
+            <span>{{ activeFilterCount ? `${activeFilterCount} filters active` : 'Filters (Multi-select)' }}</span>
+            <PhSlidersHorizontal :size="14" class="text-slate-400 shrink-0" />
+          </button>
         </div>
 
-        <!-- Status Filter Button / Trigger -->
-        <button
-          type="button"
-          @click="openFilterModal"
-          class="bg-slate-50 dark:bg-slate-850 border border-default hover:border-blue-400 rounded-xl px-3 py-2 text-xs text-slate-700 dark:text-slate-300 outline-none inline-flex items-center gap-2 cursor-pointer transition-colors"
-        >
-          <span>{{ selectedStatuses.length === 0 ? 'All Statuses (Multi-select)' : (selectedStatuses.length === 1 ? getStatusLabel(selectedStatuses[0]) : `${selectedStatuses.length} statuses selected`) }}</span>
-          <PhSlidersHorizontal :size="14" class="text-slate-400 shrink-0" />
-        </button>
+        <!-- Results Pill -->
+        <div class="flex items-center gap-2 self-end sm:self-auto">
+          <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 font-tabular bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg border border-default/60">
+            {{ pagination.total }} {{ pagination.total === 1 ? 'Student' : 'Students' }}
+          </span>
+        </div>
       </div>
+      <div v-if="activeFilterCount > 0" class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-neutral-800">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mr-1">Active:</span>
+        <button v-for="status in selectedStatuses" :key="status" type="button" @click="removeStatusFilter(status)" class="h-6 px-2.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-[11px] font-semibold text-blue-700 dark:text-blue-300 inline-flex items-center gap-1">
+          {{ getStatusLabel(status) }}<PhX :size="11" weight="bold" />
+        </button>
+        <button
+          v-if="schoolFilter.length"
+          type="button"
+          :title="schoolFilter.join(', ')"
+          @click="schoolFilter = []; onFilterChange()"
+          class="h-6 max-w-full px-2.5 rounded-lg bg-sky-50 dark:bg-sky-950/60 border border-sky-200 dark:border-sky-800 text-[11px] font-semibold text-sky-700 dark:text-sky-300 inline-flex items-center gap-1"
+        >
+          <span class="truncate max-w-[12rem]">{{ schoolFilter.length === 1 ? 'School: ' + schoolFilter[0] : schoolFilter.length + ' schools' }}</span>
+          <PhX :size="11" weight="bold" class="shrink-0" />
+        </button>
 
-      <!-- Results Pill -->
-      <div class="flex items-center gap-2 self-end sm:self-auto">
-        <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 font-tabular bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg border border-default/60">
-          {{ pagination.total }} {{ pagination.total === 1 ? 'Student' : 'Students' }}
-        </span>
+        <button type="button" @click="clearAllFilters" class="h-6 px-2 text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline">Clear all</button>
       </div>
     </div>
 
@@ -234,6 +265,7 @@
         :selectable="canDeleteStudent"
         :selectedRows="selectedRows"
         :pagination="pagination"
+        :page-size-options="[20, 50, 'all']"
         :sorting="sorting"
         row-actions-label="Actions"
         empty-title="No students enrolled yet"
@@ -250,16 +282,19 @@
             <div class="font-bold text-slate-900 dark:text-slate-100 text-xs hover:text-primary transition-colors">
               {{ row.firstName }} {{ row.lastName || '' }}
             </div>
-            <div v-if="row.schoolName" class="text-slate-500 dark:text-slate-400 text-[10px] truncate max-w-[180px]">
-              {{ row.schoolName }}
-            </div>
-            <div v-else-if="row.email" class="text-slate-400 text-[10px] truncate max-w-[150px]">
+            <div v-if="row.email" class="text-slate-400 text-[10px] truncate max-w-[150px]">
               {{ row.email }}
             </div>
           </div>
         </template>
 
         <!-- Cell: Contact Phone -->
+        <template #cell(schoolName)="{ row }">
+          <div class="w-48 lg:w-60 whitespace-normal [overflow-wrap:anywhere] text-xs leading-relaxed font-medium text-slate-700 dark:text-slate-300" :title="row.schoolName || row.leadId?.schoolName || ''">
+            {{ row.schoolName || row.leadId?.schoolName || '—' }}
+          </div>
+        </template>
+
         <template #cell(contact)="{ row }">
           <div class="font-tabular font-medium text-slate-700 dark:text-slate-300 text-xs">
             {{ row.mobile }}
@@ -399,6 +434,7 @@
                 <h3 class="font-bold text-base text-slate-900 dark:text-slate-100 tracking-tight leading-snug break-words">
                   {{ row.firstName }} {{ row.lastName || '' }}
                 </h3>
+                <p v-if="row.schoolName || row.leadId?.schoolName" class="mt-1 text-xs text-slate-500 whitespace-normal [overflow-wrap:anywhere]">{{ row.schoolName || row.leadId?.schoolName }}</p>
                 <!-- Phone & Class/Batch tags directly below name -->
                 <div class="flex items-center flex-wrap gap-2 mt-1.5">
                   <a
@@ -481,25 +517,15 @@
       </template>
 
       <!-- Mobile Pagination Controls -->
-      <div v-if="pagination.totalPages > 1" class="flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm text-xs font-semibold">
-        <button
-          type="button"
-          :disabled="pagination.page <= 1"
-          @click="handlePageChange(pagination.page - 1)"
-          class="h-9 px-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-40 transition-colors"
-        >
-          Previous
-        </button>
-        <span class="text-slate-400 font-medium">{{ pagination.page }} / {{ pagination.totalPages }}</span>
-        <button
-          type="button"
-          :disabled="pagination.page >= pagination.totalPages"
-          @click="handlePageChange(pagination.page + 1)"
-          class="h-9 px-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-40 transition-colors"
-        >
-          Next
-        </button>
-      </div>
+      <AppPagination
+        :page="pagination.page"
+        :page-size="pagination.limit"
+        :total="pagination.total"
+        :total-pages="pagination.totalPages"
+        :page-size-options="[20, 50, 'all']"
+        @page-change="handlePageChange"
+        @page-size-change="handlePageSizeChange"
+      />
     </div>
 
     <!-- View Student Details Drawer -->
@@ -893,7 +919,7 @@
     <AppModal
       :isOpen="isFilterModalOpen"
       title="Filter Students"
-      subtitle="Refine by multiple student statuses"
+      subtitle="Refine by school and multiple student statuses"
       maxSize="480px"
       @cancel="isFilterModalOpen = false"
     >
@@ -941,6 +967,7 @@
             </label>
           </div>
         </div>
+        <SchoolFilter id="student-school-filter" v-model="tempSchool" :options="schoolOptions" :loading="schoolOptionsLoading" :error="schoolOptionsError" @retry="loadSchoolOptions" />
       </div>
 
       <template #footer>
@@ -957,7 +984,7 @@
             @click="applyFiltersInModal"
             class="h-10 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs active:scale-95 transition-all text-center"
           >
-            Apply Filters {{ tempStatuses.length > 0 ? `(${tempStatuses.length})` : '' }}
+            Apply Filters
           </button>
         </div>
       </template>
@@ -996,12 +1023,15 @@ import {
 } from '@phosphor-icons/vue';
 import Swal from 'sweetalert2';
 import AppTable from '@/components/AppTable.vue';
+import AppPagination from '@/components/AppPagination.vue';
+import SchoolFilter from '../components/SchoolFilter.vue';
 import AppDrawer from '@/components/AppDrawer.vue';
 import AppModal from '@/components/AppModal.vue';
 import LeadBulkUploadModal from '@/modules/leads/components/LeadBulkUploadModal.vue';
 import { 
   createEducationStudent, 
   fetchEducationStudents,
+  fetchEducationStudentSchools,
   updateEducationStudent,
   deleteEducationStudent,
   bulkDeleteEducationStudents
@@ -1028,6 +1058,7 @@ const canDeleteStudent = computed(() => {
 
 const columns = [
   { key: 'student', label: 'Student', sortable: true },
+  { key: 'schoolName', label: 'School / College' },
   { key: 'contact', label: 'Contact', sortable: false },
   { key: 'parent', label: 'Parent / Guardian', sortable: false },
   { key: 'status', label: 'Status', sortable: true },
@@ -1069,6 +1100,24 @@ function toggleRowSelection(row) {
 const loading = ref(false);
 const search = ref('');
 const statusFilter = ref('');
+const schoolFilter = ref([]);
+const tempSchool = ref([]);
+const schoolOptions = ref([]);
+const schoolOptionsError = ref(false);
+const schoolOptionsLoading = ref(false);
+
+async function loadSchoolOptions() {
+  schoolOptionsLoading.value = true;
+  schoolOptionsError.value = false;
+  try {
+    const res = await fetchEducationStudentSchools();
+    schoolOptions.value = res.data || [];
+  } catch {
+    schoolOptionsError.value = true;
+  } finally {
+    schoolOptionsLoading.value = false;
+  }
+}
 
 const availableStatuses = [
   { value: 'active', label: 'Enrolled', badgeClass: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/40' },
@@ -1082,19 +1131,23 @@ const selectedStatuses = ref([]);
 const tempStatuses = ref([]);
 
 const activeFilterCount = computed(() => {
-  return selectedStatuses.value.length;
+  return selectedStatuses.value.length + schoolFilter.value.length;
 });
 
 function openFilterModal() {
+  tempSchool.value = [...schoolFilter.value];
+  loadSchoolOptions();
   tempStatuses.value = [...selectedStatuses.value];
   isFilterModalOpen.value = true;
 }
 
 function clearFiltersInModal() {
+  tempSchool.value = [];
   tempStatuses.value = [];
 }
 
 function applyFiltersInModal() {
+  schoolFilter.value = [...tempSchool.value];
   selectedStatuses.value = [...tempStatuses.value];
   statusFilter.value = selectedStatuses.value.length === 1 ? selectedStatuses.value[0] : '';
   isFilterModalOpen.value = false;
@@ -1108,6 +1161,7 @@ function removeStatusFilter(statusVal) {
 }
 
 function clearAllFilters() {
+  schoolFilter.value = [];
   selectedStatuses.value = [];
   statusFilter.value = '';
   search.value = '';
@@ -1130,7 +1184,7 @@ function getStudentVal(field) {
 
 const pagination = ref({
   page: 1,
-  limit: 10,
+  limit: 20,
   total: 0,
   totalPages: 1,
 });
@@ -1264,7 +1318,10 @@ function getStatusDotClass(status) {
   return 'bg-slate-400';
 }
 
+let loadVersion = 0;
 async function load() {
+  const version = ++loadVersion;
+  const requestedLimit = pagination.value.limit;
   loading.value = true;
   selectedRows.value = [];
   try {
@@ -1274,20 +1331,22 @@ async function load() {
 
     const res = await fetchEducationStudents({
       search: search.value.trim() || undefined,
+      schoolName: schoolFilter.value.length ? [...schoolFilter.value] : undefined,
       status: statusParam,
       page: pagination.value.page,
       limit: pagination.value.limit,
     });
+    if (version !== loadVersion) return;
     rows.value = res.data || [];
     const p = res.pagination || {};
     pagination.value = {
       page: Number(p.page) || pagination.value.page,
-      limit: Number(p.limit) || pagination.value.limit,
-      total: Number(p.total) || rows.value.length,
+      limit: requestedLimit === 'all' ? 'all' : Number(p.limit) || requestedLimit,
+      total: Number(p.total ?? rows.value.length),
       totalPages: Number(p.pages || p.totalPages) || 1,
     };
   } finally {
-    loading.value = false;
+    if (version === loadVersion) loading.value = false;
   }
 }
 
@@ -1300,6 +1359,7 @@ function handleSearch() {
 }
 
 function onFilterChange() {
+  clearTimeout(timer);
   pagination.value.page = 1;
   load();
 }
@@ -1409,6 +1469,7 @@ async function save() {
     }
     showModal.value = false;
     await load();
+    await loadSchoolOptions();
   } catch (err) {
     error.value = err.data?.message || err.message || 'Unable to save student.';
   } finally {
@@ -1512,6 +1573,7 @@ function formatDate(d) {
 onMounted(async () => {
   loadCustomFields();
   await load();
+  await loadSchoolOptions();
 });
 </script>
 
