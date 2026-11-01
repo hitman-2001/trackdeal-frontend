@@ -1082,6 +1082,7 @@
 <script setup>
 import { onMounted, ref, computed } from "vue";
 import { useStore } from "vuex";
+import { useRoute } from "vue-router";
 import {
   PhFileArrowUp,
   PhCheckCircle,
@@ -1134,6 +1135,7 @@ import {
 import { fetchCustomFields } from "@/api/customFields";
 
 const store = useStore();
+const route = useRoute();
 const canCreateLead = computed(() => {
   return Boolean(store.getters["permissions/hasCapability"]?.("leads.create"));
 });
@@ -1198,6 +1200,18 @@ function statusClass(status) {
   if (value === "new" || value === "assigned") {
     return "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40";
   }
+  if (value === "interested") {
+    return "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40";
+  }
+  if (value === "call_back") {
+    return "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/40";
+  }
+  if (value === "future_prospect") {
+    return "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/40";
+  }
+  if (value === "not_interested" || value === "lost") {
+    return "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200/60 dark:border-rose-800/40";
+  }
   if (value === "contacted") {
     return "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/40";
   }
@@ -1212,9 +1226,6 @@ function statusClass(status) {
   }
   if (value === "application_trial") {
     return "bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300 border border-violet-200/60 dark:border-violet-800/40";
-  }
-  if (value === "lost") {
-    return "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200/60 dark:border-rose-800/40";
   }
   return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700";
 }
@@ -1353,6 +1364,8 @@ const availableStreams = [
 const assignModalMode = ref("single");
 
 const availableStatuses = [
+  { value: "new", label: "New Inquiries" },
+  { value: "assigned", label: "Assigned" },
   { value: "interested", label: "Interested" },
   { value: "call_back", label: "Call Back" },
   { value: "future_prospect", label: "Future Prospect" },
@@ -1926,6 +1939,15 @@ async function save() {
 }
 
 onMounted(async () => {
+  if (route.query.status) {
+    const raw = String(route.query.status);
+    selectedStatuses.value = raw.split(',').map((s) => s.trim()).filter(Boolean);
+    statusFilter.value = selectedStatuses.value.length === 1 ? selectedStatuses.value[0] : "";
+  }
+  if (route.query.staffId) {
+    staffFilter.value = [String(route.query.staffId)];
+  }
+
   try {
     if (canFilterAllStaff.value) {
       const staffRes = await apiClient.get('/users', { params: { limit: 200, status: 'active' }, silent: true, skipErrorToast: true }).catch(() => ({ data: { data: [] } }));
