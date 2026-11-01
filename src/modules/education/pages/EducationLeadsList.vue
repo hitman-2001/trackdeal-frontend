@@ -1120,11 +1120,13 @@ import EducationLeadReminderModal from "../components/EducationLeadReminderModal
 import EducationLeadStatusModal from "../components/EducationLeadStatusModal.vue";
 import LeadAssignModal from "@/modules/leads/components/LeadAssignModal.vue";
 import LeadBulkUploadModal from "@/modules/leads/components/LeadBulkUploadModal.vue";
+import Swal from "sweetalert2";
 import apiClient from "@/api/client";
 import {
   createEducationLead,
   deleteEducationLead,
   bulkDeleteEducationLeads,
+  checkEducationLeadHasActiveTasks,
   fetchEducationLeads,
   fetchEducationLeadSelection,
   fetchEducationLeadSchools,
@@ -1487,8 +1489,37 @@ const deleteModalItemName = computed(() => {
   return `${leadToDelete.value.firstName} ${leadToDelete.value.lastName || ""}`.trim();
 });
 
-const handleDelete = (row) => {
+const handleDelete = async (row) => {
   closeActionMenu();
+  const leadId = row._id || row.id;
+
+  try {
+    const res = await checkEducationLeadHasActiveTasks(leadId);
+    const hasActive = res?.data?.hasActiveTasks ?? res?.hasActiveTasks;
+    if (hasActive) {
+      await Swal.fire({
+        icon: "warning",
+        title: "Active Task Pending",
+        html: `
+          <div class="text-slate-600 dark:text-slate-300 text-sm space-y-2 text-left">
+            <p>This student lead currently has an <strong>active or scheduled task</strong> assigned.</p>
+            <p class="text-slate-500 dark:text-neutral-400">Please complete the task then delete the lead.</p>
+          </div>
+        `,
+        confirmButtonText: "Understood",
+        confirmButtonColor: "#3b82f6",
+        customClass: {
+          popup: "rounded-2xl shadow-2xl border border-slate-200 dark:border-neutral-800 dark:bg-neutral-900",
+          title: "text-base font-bold text-slate-800 dark:text-slate-100",
+          confirmButton: "rounded-xl text-xs font-bold px-4 py-2.5 shadow-sm cursor-pointer",
+        },
+      });
+      return;
+    }
+  } catch {
+    // If check fails, fallback to confirmation modal and backend will strictly enforce
+  }
+
   isBulkDelete.value = false;
   leadToDelete.value = row;
   isDeleteOpen.value = true;
@@ -1535,8 +1566,34 @@ const confirmDelete = async () => {
     pagination.value.page = 1;
     await load();
   } catch (err) {
+    const errCode = err.response?.data?.error?.code || err.data?.error?.code;
+    const errMsg = err.response?.data?.error?.message || err.data?.error?.message || err.data?.message || err.message;
+
+    if (errCode === "LEAD_HAS_ACTIVE_TASKS" || (errMsg && errMsg.toLowerCase().includes("complete the task"))) {
+      isDeleteOpen.value = false;
+      isBulkDelete.value = false;
+      await Swal.fire({
+        icon: "warning",
+        title: "Active Task Pending",
+        html: `
+          <div class="text-slate-600 dark:text-slate-300 text-sm space-y-2 text-left">
+            <p>${isBulkDelete.value ? "One or more selected student leads have" : "This student lead has"} an <strong>active or scheduled task</strong> assigned.</p>
+            <p class="text-slate-500 dark:text-neutral-400">Please complete the task then delete the lead.</p>
+          </div>
+        `,
+        confirmButtonText: "Understood",
+        confirmButtonColor: "#3b82f6",
+        customClass: {
+          popup: "rounded-2xl shadow-2xl border border-slate-200 dark:border-neutral-800 dark:bg-neutral-900",
+          title: "text-base font-bold text-slate-800 dark:text-slate-100",
+          confirmButton: "rounded-xl text-xs font-bold px-4 py-2.5 shadow-sm cursor-pointer",
+        },
+      });
+      return;
+    }
+
     store.dispatch("notifications/triggerToast", {
-      message: err.response?.data?.error?.message || err.data?.error?.message || err.data?.message || err.message || "Failed to delete student lead(s).",
+      message: errMsg || "Failed to delete student lead(s).",
       type: "error",
     });
   } finally {

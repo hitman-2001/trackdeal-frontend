@@ -29,8 +29,13 @@ export async function updateLead({ id, ...data }) {
   return response.data;
 }
 
+export async function checkLeadHasActiveTasks(id) {
+  const response = await apiClient.get(`/leads/${id}/has-active-tasks`, { skipErrorToast: true, silent: true });
+  return response.data;
+}
+
 export async function deleteLead(id) {
-  const response = await apiClient.delete(`/leads/${id}`);
+  const response = await apiClient.delete(`/leads/${id}`, { skipErrorToast: true });
   return response.data;
 }
 
@@ -199,6 +204,7 @@ export default {
   createLead,
   updateLead,
   deleteLead,
+  checkLeadHasActiveTasks,
   assignLead,
   bulkAssignLeads,
   distributeLeadsBatchRoundRobin,
