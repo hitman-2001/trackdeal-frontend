@@ -1082,6 +1082,7 @@
 <script setup>
 import { onMounted, ref, computed } from "vue";
 import { useStore } from "vuex";
+import { useRoute } from "vue-router";
 import {
   PhFileArrowUp,
   PhCheckCircle,
@@ -1120,11 +1121,13 @@ import EducationLeadReminderModal from "../components/EducationLeadReminderModal
 import EducationLeadStatusModal from "../components/EducationLeadStatusModal.vue";
 import LeadAssignModal from "@/modules/leads/components/LeadAssignModal.vue";
 import LeadBulkUploadModal from "@/modules/leads/components/LeadBulkUploadModal.vue";
+import Swal from "sweetalert2";
 import apiClient from "@/api/client";
 import {
   createEducationLead,
   deleteEducationLead,
   bulkDeleteEducationLeads,
+  checkEducationLeadHasActiveTasks,
   fetchEducationLeads,
   fetchEducationLeadSelection,
   fetchEducationLeadSchools,
@@ -1132,6 +1135,7 @@ import {
 import { fetchCustomFields } from "@/api/customFields";
 
 const store = useStore();
+const route = useRoute();
 const canCreateLead = computed(() => {
   return Boolean(store.getters["permissions/hasCapability"]?.("leads.create"));
 });
@@ -1196,6 +1200,18 @@ function statusClass(status) {
   if (value === "new" || value === "assigned") {
     return "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40";
   }
+  if (value === "interested") {
+    return "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40";
+  }
+  if (value === "call_back") {
+    return "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/40";
+  }
+  if (value === "future_prospect") {
+    return "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/40";
+  }
+  if (value === "not_interested" || value === "lost") {
+    return "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200/60 dark:border-rose-800/40";
+  }
   if (value === "contacted") {
     return "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/40";
   }
@@ -1210,9 +1226,6 @@ function statusClass(status) {
   }
   if (value === "application_trial") {
     return "bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300 border border-violet-200/60 dark:border-violet-800/40";
-  }
-  if (value === "lost") {
-    return "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200/60 dark:border-rose-800/40";
   }
   return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700";
 }
@@ -1351,6 +1364,8 @@ const availableStreams = [
 const assignModalMode = ref("single");
 
 const availableStatuses = [
+  { value: "new", label: "New Inquiries" },
+  { value: "assigned", label: "Assigned" },
   { value: "interested", label: "Interested" },
   { value: "call_back", label: "Call Back" },
   { value: "future_prospect", label: "Future Prospect" },
@@ -1487,8 +1502,37 @@ const deleteModalItemName = computed(() => {
   return `${leadToDelete.value.firstName} ${leadToDelete.value.lastName || ""}`.trim();
 });
 
-const handleDelete = (row) => {
+const handleDelete = async (row) => {
   closeActionMenu();
+  const leadId = row._id || row.id;
+
+  try {
+    const res = await checkEducationLeadHasActiveTasks(leadId);
+    const hasActive = res?.data?.hasActiveTasks ?? res?.hasActiveTasks;
+    if (hasActive) {
+      await Swal.fire({
+        icon: "warning",
+        title: "Active Task Pending",
+        html: `
+          <div class="text-slate-600 dark:text-slate-300 text-sm space-y-2 text-left">
+            <p>This student lead currently has an <strong>active or scheduled task</strong> assigned.</p>
+            <p class="text-slate-500 dark:text-neutral-400">Please complete the task then delete the lead.</p>
+          </div>
+        `,
+        confirmButtonText: "Understood",
+        confirmButtonColor: "#3b82f6",
+        customClass: {
+          popup: "rounded-2xl shadow-2xl border border-slate-200 dark:border-neutral-800 dark:bg-neutral-900",
+          title: "text-base font-bold text-slate-800 dark:text-slate-100",
+          confirmButton: "rounded-xl text-xs font-bold px-4 py-2.5 shadow-sm cursor-pointer",
+        },
+      });
+      return;
+    }
+  } catch {
+    // If check fails, fallback to confirmation modal and backend will strictly enforce
+  }
+
   isBulkDelete.value = false;
   leadToDelete.value = row;
   isDeleteOpen.value = true;
@@ -1535,8 +1579,34 @@ const confirmDelete = async () => {
     pagination.value.page = 1;
     await load();
   } catch (err) {
+    const errCode = err.response?.data?.error?.code || err.data?.error?.code;
+    const errMsg = err.response?.data?.error?.message || err.data?.error?.message || err.data?.message || err.message;
+
+    if (errCode === "LEAD_HAS_ACTIVE_TASKS" || (errMsg && errMsg.toLowerCase().includes("complete the task"))) {
+      isDeleteOpen.value = false;
+      isBulkDelete.value = false;
+      await Swal.fire({
+        icon: "warning",
+        title: "Active Task Pending",
+        html: `
+          <div class="text-slate-600 dark:text-slate-300 text-sm space-y-2 text-left">
+            <p>${isBulkDelete.value ? "One or more selected student leads have" : "This student lead has"} an <strong>active or scheduled task</strong> assigned.</p>
+            <p class="text-slate-500 dark:text-neutral-400">Please complete the task then delete the lead.</p>
+          </div>
+        `,
+        confirmButtonText: "Understood",
+        confirmButtonColor: "#3b82f6",
+        customClass: {
+          popup: "rounded-2xl shadow-2xl border border-slate-200 dark:border-neutral-800 dark:bg-neutral-900",
+          title: "text-base font-bold text-slate-800 dark:text-slate-100",
+          confirmButton: "rounded-xl text-xs font-bold px-4 py-2.5 shadow-sm cursor-pointer",
+        },
+      });
+      return;
+    }
+
     store.dispatch("notifications/triggerToast", {
-      message: err.response?.data?.error?.message || err.data?.error?.message || err.data?.message || err.message || "Failed to delete student lead(s).",
+      message: errMsg || "Failed to delete student lead(s).",
       type: "error",
     });
   } finally {
@@ -1869,6 +1939,15 @@ async function save() {
 }
 
 onMounted(async () => {
+  if (route.query.status) {
+    const raw = String(route.query.status);
+    selectedStatuses.value = raw.split(',').map((s) => s.trim()).filter(Boolean);
+    statusFilter.value = selectedStatuses.value.length === 1 ? selectedStatuses.value[0] : "";
+  }
+  if (route.query.staffId) {
+    staffFilter.value = [String(route.query.staffId)];
+  }
+
   try {
     if (canFilterAllStaff.value) {
       const staffRes = await apiClient.get('/users', { params: { limit: 200, status: 'active' }, silent: true, skipErrorToast: true }).catch(() => ({ data: { data: [] } }));

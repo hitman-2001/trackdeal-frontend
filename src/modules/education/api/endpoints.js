@@ -124,10 +124,17 @@ export async function bulkDeleteEducationLeads(ids) {
   return res.data;
 }
 
+export async function checkEducationLeadHasActiveTasks(id) {
+  const res = await apiClient.get(`/leads/${id}/has-active-tasks`, { skipErrorToast: true, silent: true }).catch(() => {
+    return apiClient.get(`/education/leads/${id}/has-active-tasks`, { skipErrorToast: true, silent: true });
+  });
+  return res.data;
+}
+
 export async function deleteEducationLead(id) {
-  const res = await apiClient.delete(`/education/leads/${id}`).catch((err) => {
+  const res = await apiClient.delete(`/education/leads/${id}`, { skipErrorToast: true }).catch((err) => {
     if (err.response?.status === 404) {
-      return apiClient.delete(`/leads/${id}`);
+      return apiClient.delete(`/leads/${id}`, { skipErrorToast: true });
     }
     throw err;
   });

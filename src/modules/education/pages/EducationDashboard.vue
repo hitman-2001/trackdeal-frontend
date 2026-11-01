@@ -122,7 +122,7 @@
         <!-- 2. In Active Counseling / Pipeline -->
         <div
           class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 hover:border-slate-300 dark:hover:border-neutral-700 shadow-xs transition-all flex flex-col justify-between group cursor-pointer min-w-0"
-          @click="navigateToLeads('counseling_scheduled')"
+          @click="navigateToLeads('interested,call_back,future_prospect')"
         >
           <div class="flex items-center justify-between gap-1">
             <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">In Counseling</span>
@@ -135,7 +135,7 @@
               {{ activePipelineCount }}
             </div>
             <div class="text-xs text-slate-600 dark:text-slate-400 font-semibold mt-1 flex items-center gap-1 truncate">
-              <span>Calls, demos & trials in progress</span>
+              <span>Interested & follow-ups in progress</span>
             </div>
           </div>
         </div>
@@ -563,8 +563,8 @@
 
         <!-- ROW: Where Inquiries Come From (Lead Sources) + Simple Funnel -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 w-full min-w-0">
-          <!-- Lead Sources Distribution (5 cols) -->
-          <div class="lg:col-span-5 bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 rounded-2xl p-4 sm:p-5 shadow-xs">
+          <!-- Lead Sources Distribution (4 cols) -->
+          <div class="lg:col-span-4 bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 rounded-2xl p-4 sm:p-5 shadow-xs">
             <div class="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-100 dark:border-neutral-800">
               <div class="flex items-center gap-2">
                 <div class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-neutral-800 text-slate-700 dark:text-slate-300 flex items-center justify-center border border-slate-200/60 dark:border-neutral-700">
@@ -611,8 +611,8 @@
             </div>
           </div>
 
-          <!-- Simplified 5-Stage Admission Funnel (7 cols) -->
-          <div class="lg:col-span-7 bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 rounded-2xl p-4 sm:p-5 shadow-xs">
+          <!-- Simplified 6-Stage Admission Funnel (8 cols) -->
+          <div class="lg:col-span-8 bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 rounded-2xl p-4 sm:p-5 shadow-xs">
             <div class="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-100 dark:border-neutral-800">
               <div class="flex items-center gap-2">
                 <div class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-neutral-800 text-slate-700 dark:text-slate-300 flex items-center justify-center border border-slate-200/60 dark:border-neutral-700">
@@ -631,7 +631,7 @@
             </div>
 
             <!-- Funnel Stage Progression Cards with Clean Phosphor Icons (No Emojis) -->
-            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-2">
+            <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2 pt-2">
               <div
                 v-for="stage in simplifiedFunnelStages"
                 :key="stage.key"
@@ -639,10 +639,13 @@
                 @click="navigateToLeads(stage.key)"
               >
                 <div>
-                  <div class="w-8 h-8 rounded-xl bg-white dark:bg-neutral-700 border border-slate-200/60 dark:border-neutral-600 text-slate-700 dark:text-slate-200 mx-auto flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <div
+                    class="w-8 h-8 rounded-xl bg-white dark:bg-neutral-700 border border-slate-200/60 dark:border-neutral-600 mx-auto flex items-center justify-center group-hover:scale-105 transition-transform"
+                    :class="stage.color"
+                  >
                     <component :is="stage.icon" :size="16" weight="bold" />
                   </div>
-                  <div class="text-[11px] font-bold text-slate-700 dark:text-slate-200 mt-2 truncate">
+                  <div class="text-[11px] font-bold text-slate-700 dark:text-slate-200 mt-2 truncate" :title="stage.label">
                     {{ stage.label }}
                   </div>
                 </div>
@@ -1031,6 +1034,7 @@ import {
   PhClock,
   PhArrowRight,
   PhSparkle,
+  PhStar,
   PhFunnel,
   PhBell,
   PhEye,
@@ -1262,7 +1266,15 @@ const displayedFollowUps = computed(() => filteredFollowUps.value.slice(0, 12));
 // KPIs & Analytics
 const activePipelineCount = computed(() => {
   const b = summary.value.stageBreakdown || {};
-  return (b.contacted || 0) + (b.follow_up || 0) + (b.meeting_scheduled || 0) + (b.qualified || 0);
+  return (
+    (b.interested || 0) +
+    (b.call_back || 0) +
+    (b.future_prospect || 0) +
+    (b.contacted || 0) +
+    (b.follow_up || 0) +
+    (b.meeting_scheduled || 0) +
+    (b.qualified || 0)
+  );
 });
 
 const conversionPercentage = computed(() => {
@@ -1301,23 +1313,67 @@ const leadSourcesList = computed(() => {
     }));
 });
 
-// Simplified 5-Stage Funnel with Clean Phosphor Icons (No Emojis)
+// Simplified 6-Stage Education Funnel matching platform lead statuses
 const simplifiedFunnelStages = computed(() => {
   const b = summary.value.stageBreakdown || {};
   const total = summary.value.totalLeads || 0;
 
-  const newCount = b.new || 0;
-  const contactedCount = (b.contacted || 0) + (b.assigned || 0);
-  const counselingCount = (b.meeting_scheduled || 0) + (b.follow_up || 0) + (b.qualified || 0);
-  const trialCount = b.application_trial || 0;
+  const newCount = (b.new || 0) + (b.assigned || 0);
+  const interestedCount = b.interested || 0;
+  const callBackCount = b.call_back || 0;
+  const futureProspectCount = b.future_prospect || 0;
   const enrolledCount = (b.converted || 0) + (b.enrolled || 0) || summary.value.enrolledLeads || 0;
+  const notInterestedCount = (b.not_interested || 0) + (b.lost || 0);
 
   return [
-    { key: 'new', label: 'New Inquiries', icon: PhTray, count: newCount, percent: total > 0 ? Math.round((newCount / total) * 100) : 0 },
-    { key: 'contacted', label: 'Contacted', icon: PhPhoneCall, count: contactedCount, percent: total > 0 ? Math.round((contactedCount / total) * 100) : 0 },
-    { key: 'meeting_scheduled', label: 'Demo / Counseling', icon: PhChalkboardTeacher, count: counselingCount, percent: total > 0 ? Math.round((counselingCount / total) * 100) : 0 },
-    { key: 'application_trial', label: 'Trial Class', icon: PhFileText, count: trialCount, percent: total > 0 ? Math.round((trialCount / total) * 100) : 0 },
-    { key: 'converted', label: 'Enrolled Students', icon: PhGraduationCap, count: enrolledCount, percent: total > 0 ? Math.round((enrolledCount / total) * 100) : 0 },
+    {
+      key: 'new',
+      label: 'New Inquiries',
+      icon: PhTray,
+      color: 'text-slate-700 dark:text-slate-200',
+      count: newCount,
+      percent: total > 0 ? Math.round((newCount / total) * 100) : 0,
+    },
+    {
+      key: 'interested',
+      label: 'Interested',
+      icon: PhStar,
+      color: 'text-amber-500',
+      count: interestedCount,
+      percent: total > 0 ? Math.round((interestedCount / total) * 100) : 0,
+    },
+    {
+      key: 'call_back',
+      label: 'Call Back',
+      icon: PhPhoneCall,
+      color: 'text-blue-500',
+      count: callBackCount,
+      percent: total > 0 ? Math.round((callBackCount / total) * 100) : 0,
+    },
+    {
+      key: 'future_prospect',
+      label: 'Future Prospect',
+      icon: PhClock,
+      color: 'text-indigo-500',
+      count: futureProspectCount,
+      percent: total > 0 ? Math.round((futureProspectCount / total) * 100) : 0,
+    },
+    {
+      key: 'enrolled',
+      label: 'Enrolled',
+      icon: PhGraduationCap,
+      color: 'text-emerald-500',
+      count: enrolledCount,
+      percent: total > 0 ? Math.round((enrolledCount / total) * 100) : 0,
+    },
+    {
+      key: 'not_interested',
+      label: 'Not Interested',
+      icon: PhXCircle,
+      color: 'text-rose-500',
+      count: notInterestedCount,
+      percent: total > 0 ? Math.round((notInterestedCount / total) * 100) : 0,
+    },
   ];
 });
 
@@ -1598,7 +1654,13 @@ function setTabAndScroll(tab) {
 }
 
 function navigateToLeads(status) {
-  if (status) {
+  if (status === 'new') {
+    router.push({ path: '/app/leads', query: { status: 'new,assigned' } });
+  } else if (status === 'enrolled') {
+    router.push({ path: '/app/leads', query: { status: 'enrolled,converted' } });
+  } else if (status === 'not_interested') {
+    router.push({ path: '/app/leads', query: { status: 'not_interested,lost' } });
+  } else if (status) {
     router.push({ path: '/app/leads', query: { status } });
   } else {
     router.push('/app/leads');
