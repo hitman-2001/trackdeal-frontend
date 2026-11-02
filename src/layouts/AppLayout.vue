@@ -46,6 +46,16 @@
           <span class="hidden sm:inline">Add</span>
         </button>
 
+        <!-- Quick Search Launcher Button for Mobile -->
+        <button
+          @click="globalSearchOpen = true"
+          class="action-btn flex sm:hidden"
+          title="Search"
+          aria-label="Search leads, students and pages"
+        >
+          <PhMagnifyingGlass :size="20" weight="regular" />
+        </button>
+
         <!-- Theme Toggle Button (Commented out per request) -->
         <!-- <button
           @click="toggleTheme"
@@ -2201,28 +2211,36 @@ const vClickOutside = {
   .app-navbar {
     padding-left: 16px !important;
     padding-right: 16px !important;
-    height: 52px !important;
+    padding-top: env(safe-area-inset-top, 0px) !important;
+    height: calc(64px + env(safe-area-inset-top, 0px)) !important;
+    min-height: calc(64px + env(safe-area-inset-top, 0px)) !important;
     width: 100% !important;
     max-width: 100vw !important;
     box-sizing: border-box !important;
     background: rgba(255, 255, 255, 0.96) !important;
     backdrop-filter: blur(20px) saturate(1.4) !important;
     -webkit-backdrop-filter: blur(20px) saturate(1.4) !important;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
+    box-shadow: 0 1px 4px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.03) !important;
   }
   .dark .app-navbar {
     background: rgba(13, 21, 35, 0.96) !important;
-    border-bottom-color: rgba(255, 255, 255, 0.06) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.35) !important;
   }
   .navbar-left {
-    gap: 8px;
+    gap: 10px;
     min-width: auto !important;
     flex-shrink: 1;
+    display: flex;
+    align-items: center;
   }
   .navbar-right {
-    gap: 4px;
+    gap: 8px;
     padding-left: 0 !important;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
   }
   .action-btn.hidden {
     display: none !important;
@@ -2231,42 +2249,64 @@ const vClickOutside = {
     display: none !important;
   }
   .logo-container {
-    gap: 8px;
+    gap: 10px;
+    display: flex;
+    align-items: center;
   }
   .trackdeal-nav-logo {
-    height: 26px !important;
-    max-width: 130px !important;
+    height: 36px !important;
+    max-width: 165px !important;
+    object-fit: contain;
   }
   .real-estate-logo {
-    height: 26px !important;
-    max-width: 130px !important;
+    height: 36px !important;
+    max-width: 165px !important;
+    object-fit: contain;
   }
   .education-logo {
-    height: 28px !important;
-    max-width: 135px !important;
+    height: 36px !important;
+    max-width: 165px !important;
+    object-fit: contain;
   }
   .brand-mark-box {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
   }
   .brand-name {
-    font-size: 1rem;
+    font-size: 1.05rem;
   }
   .user-profile {
     padding: 0;
     gap: 0;
+    display: flex;
+    align-items: center;
   }
   .user-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 10px;
-    font-size: 0.7rem;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    box-shadow: 0 2px 8px hsla(var(--primary, 142 71% 29%), 0.25);
   }
   .action-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: rgba(241, 245, 249, 0.75);
+    color: #475569;
+  }
+  .dark .action-btn {
+    background: rgba(30, 41, 59, 0.75);
+    color: #cbd5e1;
+  }
+  .action-btn:active {
+    background: rgba(226, 232, 240, 0.95);
+    transform: scale(0.96);
+  }
+  .dark .action-btn:active {
+    background: rgba(51, 65, 85, 0.95);
   }
   /* Hide breadcrumbs on mobile for cleaner look */
   .breadcrumb-bar {

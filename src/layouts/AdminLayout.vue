@@ -865,6 +865,17 @@ onUnmounted(() => {
 }
 
 @media (max-width: 640px) {
+  .navbar-center {
+    display: none !important;
+  }
+  .app-navbar {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    padding-top: env(safe-area-inset-top, 0px) !important;
+    height: calc(64px + env(safe-area-inset-top, 0px)) !important;
+    min-height: calc(64px + env(safe-area-inset-top, 0px)) !important;
+    box-shadow: 0 1px 4px 0 rgba(15, 23, 42, 0.05) !important;
+  }
   .layout-body {
     padding: 8px;
     gap: 8px;
