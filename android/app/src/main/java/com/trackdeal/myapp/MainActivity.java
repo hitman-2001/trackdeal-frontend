@@ -2,15 +2,37 @@ package com.trackdeal.myapp;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.Window;
+import android.view.WindowManager;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setupStatusBar();
         createNotificationChannels();
+    }
+
+    private void setupStatusBar() {
+        Window window = getWindow();
+        if (window != null) {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.setStatusBarColor(Color.WHITE);
+
+            WindowInsetsControllerCompat insetsController =
+                WindowCompat.getInsetsController(window, window.getDecorView());
+            if (insetsController != null) {
+                // Ensure status bar icons (time, battery, wifi) are dark on white background
+                insetsController.setAppearanceLightStatusBars(true);
+            }
+        }
     }
 
     private void createNotificationChannels() {

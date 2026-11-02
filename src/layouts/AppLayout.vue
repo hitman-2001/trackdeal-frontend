@@ -2211,9 +2211,8 @@ const vClickOutside = {
   .app-navbar {
     padding-left: 16px !important;
     padding-right: 16px !important;
-    padding-top: env(safe-area-inset-top, 0px) !important;
-    height: calc(64px + env(safe-area-inset-top, 0px)) !important;
-    min-height: calc(64px + env(safe-area-inset-top, 0px)) !important;
+    height: 60px !important;
+    min-height: 60px !important;
     width: 100% !important;
     max-width: 100vw !important;
     box-sizing: border-box !important;
