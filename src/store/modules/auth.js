@@ -11,47 +11,43 @@ function parseJwt(token) {
   }
 }
 
+// Remove credentials and identity/authorization caches created by older builds.
+// Browser-readable storage must never be the source of session authority.
+[
+  'accessToken', 'refreshToken', 'sessionExpiresAt', 'currentUser',
+  'capabilities', 'tenant_id', 'tenant_slug', 'tenant_vertical',
+  'org_type', 'featuresFlags', 'branding',
+].forEach((key) => localStorage.removeItem(key));
+
+function expiresAt(token) {
+  const exp = parseJwt(token)?.exp;
+  return exp ? exp * 1000 : null;
+}
+
 export default {
   namespaced: true,
   state: () => ({
-    token: localStorage.getItem('accessToken') || null,
-    refreshToken: localStorage.getItem('refreshToken') || null,
-    sessionExpiresAt: localStorage.getItem('sessionExpiresAt') ? Number(localStorage.getItem('sessionExpiresAt')) : null,
-    currentUser: localStorage.getItem('currentUser') ? JSON.parse(localStorage.getItem('currentUser')) : null
+    token: null,
+    sessionExpiresAt: null,
+    currentUser: null
   }),
   mutations: {
-    SET_TOKEN(state, { accessToken, refreshToken, expiresAt }) {
+    SET_TOKEN(state, { accessToken }) {
       state.token = accessToken;
-      localStorage.setItem('accessToken', accessToken);
-      if (refreshToken) {
-        state.refreshToken = refreshToken;
-        localStorage.setItem('refreshToken', refreshToken);
-      }
-      state.sessionExpiresAt = expiresAt;
-      localStorage.setItem('sessionExpiresAt', expiresAt);
+      state.sessionExpiresAt = expiresAt(accessToken);
     },
     CLEAR_SESSION(state) {
       state.token = null;
-      state.refreshToken = null;
       state.sessionExpiresAt = null;
       state.currentUser = null;
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('sessionExpiresAt');
-      localStorage.removeItem('currentUser');
     },
     SET_USER_PROFILE(state, profile) {
       state.currentUser = profile;
-      if (profile) {
-        localStorage.setItem('currentUser', JSON.stringify(profile));
-      } else {
-        localStorage.removeItem('currentUser');
-      }
     }
   },
   actions: {
-    loginUser({ commit }, { accessToken, refreshToken, profile }) {
-      commit('SET_TOKEN', { accessToken, refreshToken, expiresAt: Date.now() + 3600000 });
+    loginUser({ commit }, { accessToken, profile }) {
+      commit('SET_TOKEN', { accessToken });
       commit('SET_USER_PROFILE', profile);
       
       const decoded = parseJwt(accessToken) || {};
@@ -74,23 +70,21 @@ export default {
         featuresFlags,
       }, { root: true });
     },
-    logoutSession({ commit }) {
-      commit('CLEAR_SESSION');
-      commit('permissions/CLEAR_CAPABILITIES', null, { root: true });
-      commit('organization/CLEAR_ORGANIZATION', null, { root: true });
-    },
-    async refreshUserTokens({ commit, state }) {
-      if (!state.refreshToken) {
+    async logoutSession({ commit }) {
+      try {
+        await authApi.logout();
+      } finally {
         commit('CLEAR_SESSION');
         commit('permissions/CLEAR_CAPABILITIES', null, { root: true });
         commit('organization/CLEAR_ORGANIZATION', null, { root: true });
-        return Promise.reject(new Error('No refresh token available'));
       }
+    },
+    async refreshUserTokens({ commit }) {
       try {
-        const data = await authApi.refreshTokens(state.refreshToken);
+        const data = await authApi.refreshTokens();
         const payload = data.data || data;
         
-        commit('SET_TOKEN', { accessToken: payload.accessToken, refreshToken: payload.refreshToken, expiresAt: Date.now() + 3600000 });
+        commit('SET_TOKEN', { accessToken: payload.accessToken });
         commit('SET_USER_PROFILE', payload.user);
         
         const decoded = parseJwt(payload.accessToken) || {};

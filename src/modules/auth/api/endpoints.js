@@ -30,11 +30,13 @@ export async function acceptInvitation({ token, password }) {
   return response.data;
 }
 
-export async function refreshTokens(refreshToken) {
-  if (!refreshToken) {
-    throw new Error('Refresh token is required');
-  }
-  const response = await apiClient.post('/auth/refresh', { refreshToken });
+export async function refreshTokens() {
+  const response = await apiClient.post('/auth/refresh', {});
+  return response.data;
+}
+
+export async function logout() {
+  const response = await apiClient.post('/auth/logout', {});
   return response.data;
 }
 
@@ -56,5 +58,6 @@ export default {
   resetPassword,
   validateInvitationToken,
   acceptInvitation,
-  refreshTokens
+  refreshTokens,
+  logout
 };

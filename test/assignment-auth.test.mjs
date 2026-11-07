@@ -26,7 +26,7 @@ function unauthorized(config) {
   });
 }
 
-test('Equal Split sends the stored access token, JSON body and tenant header', async () => {
+test('Equal Split sends the in-memory access token, JSON body and tenant header', async () => {
   const { apiClient, injectStore } = loadClient();
   injectStore({ state: { auth: { token: 'test-access-token' }, organization: { tenantId: 'test-tenant' } } });
   apiClient.defaults.adapter = async (config) => {
@@ -45,7 +45,7 @@ test('Equal Split retries its original POST with a refreshed token after a 401',
   const { apiClient, injectStore } = loadClient();
   let refreshes = 0;
   let calls = 0;
-  const state = { auth: { token: 'expired-access', refreshToken: 'test-refresh' } };
+  const state = { auth: { token: 'expired-access' } };
   injectStore({ state, dispatch: async (action) => {
     assert.equal(action, 'auth/refreshUserTokens');
     refreshes++;

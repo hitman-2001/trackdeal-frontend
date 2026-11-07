@@ -18,14 +18,12 @@ export function setupRouterGuards(router) {
     if (!sessionChecked) {
       sessionChecked = true;
       const isAuthenticated = store.getters["auth/isAuthenticated"];
-      const hasRefreshToken = !!store.state.auth?.refreshToken;
-      const isAuthPage =
+      const shouldRestoreSession =
         to.path.startsWith("/login") ||
-        to.path.startsWith("/forgot-password") ||
-        to.path.startsWith("/reset-password") ||
-        to.path.startsWith("/accept-invitation");
+        to.matched.some((record) => record.meta.requiresAuth) ||
+        ((to.path === "/" || to.name === "Home") && isAndroidUser());
 
-      if (!isAuthenticated && hasRefreshToken && !isAuthPage) {
+      if (!isAuthenticated && shouldRestoreSession) {
         try {
           await store.dispatch("auth/refreshUserTokens");
         } catch (error) {

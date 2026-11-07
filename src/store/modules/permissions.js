@@ -1,17 +1,6 @@
 export default {
   namespaced: true,
-  state: () => {
-    let stored = [];
-    try {
-      const val = localStorage.getItem('capabilities');
-      stored = val ? JSON.parse(val) : [];
-    } catch (e) {
-      stored = [];
-    }
-    return {
-      capabilities: stored
-    };
-  },
+  state: () => ({ capabilities: [] }),
   mutations: {
     SET_CAPABILITIES(state, capabilities) {
       if (Array.isArray(capabilities)) {
@@ -34,11 +23,9 @@ export default {
       } else {
         state.capabilities = [];
       }
-      localStorage.setItem('capabilities', JSON.stringify(state.capabilities));
     },
     CLEAR_CAPABILITIES(state) {
       state.capabilities = [];
-      localStorage.removeItem('capabilities');
     }
   },
   getters: {

@@ -1,34 +1,21 @@
 import { applyThemeTokensToDOM } from './ui';
 
-function getStoredJson(key, fallback) {
-  try {
-    const val = localStorage.getItem(key);
-    return val ? JSON.parse(val) : fallback;
-  } catch (e) {
-    return fallback;
-  }
-}
-
 export default {
   namespaced: true,
   state: () => {
-    const tenantId = localStorage.getItem('tenant_id') || null;
-    const tenantSlug = localStorage.getItem('tenant_slug') || null;
-    const tenantVertical =
-      localStorage.getItem('tenant_vertical')
-      || getStoredJson('currentUser', null)?.tenantVertical
-      || getStoredJson('currentUser', null)?.tenantDomain
-      || 'realEstate';
-    const featuresFlags = getStoredJson('featuresFlags', {});
-    const branding = getStoredJson('branding', {
+    const tenantId = null;
+    const tenantSlug = null;
+    const tenantVertical = 'realEstate';
+    const featuresFlags = {};
+    const branding = {
       primaryHsl: '220 85% 45%', // Default Deep Indigo
       secondaryHsl: '210 25% 35%', // Default Slate
       logoUrl: '',
       logoDarkUrl: '',
       themeTokens: null,
-    });
+    };
 
-    const organizationType = localStorage.getItem('org_type') || 'AGENCY';
+    const organizationType = 'AGENCY';
  
     // Inject HSL colors / dynamic theme tokens to stylesheet root on boot
     if (typeof window !== 'undefined' && window.document) {
@@ -60,19 +47,6 @@ export default {
       state.featuresFlags = featuresFlags || {};
       state.branding = { ...state.branding, ...branding };
       
-      if (tenantId) {
-        localStorage.setItem('tenant_id', tenantId);
-      }
-      if (tenantSlug) {
-        localStorage.setItem('tenant_slug', tenantSlug);
-      }
-      if (state.tenantVertical) {
-        localStorage.setItem('tenant_vertical', state.tenantVertical);
-      }
-      localStorage.setItem('org_type', state.organizationType);
-      localStorage.setItem('featuresFlags', JSON.stringify(state.featuresFlags));
-      localStorage.setItem('branding', JSON.stringify(state.branding));
-      
       // Inject HSL colors / dynamic theme tokens to stylesheet root
       if (branding?.themeTokens) {
         applyThemeTokensToDOM(branding.themeTokens);
@@ -87,7 +61,6 @@ export default {
     SET_ORGANIZATION_BRANDING(state, branding) {
       if (!branding) return;
       state.branding = { ...state.branding, ...branding };
-      localStorage.setItem('branding', JSON.stringify(state.branding));
       if (branding.themeTokens) {
         applyThemeTokensToDOM(branding.themeTokens);
         localStorage.setItem('theme_custom_hsl', JSON.stringify(branding.themeTokens));

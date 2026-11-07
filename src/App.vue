@@ -39,7 +39,7 @@ onMounted(() => {
   store.dispatch('ui/initializeTheme');
 
   // Synchronize latest organization theme and push tokens for all logged-in users
-  const isAuth = store.getters['auth/isAuthenticated'] || localStorage.getItem('accessToken');
+  const isAuth = store.getters['auth/isAuthenticated'];
   if (isAuth) {
     store.dispatch('ui/syncOrgTheme');
     syncPushTokenIfPermissionGranted().catch(() => {});

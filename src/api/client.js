@@ -144,17 +144,6 @@ apiClient.interceptors.response.use(
           });
       }
 
-      const hasRefreshToken = !!storeInstance?.state?.auth?.refreshToken;
-      if (!hasRefreshToken) {
-        if (storeInstance) {
-          await storeInstance.dispatch('auth/logoutSession');
-        }
-        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
-          window.location.href = '/login';
-        }
-        return Promise.reject(error);
-      }
-
       originalRequest._retry = true;
       isRefreshing = true;
 
