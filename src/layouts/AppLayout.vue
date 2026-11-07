@@ -2211,8 +2211,8 @@ const vClickOutside = {
   .app-navbar {
     padding-left: 16px !important;
     padding-right: 16px !important;
-    height: 60px !important;
-    min-height: 60px !important;
+    height: 68px !important;
+    min-height: 68px !important;
     width: 100% !important;
     max-width: 100vw !important;
     box-sizing: border-box !important;
@@ -2282,16 +2282,16 @@ const vClickOutside = {
     align-items: center;
   }
   .user-avatar {
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
     border-radius: 12px;
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
     font-weight: 700;
     box-shadow: 0 2px 8px hsla(var(--primary, 142 71% 29%), 0.25);
   }
   .action-btn {
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
     border-radius: 10px;
     background: rgba(241, 245, 249, 0.75);
     color: #475569;
