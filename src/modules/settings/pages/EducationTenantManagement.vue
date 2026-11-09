@@ -1,26 +1,17 @@
 <template>
   <div class="space-y-4">
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-      <div>
-        <div class="flex items-center gap-2">
-          <h2 class="font-heading text-lg font-extrabold text-slate-900 dark:text-white">
-            Education Tenant Directory
-          </h2>
-          <span class="rounded-md border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300">
-            Manch Admin
-          </span>
-        </div>
-        <p class="mt-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
-          View Education organizations and control their access to TrackDeal.
-        </p>
+    <div>
+      <div class="flex items-center gap-2">
+        <h2 class="font-heading text-lg font-extrabold text-slate-900 dark:text-white">
+          Education Tenant Directory
+        </h2>
+        <span class="rounded-md border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300">
+          Manch Admin
+        </span>
       </div>
-      <div class="flex items-center gap-2 rounded-xl border border-default bg-surface px-3 py-2 shadow-xs">
-        <PhBuildings :size="16" class="text-primary" />
-        <div>
-          <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Education tenants</p>
-          <p class="font-tabular text-sm font-black text-slate-900 dark:text-white">{{ pagination.total || 0 }}</p>
-        </div>
-      </div>
+      <p class="mt-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+        View Education organizations and control their access to TrackDeal.
+      </p>
     </div>
 
     <div
@@ -142,7 +133,6 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import Swal from 'sweetalert2';
 import {
-  PhBuildings,
   PhMagnifyingGlass,
   PhShieldCheck,
   PhWarningCircle,
