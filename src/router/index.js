@@ -355,6 +355,13 @@ const routes = [
               import("@/modules/settings/pages/CustomFieldsSettings.vue"),
             meta: { vertical: "education" },
           },
+          {
+            path: "education-tenants",
+            name: "EducationTenantManagement",
+            component: () =>
+              import("@/modules/settings/pages/EducationTenantManagement.vue"),
+            meta: { vertical: "education" },
+          },
         ],
       },
     ],

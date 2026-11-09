@@ -1,5 +1,27 @@
 import apiClient from '@/api/client';
 
+export async function fetchEducationTenantAdminAccess() {
+  const response = await apiClient.get('/organizations/education-admin/access', {
+    silent: true,
+    skipErrorToast: true,
+  });
+  return response.data?.data || response.data;
+}
+
+export async function fetchEducationTenants(params = {}) {
+  const response = await apiClient.get('/organizations/education-admin/tenants', { params });
+  return {
+    data: response.data?.data || [],
+    pagination: response.data?.pagination || {},
+  };
+}
+
+export async function setEducationTenantEnabled(id, enabled) {
+  const action = enabled ? 'activate' : 'suspend';
+  const response = await apiClient.post(`/organizations/education-admin/tenants/${id}/${action}`);
+  return response.data?.data || response.data;
+}
+
 export async function fetchOrgSettings() {
   try {
     const response = await apiClient.get('/settings/org');

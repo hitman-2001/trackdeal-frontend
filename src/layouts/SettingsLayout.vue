@@ -45,17 +45,19 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useStore } from 'vuex';
 import {
   PhBuildings, PhMapPin, PhUsersThree,
   PhSlidersHorizontal,
 } from '@phosphor-icons/vue';
+import { fetchEducationTenantAdminAccess } from '@/modules/settings/api/endpoints';
 
 const store = useStore();
 const route = useRoute();
 const isEducation = computed(() => store.getters['organization/isEducationTenant']);
+const hasEducationTenantAdminAccess = ref(false);
 
 const settingsMenu = computed(() => {
   const items = [
@@ -90,6 +92,15 @@ const settingsMenu = computed(() => {
       icon: PhSlidersHorizontal,
       permission: 'organizations.read',
     });
+    if (hasEducationTenantAdminAccess.value) {
+      items.push({
+        name: 'Tenant Directory',
+        shortName: 'Tenants',
+        to: '/app/settings/education-tenants',
+        icon: PhBuildings,
+        permission: null,
+      });
+    }
   }
   return items;
 });
@@ -110,5 +121,15 @@ const filteredSettingsMenu = computed(() => {
     if (!item.permission || isSuperAdmin) return true;
     return store.getters['permissions/hasCapability'](item.permission);
   });
+});
+
+onMounted(async () => {
+  if (!isEducation.value) return;
+  try {
+    const access = await fetchEducationTenantAdminAccess();
+    hasEducationTenantAdminAccess.value = Boolean(access?.allowed);
+  } catch {
+    hasEducationTenantAdminAccess.value = false;
+  }
 });
 </script>
