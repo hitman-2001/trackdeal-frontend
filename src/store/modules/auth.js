@@ -3,15 +3,29 @@ import { Capacitor } from '@capacitor/core';
 
 const NATIVE_REFRESH_TOKEN_KEY = 'trackdeal_native_refresh_token';
 
+function isNativePlatform() {
+  if (typeof Capacitor !== 'undefined' && Capacitor?.isNativePlatform?.()) {
+    return true;
+  }
+  if (typeof window !== 'undefined' && (
+    window.location.protocol === 'capacitor:' ||
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1'
+  )) {
+    return true;
+  }
+  return false;
+}
+
 function getNativeRefreshToken() {
-  if (Capacitor.isNativePlatform() && typeof localStorage !== 'undefined') {
+  if (isNativePlatform() && typeof localStorage !== 'undefined') {
     return localStorage.getItem(NATIVE_REFRESH_TOKEN_KEY);
   }
   return null;
 }
 
 function setNativeRefreshToken(token) {
-  if (Capacitor.isNativePlatform() && typeof localStorage !== 'undefined') {
+  if (isNativePlatform() && typeof localStorage !== 'undefined') {
     if (token) {
       localStorage.setItem(NATIVE_REFRESH_TOKEN_KEY, token);
     } else {
@@ -136,7 +150,11 @@ export default {
         
         return payload;
       } catch (error) {
-        setNativeRefreshToken(null);
+        // Only invalidate stored credentials if the server explicitly rejected the token as invalid or expired (401/403).
+        // Transient network failures, offline status, or server 5xx errors must not clear the native session.
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          setNativeRefreshToken(null);
+        }
         commit('CLEAR_SESSION');
         commit('permissions/CLEAR_CAPABILITIES', null, { root: true });
         commit('organization/CLEAR_ORGANIZATION', null, { root: true });

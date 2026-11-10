@@ -63,7 +63,15 @@ apiClient.interceptors.request.use(
       config.data = unwrap(config.data);
     }
 
-    if (typeof Capacitor !== 'undefined' && Capacitor?.isNativePlatform?.()) {
+    const isNativeClient =
+      (typeof Capacitor !== 'undefined' && Capacitor?.isNativePlatform?.()) ||
+      (typeof window !== 'undefined' && (
+        window.location.protocol === 'capacitor:' ||
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1'
+      ));
+
+    if (isNativeClient) {
       config.headers['X-Client-Platform'] = 'native';
     }
 

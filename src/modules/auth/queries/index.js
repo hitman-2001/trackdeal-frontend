@@ -12,7 +12,7 @@ export function useLoginMutation() {
     mutationFn: authApi.login,
     onSuccess: (response) => {
       // The refresh credential is an HttpOnly cookie and is never exposed here.
-      const payload = response.data || {};
+      const payload = response?.data || response || {};
       if (payload.mfaRequired) {
         // MFA is required for Super Admin; wait for code verification
         return;
@@ -43,7 +43,7 @@ export function useVerifyMfaMutation() {
   return useMutation({
     mutationFn: authApi.verifyMfa,
     onSuccess: (response) => {
-      const payload = response.data || {};
+      const payload = response?.data || response || {};
       store.dispatch("auth/loginUser", {
         accessToken: payload.accessToken,
         refreshToken: payload.refreshToken,

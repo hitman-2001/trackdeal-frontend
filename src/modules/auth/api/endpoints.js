@@ -31,16 +31,14 @@ export async function acceptInvitation({ token, password }) {
 }
 
 export async function refreshTokens(refreshToken) {
-  const payload = refreshToken ? { refreshToken } : {};
   const headers = refreshToken ? { 'X-Refresh-Token': refreshToken } : {};
-  const response = await apiClient.post('/auth/refresh', payload, { headers });
+  const response = await apiClient.post('/auth/refresh', {}, { headers });
   return response.data;
 }
 
 export async function logout(refreshToken) {
-  const payload = refreshToken ? { refreshToken } : {};
   const headers = refreshToken ? { 'X-Refresh-Token': refreshToken } : {};
-  const response = await apiClient.post('/auth/logout', payload, { headers });
+  const response = await apiClient.post('/auth/logout', {}, { headers });
   return response.data;
 }
 
