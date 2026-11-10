@@ -19,6 +19,7 @@ export function useLoginMutation() {
       }
       store.dispatch("auth/loginUser", {
         accessToken: payload.accessToken,
+        refreshToken: payload.refreshToken,
         profile: payload.user,
       });
       syncPushTokenIfPermissionGranted().catch(() => {});
@@ -45,6 +46,7 @@ export function useVerifyMfaMutation() {
       const payload = response.data || {};
       store.dispatch("auth/loginUser", {
         accessToken: payload.accessToken,
+        refreshToken: payload.refreshToken,
         profile: payload.user,
       });
       syncPushTokenIfPermissionGranted().catch(() => {});

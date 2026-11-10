@@ -5,6 +5,14 @@ scripts/
 !scripts/generate-padded-icons.mjs
 dist/
 .env
+test/
+tests/
+*.test.js
+*.test.mjs
+*.test.ts
+*.spec.js
+*.spec.mjs
+*.spec.ts
 *.md
 !docs/ui-design.md
 .idea/

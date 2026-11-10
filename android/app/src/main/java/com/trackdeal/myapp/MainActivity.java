@@ -7,6 +7,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.Window;
 import android.view.WindowManager;
+import android.webkit.CookieManager;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import com.getcapacitor.BridgeActivity;
@@ -16,7 +17,26 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setupStatusBar();
+        setupCookieManager();
         createNotificationChannels();
+    }
+
+    private void setupCookieManager() {
+        try {
+            CookieManager cookieManager = CookieManager.getInstance();
+            cookieManager.setAcceptCookie(true);
+            if (bridge != null && bridge.getWebView() != null) {
+                cookieManager.setAcceptThirdPartyCookies(bridge.getWebView(), true);
+            }
+        } catch (Exception ignored) {}
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        try {
+            CookieManager.getInstance().flush();
+        } catch (Exception ignored) {}
     }
 
     private void setupStatusBar() {

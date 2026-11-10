@@ -1,4 +1,24 @@
 import authApi from '@/modules/auth/api/endpoints';
+import { Capacitor } from '@capacitor/core';
+
+const NATIVE_REFRESH_TOKEN_KEY = 'trackdeal_native_refresh_token';
+
+function getNativeRefreshToken() {
+  if (Capacitor.isNativePlatform() && typeof localStorage !== 'undefined') {
+    return localStorage.getItem(NATIVE_REFRESH_TOKEN_KEY);
+  }
+  return null;
+}
+
+function setNativeRefreshToken(token) {
+  if (Capacitor.isNativePlatform() && typeof localStorage !== 'undefined') {
+    if (token) {
+      localStorage.setItem(NATIVE_REFRESH_TOKEN_KEY, token);
+    } else {
+      localStorage.removeItem(NATIVE_REFRESH_TOKEN_KEY);
+    }
+  }
+}
 
 function parseJwt(token) {
   if (!token) return null;
@@ -46,9 +66,12 @@ export default {
     }
   },
   actions: {
-    loginUser({ commit }, { accessToken, profile }) {
+    loginUser({ commit }, { accessToken, refreshToken, profile }) {
       commit('SET_TOKEN', { accessToken });
       commit('SET_USER_PROFILE', profile);
+      if (refreshToken) {
+        setNativeRefreshToken(refreshToken);
+      }
       
       const decoded = parseJwt(accessToken) || {};
       const permissions = decoded.permissions || profile?.permissions || [];
@@ -72,8 +95,10 @@ export default {
     },
     async logoutSession({ commit }) {
       try {
-        await authApi.logout();
+        const nativeToken = getNativeRefreshToken();
+        await authApi.logout(nativeToken);
       } finally {
+        setNativeRefreshToken(null);
         commit('CLEAR_SESSION');
         commit('permissions/CLEAR_CAPABILITIES', null, { root: true });
         commit('organization/CLEAR_ORGANIZATION', null, { root: true });
@@ -81,11 +106,15 @@ export default {
     },
     async refreshUserTokens({ commit }) {
       try {
-        const data = await authApi.refreshTokens();
+        const nativeToken = getNativeRefreshToken();
+        const data = await authApi.refreshTokens(nativeToken);
         const payload = data.data || data;
         
         commit('SET_TOKEN', { accessToken: payload.accessToken });
         commit('SET_USER_PROFILE', payload.user);
+        if (payload.refreshToken) {
+          setNativeRefreshToken(payload.refreshToken);
+        }
         
         const decoded = parseJwt(payload.accessToken) || {};
         const permissions = decoded.permissions || payload.user?.permissions || [];
@@ -107,6 +136,7 @@ export default {
         
         return payload;
       } catch (error) {
+        setNativeRefreshToken(null);
         commit('CLEAR_SESSION');
         commit('permissions/CLEAR_CAPABILITIES', null, { root: true });
         commit('organization/CLEAR_ORGANIZATION', null, { root: true });

@@ -30,13 +30,17 @@ export async function acceptInvitation({ token, password }) {
   return response.data;
 }
 
-export async function refreshTokens() {
-  const response = await apiClient.post('/auth/refresh', {});
+export async function refreshTokens(refreshToken) {
+  const payload = refreshToken ? { refreshToken } : {};
+  const headers = refreshToken ? { 'X-Refresh-Token': refreshToken } : {};
+  const response = await apiClient.post('/auth/refresh', payload, { headers });
   return response.data;
 }
 
-export async function logout() {
-  const response = await apiClient.post('/auth/logout', {});
+export async function logout(refreshToken) {
+  const payload = refreshToken ? { refreshToken } : {};
+  const headers = refreshToken ? { 'X-Refresh-Token': refreshToken } : {};
+  const response = await apiClient.post('/auth/logout', payload, { headers });
   return response.data;
 }
 

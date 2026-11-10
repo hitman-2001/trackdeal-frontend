@@ -7,9 +7,6 @@
     "cleartext": true
   },
   "plugins": {
-    "CapacitorCookies": {
-      "enabled": true
-    },
     "PushNotifications": {
       "presentationOptions": ["badge", "sound", "alert"],
       "iconColor": "#7c3aed"

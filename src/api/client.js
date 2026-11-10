@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { isRef, ref } from 'vue';
+import { Capacitor } from '@capacitor/core';
 import { getErrorMessage } from '@/utils/errorHandler';
 
 export const activeApiRequests = ref(0);
@@ -60,6 +61,10 @@ apiClient.interceptors.request.use(
     }
     if (config.data) {
       config.data = unwrap(config.data);
+    }
+
+    if (typeof Capacitor !== 'undefined' && Capacitor?.isNativePlatform?.()) {
+      config.headers['X-Client-Platform'] = 'native';
     }
 
     if (storeInstance) {
