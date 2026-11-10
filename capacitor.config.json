@@ -3,6 +3,7 @@
   "appName": "TrackDeal",
   "webDir": "dist",
   "server": {
+    "hostname": "app.trackdeal.in",
     "androidScheme": "https",
     "cleartext": true
   },

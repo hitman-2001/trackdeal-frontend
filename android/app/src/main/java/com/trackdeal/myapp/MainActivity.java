@@ -35,6 +35,21 @@ public class MainActivity extends BridgeActivity {
     public void onResume() {
         super.onResume();
         setupCookieManager();
+    }
+
+    @Override
+    public void onPause() {
+        flushCookies();
+        super.onPause();
+    }
+
+    @Override
+    public void onStop() {
+        flushCookies();
+        super.onStop();
+    }
+
+    private void flushCookies() {
         try {
             CookieManager.getInstance().flush();
         } catch (Exception ignored) {}

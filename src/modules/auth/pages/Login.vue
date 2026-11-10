@@ -239,7 +239,7 @@
 import { ref, onMounted, onUnmounted } from "vue";
 import { useStore } from "vuex";
 import { useForm, useField } from "vee-validate";
-import { toTypedSchema } from "@vee-validate/zod";
+import { toTypedSchema } from "@/utils/toTypedSchema";
 import { PhEye, PhEyeSlash, PhX, PhShieldCheck, PhArrowLeft } from "@phosphor-icons/vue";
 import AppSpinner from "@/components/AppSpinner.vue";
 import { getErrorMessage } from "@/utils/errorHandler";

@@ -29,7 +29,6 @@ export function setupRouterGuards(router) {
         typeof localStorage !== "undefined" &&
           localStorage.getItem("trackdeal_native_refresh_token")
       );
-
       const shouldRestoreSession =
         !isAuthenticated &&
         (isNative ||

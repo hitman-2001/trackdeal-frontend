@@ -107,7 +107,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useForm, useField } from 'vee-validate';
-import { toTypedSchema } from '@vee-validate/zod';
+import { toTypedSchema } from '@/utils/toTypedSchema';
 import { PhSpinner, PhWarning } from '@phosphor-icons/vue';
 import { acceptInvitationSchema } from '../schemas/validation';
 import { useAcceptInvitationMutation } from '../queries';

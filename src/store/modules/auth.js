@@ -46,7 +46,7 @@ function parseJwt(token) {
 }
 
 // Remove credentials and identity/authorization caches created by older builds.
-// Browser-readable storage must never be the source of session authority.
+// Browser-readable storage must never be the source of session authority on web.
 [
   'accessToken', 'refreshToken', 'sessionExpiresAt', 'currentUser',
   'capabilities', 'tenant_id', 'tenant_slug', 'tenant_vertical',
@@ -129,7 +129,7 @@ export default {
         if (payload.refreshToken) {
           setNativeRefreshToken(payload.refreshToken);
         }
-        
+
         const decoded = parseJwt(payload.accessToken) || {};
         const permissions = decoded.permissions || payload.user?.permissions || [];
         const tenantId = decoded.tenantId || payload.user?.tenantId || decoded.organizationId || payload.user?.organizationId;
@@ -150,8 +150,6 @@ export default {
         
         return payload;
       } catch (error) {
-        // Only invalidate stored credentials if the server explicitly rejected the token as invalid or expired (401/403).
-        // Transient network failures, offline status, or server 5xx errors must not clear the native session.
         if (error.response?.status === 401 || error.response?.status === 403) {
           setNativeRefreshToken(null);
         }

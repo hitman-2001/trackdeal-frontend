@@ -18,10 +18,17 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-core': ['vue', 'vue-router', 'vuex', '@tanstack/vue-query'],
-          'vendor-icons': ['@phosphor-icons/vue'],
-          'vendor-heavy': ['xlsx', 'mammoth', 'jimp'],
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+          if (id.includes('@phosphor-icons/vue')) return 'vendor-icons';
+          if (id.includes('/xlsx/') || id.includes('/mammoth/')) return 'vendor-heavy';
+          if (
+            id.includes('/vue/') ||
+            id.includes('/vue-router/') ||
+            id.includes('/vuex/') ||
+            id.includes('@tanstack/vue-query')
+          ) return 'vendor-core';
+          return undefined;
         },
       },
     },

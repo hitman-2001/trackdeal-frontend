@@ -110,7 +110,7 @@
 <script setup>
 import { useStore } from 'vuex';
 import { useForm, useField } from 'vee-validate';
-import { toTypedSchema } from '@vee-validate/zod';
+import { toTypedSchema } from '@/utils/toTypedSchema';
 import * as zod from 'zod';
 import AppDrawer from '@/components/AppDrawer.vue';
 import { useRecordCollectionMutation } from '../queries';
