@@ -130,6 +130,13 @@
               >
                 <td class="p-3 font-bold text-slate-850 dark:text-slate-200">
                   {{ getUserDisplayName(user) }}
+                  <span
+                    v-if="user.accountDeletionRequest?.status === 'pending'"
+                    class="ml-2 inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-900/50"
+                    :title="`Requested ${formatDeletionRequestDate(user.accountDeletionRequest.requestedAt)}`"
+                  >
+                    Deletion requested
+                  </span>
                 </td>
                 <td class="p-3 text-slate-600 dark:text-slate-400 font-mono">
                   {{ user.email }}
@@ -204,6 +211,26 @@
                   </template>
                   <template v-else>
                     <div class="flex items-center justify-center gap-1.5">
+                      <template v-if="user.accountDeletionRequest?.status === 'pending' && isOrgAdmin">
+                        <button
+                          @click="reviewDeletionRequest(user, 'approve')"
+                          type="button"
+                          title="Approve account deletion"
+                          aria-label="Approve account deletion"
+                          class="w-7 h-7 rounded-lg border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/70 dark:bg-emerald-950/20 text-emerald-600 hover:bg-emerald-100 flex items-center justify-center transition-all shadow-2xs"
+                        >
+                          <PhCheck :size="14" weight="bold" />
+                        </button>
+                        <button
+                          @click="reviewDeletionRequest(user, 'reject')"
+                          type="button"
+                          title="Reject account deletion"
+                          aria-label="Reject account deletion"
+                          class="w-7 h-7 rounded-lg border border-amber-200 dark:border-amber-900/40 bg-amber-50/70 dark:bg-amber-950/20 text-amber-600 hover:bg-amber-100 flex items-center justify-center transition-all shadow-2xs"
+                        >
+                          <PhX :size="14" weight="bold" />
+                        </button>
+                      </template>
                       <button
                         v-if="isEnterprise"
                         @click="triggerTransfer(user)"
@@ -236,7 +263,7 @@
                         <PhGear :size="13" weight="bold" />
                       </button>
                       <button
-                        v-if="isOrgAdmin"
+                        v-if="isOrgAdmin && user.accountDeletionRequest?.status !== 'pending'"
                         @click="confirmDeleteUser(user)"
                         type="button"
                         title="Delete User"
@@ -287,6 +314,12 @@
                       class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 uppercase tracking-wider"
                     >
                       You
+                    </span>
+                    <span
+                      v-if="user.accountDeletionRequest?.status === 'pending'"
+                      class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300 border border-rose-200 dark:border-rose-900/50 uppercase tracking-wide"
+                    >
+                      Deletion requested
                     </span>
                   </div>
                   <span
@@ -372,6 +405,24 @@
               v-if="!isSuperAdminSelf(user)"
               class="pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2"
             >
+              <template v-if="user.accountDeletionRequest?.status === 'pending' && isOrgAdmin">
+                <button
+                  @click="reviewDeletionRequest(user, 'approve')"
+                  type="button"
+                  class="h-8 px-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-400 text-xs font-semibold flex items-center justify-center gap-1 transition-all"
+                >
+                  <PhCheck :size="13" weight="bold" />
+                  <span>Approve</span>
+                </button>
+                <button
+                  @click="reviewDeletionRequest(user, 'reject')"
+                  type="button"
+                  class="h-8 px-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 text-amber-700 dark:text-amber-400 text-xs font-semibold flex items-center justify-center gap-1 transition-all"
+                >
+                  <PhX :size="13" weight="bold" />
+                  <span>Reject</span>
+                </button>
+              </template>
               <button
                 @click="triggerRoleSwap(user)"
                 type="button"
@@ -394,7 +445,7 @@
               </button>
 
               <button
-                v-if="isOrgAdmin"
+                v-if="isOrgAdmin && user.accountDeletionRequest?.status !== 'pending'"
                 @click="confirmDeleteUser(user)"
                 type="button"
                 class="h-8 px-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-center justify-center gap-1 transition-all active:scale-[0.98] shadow-2xs hover:bg-rose-100"
@@ -461,6 +512,8 @@ import {
   PhPhone,
   PhMagnifyingGlass,
   PhTrash,
+  PhCheck,
+  PhX,
 } from "@phosphor-icons/vue";
 import Swal from "sweetalert2";
 import {
@@ -471,6 +524,7 @@ import {
   useOrgSettingsQuery,
   useUpdateUserStatusMutation,
   useDeleteUserMutation,
+  useResolveAccountDeletionRequestMutation,
 } from "../queries";
 import UserInviteDrawer from "../components/UserInviteDrawer.vue";
 import BranchTransferDrawer from "../components/BranchTransferDrawer.vue";
@@ -513,6 +567,7 @@ const { data: auditLogs } = useAuditLogsQuery({ limit: 200 });
 const { data: orgData } = useOrgSettingsQuery();
 const { mutateAsync: updateUserStatus } = useUpdateUserStatusMutation();
 const { mutateAsync: deleteUserMutation } = useDeleteUserMutation();
+const { mutateAsync: resolveDeletionRequest } = useResolveAccountDeletionRequestMutation();
 
 const maxUserQuota = computed(() => {
   const org = orgData.value?.data || orgData.value;
@@ -575,6 +630,39 @@ function triggerTransfer(user) {
 function triggerRoleSwap(user) {
   activeUser.value = user;
   roleDrawerOpen.value = true;
+}
+
+async function reviewDeletionRequest(user, decision) {
+  if (!isOrgAdmin.value) return;
+  const name = getUserDisplayName(user);
+  const approving = decision === "approve";
+  const result = await Swal.fire({
+    title: approving ? "Approve account deletion?" : "Reject account deletion?",
+    text: approving
+      ? `${name}'s account will be deleted and assigned work will be transferred to the organization administrator.`
+      : `${name}'s pending request will be declined and they will be able to request deletion again.`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: approving ? "#dc2626" : "#d97706",
+    confirmButtonText: approving ? "Approve & Delete" : "Reject Request",
+    cancelButtonText: "Cancel",
+  });
+  if (!result.isConfirmed) return;
+
+  try {
+    await resolveDeletionRequest({ id: getUserId(user), decision });
+    store.dispatch("notifications/triggerToast", {
+      message: approving
+        ? `${name}'s deletion request was approved and the account was deleted.`
+        : `${name}'s deletion request was rejected. They can submit a new request.`,
+      type: "success",
+    });
+  } catch (error) {
+    store.dispatch("notifications/triggerToast", {
+      message: error.response?.data?.error?.message || error.response?.data?.message || "Failed to review the deletion request.",
+      type: "error",
+    });
+  }
 }
 
 function isSuperAdminSelf(user) {
@@ -657,6 +745,12 @@ function getRoleBadgeClass(role) {
     default:
       return "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200/50 dark:border-slate-700";
   }
+}
+
+function formatDeletionRequestDate(value) {
+  if (!value) return "recently";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "recently" : date.toLocaleString();
 }
 
 function getRoleCode(role, user) {

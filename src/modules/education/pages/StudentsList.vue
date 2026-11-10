@@ -16,16 +16,6 @@
           <button 
             v-if="canCreateStudent"
             type="button"
-            class="h-8 px-2.5 rounded-xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 shadow-2xs active:scale-95 transition-all"
-            @click="showBulkUpload = true"
-            title="Bulk Upload Enrolled Students from Excel (.xlsx, .csv)"
-          >
-            <PhFileArrowUp :size="14" weight="bold" class="text-emerald-600 dark:text-emerald-400" />
-            <span>Import</span>
-          </button>
-          <button 
-            v-if="canCreateStudent"
-            type="button"
             class="h-8 px-3 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold flex items-center gap-1 shadow-xs active:scale-95 transition-all"
             @click="openCreate"
           >
@@ -37,16 +27,6 @@
 
       <!-- Desktop Action Buttons (sm and above) -->
       <div class="hidden sm:flex items-center gap-2.5 shrink-0">
-        <button 
-          v-if="canCreateStudent"
-          type="button"
-          class="btn btn-secondary btn-sm h-9 px-3.5 text-xs font-semibold flex items-center gap-1.5 shadow-xs" 
-          @click="showBulkUpload = true"
-          title="Bulk Upload Enrolled Students from Excel (.xlsx, .csv)"
-        >
-          <PhFileArrowUp :size="15" weight="bold" />
-          <span>Import Excel</span>
-        </button>
         <button 
           v-if="canCreateStudent"
           type="button"
@@ -990,13 +970,6 @@
       </template>
     </AppModal>
 
-    <!-- Bulk Import Enrolled Students Modal -->
-    <LeadBulkUploadModal
-      :isOpen="showBulkUpload"
-      target="students"
-      @close="showBulkUpload = false"
-      @success="load"
-    />
   </div>
 </template>
 
@@ -1019,7 +992,6 @@ import {
   PhBuildings,
   PhUser,
   PhMapPin,
-  PhFileArrowUp,
 } from '@phosphor-icons/vue';
 import Swal from 'sweetalert2';
 import AppTable from '@/components/AppTable.vue';
@@ -1027,7 +999,6 @@ import AppPagination from '@/components/AppPagination.vue';
 import SchoolFilter from '../components/SchoolFilter.vue';
 import AppDrawer from '@/components/AppDrawer.vue';
 import AppModal from '@/components/AppModal.vue';
-import LeadBulkUploadModal from '@/modules/leads/components/LeadBulkUploadModal.vue';
 import { 
   createEducationStudent, 
   fetchEducationStudents,
@@ -1040,7 +1011,6 @@ import { fetchCustomFields } from '@/api/customFields';
 import { formatLeadSource } from '@/utils/formatters';
 
 const store = useStore();
-const showBulkUpload = ref(false);
 const canCreateStudent = computed(() => {
   return Boolean(store.getters['permissions/hasCapability']?.('students.create'));
 });

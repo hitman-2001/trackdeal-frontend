@@ -103,9 +103,9 @@
         <!-- User Profile Pill -->
         <div
           class="user-profile"
-          @click="userMenuOpen = !userMenuOpen"
-          @keydown.enter="userMenuOpen = !userMenuOpen"
-          @keydown.space.prevent="userMenuOpen = !userMenuOpen"
+          @click="toggleUserMenu"
+          @keydown.enter="toggleUserMenu"
+          @keydown.space.prevent="toggleUserMenu"
           @keydown.esc="userMenuOpen = false"
           tabindex="0"
           role="button"
@@ -152,6 +152,16 @@
                 <PhGearSix :size="16" /> Settings
               </router-link>
               <div v-if="isOrgAdmin" class="dropdown-divider"></div>
+              <button
+                @click="handleAccountDeletionRequest"
+                class="dropdown-item deletion-request-btn"
+                role="menuitem"
+                :disabled="deletionRequestPending || isRequestingDeletion"
+              >
+                <PhTrash :size="16" />
+                {{ deletionRequestPending ? "Deletion request pending" : "Request account deletion" }}
+              </button>
+              <div class="dropdown-divider"></div>
               <button
                 @click="handleLogout"
                 class="dropdown-item logout-btn"
@@ -430,6 +440,14 @@
           <!-- Sign Out Button (pinned at bottom) -->
           <div class="px-5 py-4 border-t border-slate-100 dark:border-slate-800 shrink-0" style="padding-bottom: calc(16px + env(safe-area-inset-bottom));">
             <button
+              @click="handleAccountDeletionRequest"
+              :disabled="deletionRequestPending || isRequestingDeletion"
+              class="w-full h-11 mb-2 flex items-center justify-center gap-2.5 rounded-2xl text-sm font-semibold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 disabled:opacity-60"
+            >
+              <PhTrash :size="17" weight="bold" />
+              <span>{{ deletionRequestPending ? "Deletion request pending" : "Request account deletion" }}</span>
+            </button>
+            <button
               @click="handleLogout"
               class="w-full h-12 flex items-center justify-center gap-2.5 rounded-2xl text-sm font-semibold bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/30 transition-colors active:bg-red-100"
             >
@@ -615,7 +633,7 @@
         />
         <span>{{ mobileNavFourthItem.label }}</span>
       </router-link>
-      <button @click="mobileMenuOpen = true" class="mobile-nav-item" aria-label="Menu">
+      <button @click="openMobileMenu" class="mobile-nav-item" aria-label="Menu">
         <PhList :size="22" weight="regular" class="nav-icon" />
         <span>Menu</span>
       </button>
@@ -658,10 +676,13 @@ import {
   PhGraduationCap,
   PhChartLineUp,
   PhMagnifyingGlass,
+  PhTrash,
 } from "@phosphor-icons/vue";
+import Swal from "sweetalert2";
 
 import GlobalSearchModal from "@/components/GlobalSearchModal.vue";
 import QuickAddModal from "@/components/QuickAddModal.vue";
+import apiClient from "@/api/client";
 import { notificationApi } from "@/api/notification.api";
 import {
   requestPushNotificationPermission,
@@ -680,6 +701,7 @@ const quickAddOpen = ref(false);
 const mobileMenuOpen = ref(false);
 const userMenuOpen = ref(false);
 const notificationsOpen = ref(false);
+const isRequestingDeletion = ref(false);
 
 // ── Workspace & Vertical Context ────────────────────────────────────────────
 const isEducationWorkspace = computed(
@@ -688,6 +710,9 @@ const isEducationWorkspace = computed(
 
 // ── User Information ────────────────────────────────────────────────────────
 const userProfile = computed(() => store.state.auth.currentUser);
+const deletionRequestPending = computed(
+  () => userProfile.value?.accountDeletionRequest?.status === "pending",
+);
 const userName = computed(() => {
   if (userProfile.value?.name) return userProfile.value.name;
   if (userProfile.value?.firstName) {
@@ -1272,6 +1297,79 @@ const handleLogout = async () => {
   router.push("/login");
 };
 
+const refreshDeletionRequestStatus = async () => {
+  try {
+    const response = await apiClient.get("/users/me", { silent: true });
+    const freshProfile = response.data?.data || response.data;
+    if (freshProfile) {
+      store.commit("auth/SET_USER_PROFILE", {
+        ...userProfile.value,
+        ...freshProfile,
+      });
+    }
+  } catch (_) {
+    // Keep the cached profile when a background refresh is unavailable.
+  }
+};
+
+const toggleUserMenu = async () => {
+  const opening = !userMenuOpen.value;
+  userMenuOpen.value = opening;
+  if (opening) await refreshDeletionRequestStatus();
+};
+
+const openMobileMenu = async () => {
+  mobileMenuOpen.value = true;
+  await refreshDeletionRequestStatus();
+};
+
+const handleAccountDeletionRequest = async () => {
+  userMenuOpen.value = false;
+  mobileMenuOpen.value = false;
+  if (deletionRequestPending.value || isRequestingDeletion.value) return;
+
+  const result = await Swal.fire({
+    title: "Request account deletion?",
+    text: "Your organization administrator will receive this request. Your account and data will not be deleted until an administrator reviews it.",
+    icon: "warning",
+    input: "textarea",
+    inputLabel: "Reason (optional)",
+    inputPlaceholder: "Tell your administrator why you want to delete your account",
+    inputAttributes: { maxlength: "500" },
+    showCancelButton: true,
+    confirmButtonColor: "#dc2626",
+    confirmButtonText: "Send deletion request",
+    cancelButtonText: "Cancel",
+  });
+  if (!result.isConfirmed) return;
+
+  isRequestingDeletion.value = true;
+  try {
+    const response = await apiClient.post("/users/me/account-deletion-request", {
+      reason: String(result.value || "").trim(),
+    });
+    const requestData = response.data?.data || {};
+    store.commit("auth/SET_USER_PROFILE", {
+      ...userProfile.value,
+      accountDeletionRequest: {
+        status: "pending",
+        requestedAt: requestData.requestedAt,
+      },
+    });
+    store.dispatch("notifications/triggerToast", {
+      message: response.data?.message || "Account deletion request sent to your organization administrator.",
+      type: "success",
+    });
+  } catch (error) {
+    store.dispatch("notifications/triggerToast", {
+      message: error.response?.data?.error?.message || error.response?.data?.message || "Could not send your account deletion request.",
+      type: "error",
+    });
+  } finally {
+    isRequestingDeletion.value = false;
+  }
+};
+
 // ── Click outside directive ──────────────────────────────────────────────────
 const vClickOutside = {
   mounted(el, binding) {
@@ -1738,6 +1836,20 @@ const vClickOutside = {
 .dropdown-item.logout-btn:hover {
   background: #fef2f2;
   color: #ef4444;
+}
+
+.dropdown-item.deletion-request-btn {
+  color: #dc2626;
+}
+
+.dropdown-item.deletion-request-btn:hover:not(:disabled) {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.dropdown-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .dark .dropdown-item.logout-btn:hover {

@@ -166,6 +166,16 @@ export async function changeUserRole({ id, role }) {
   return response.data;
 }
 
+export async function updateUserPassword({ id, newPassword }) {
+  const response = await apiClient.put(`/settings/users/${id}/password`, { newPassword });
+  return response.data;
+}
+
+export async function resolveAccountDeletionRequest({ id, decision }) {
+  const response = await apiClient.patch(`/settings/users/${id}/account-deletion-request`, { decision });
+  return response.data;
+}
+
 export async function deleteUser(id) {
   try {
     const response = await apiClient.delete(`/settings/users/${id}`);
@@ -369,6 +379,8 @@ export default {
   updateUserPermissions,
   transferUserBranch,
   changeUserRole,
+  updateUserPassword,
+  resolveAccountDeletionRequest,
   deleteUser,
   fetchRoles,
   updateRolePermissions,

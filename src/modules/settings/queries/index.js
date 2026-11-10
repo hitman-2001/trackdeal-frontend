@@ -132,6 +132,27 @@ export function useChangeUserRoleMutation() {
   });
 }
 
+export function useUpdateUserPasswordMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: settingsApi.updateUserPassword,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['settings', 'audit'] });
+    }
+  });
+}
+
+export function useResolveAccountDeletionRequestMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: settingsApi.resolveAccountDeletionRequest,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['settings', 'users'] });
+      queryClient.invalidateQueries({ queryKey: ['settings', 'audit'] });
+    }
+  });
+}
+
 
 export function useDeleteUserMutation() {
   const queryClient = useQueryClient();

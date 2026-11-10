@@ -1,7 +1,7 @@
 <template>
   <AppDrawer
     :isOpen="isOpen"
-    :title="`Modify User Access Role: ${userDisplayName}`"
+    :title="`Manage User: ${userDisplayName}`"
     width="480px"
     @close="$emit('close')"
   >
@@ -14,8 +14,31 @@
         <div class="text-[10px] text-slate-500">Branch: {{ userBranchName || 'None' }}</div>
       </div>
 
+      <div class="grid grid-cols-2 gap-1 rounded-xl bg-slate-100 dark:bg-slate-800 p-1" role="tablist" aria-label="User settings">
+        <button
+          type="button"
+          role="tab"
+          :aria-selected="activeSection === 'role'"
+          @click="activeSection = 'role'"
+          class="h-9 rounded-lg font-bold transition-colors flex items-center justify-center gap-1.5"
+          :class="activeSection === 'role' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 dark:text-slate-400'"
+        >
+          <PhUserGear :size="15" weight="bold" /> Access Role
+        </button>
+        <button
+          type="button"
+          role="tab"
+          :aria-selected="activeSection === 'password'"
+          @click="activeSection = 'password'"
+          class="h-9 rounded-lg font-bold transition-colors flex items-center justify-center gap-1.5"
+          :class="activeSection === 'password' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 dark:text-slate-400'"
+        >
+          <PhKey :size="15" weight="bold" /> Password
+        </button>
+      </div>
+
       <!-- Role Selector -->
-      <div class="space-y-1">
+      <div v-if="activeSection === 'role'" class="space-y-1">
         <label class="block text-[10px] font-bold text-slate-500 uppercase">Target Role *</label>
         <select
           v-model="targetRole"
@@ -33,7 +56,7 @@
       </div>
 
       <!-- Visibility Drop / Warning Analysis -->
-      <div v-if="showWarning" class="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-xl space-y-2 flex flex-col">
+      <div v-if="activeSection === 'role' && showWarning" class="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-xl space-y-2 flex flex-col">
         <div class="flex items-center gap-1.5 text-xs font-bold">
           <PhWarning :size="14" class="text-amber-500" />
           <span>Access Level Reduction Warning</span>
@@ -46,8 +69,40 @@
         </ul>
       </div>
 
-      <div v-if="targetRole && targetRole === userRoleCode" class="text-slate-450 italic text-[10px]">
+      <div v-if="activeSection === 'role' && targetRole && targetRole === userRoleCode" class="text-slate-450 italic text-[10px]">
         Selected role matches user's current role assignment.
+      </div>
+
+      <div v-if="activeSection === 'password'" class="space-y-4">
+        <div class="rounded-xl border border-blue-100 dark:border-blue-900/40 bg-blue-50/70 dark:bg-blue-950/20 p-4 text-[11px] leading-relaxed text-blue-800 dark:text-blue-300">
+          Updating the password will immediately sign this user out from all active sessions.
+        </div>
+        <div class="space-y-1.5">
+          <label for="managed-user-password" class="block text-[10px] font-bold text-slate-500 uppercase">New password *</label>
+          <input
+            id="managed-user-password"
+            v-model="newPassword"
+            type="password"
+            autocomplete="new-password"
+            maxlength="100"
+            class="w-full bg-surface border border-default rounded-lg px-3 py-2.5 text-xs outline-none focus:border-primary text-slate-800"
+            placeholder="At least 8 characters"
+          />
+        </div>
+        <div class="space-y-1.5">
+          <label for="managed-user-password-confirm" class="block text-[10px] font-bold text-slate-500 uppercase">Confirm password *</label>
+          <input
+            id="managed-user-password-confirm"
+            v-model="confirmPassword"
+            type="password"
+            autocomplete="new-password"
+            maxlength="100"
+            class="w-full bg-surface border border-default rounded-lg px-3 py-2.5 text-xs outline-none focus:border-primary text-slate-800"
+            placeholder="Enter the password again"
+            @keyup.enter="onUpdatePassword"
+          />
+        </div>
+        <p v-if="passwordError" class="text-[10px] font-semibold text-rose-600 dark:text-rose-400">{{ passwordError }}</p>
       </div>
     </div>
 
@@ -59,12 +114,22 @@
         Cancel
       </button>
       <button
+        v-if="activeSection === 'role'"
         @click="onUpdateRole"
-        :disabled="isPending || !targetRole || targetRole === userRoleCode"
+        :disabled="isRolePending || !targetRole || targetRole === userRoleCode"
         class="btn-md btn-primary"
       >
-        <span v-if="isPending">Updating Role...</span>
+        <span v-if="isRolePending">Updating Role...</span>
         <span v-else>Confirm Role Swap</span>
+      </button>
+      <button
+        v-else
+        @click="onUpdatePassword"
+        :disabled="isPasswordPending || !newPassword || !confirmPassword"
+        class="btn-md btn-primary"
+      >
+        <span v-if="isPasswordPending">Updating Password...</span>
+        <span v-else>Update Password</span>
       </button>
     </template>
   </AppDrawer>
@@ -73,8 +138,8 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { useStore } from 'vuex';
-import { PhWarning } from '@phosphor-icons/vue';
-import { useChangeUserRoleMutation } from '../queries';
+import { PhKey, PhUserGear, PhWarning } from '@phosphor-icons/vue';
+import { useChangeUserRoleMutation, useUpdateUserPasswordMutation } from '../queries';
 import AppDrawer from '@/components/AppDrawer.vue';
 
 const props = defineProps({
@@ -87,6 +152,10 @@ const emit = defineEmits(['close', 'success']);
 const store = useStore();
 
 const targetRole = ref('');
+const activeSection = ref('role');
+const newPassword = ref('');
+const confirmPassword = ref('');
+const passwordError = ref('');
 
 const userDisplayName = computed(() => {
   if (!props.user) return 'Staff';
@@ -151,10 +220,15 @@ watch(() => props.isOpen, (open) => {
       r => r.id === currentCode || r.code === currentCode
     );
     targetRole.value = isCurrentSelectable ? currentCode : '';
+    activeSection.value = 'role';
+    newPassword.value = '';
+    confirmPassword.value = '';
+    passwordError.value = '';
   }
 });
 
-const { mutateAsync: changeRole, isPending } = useChangeUserRoleMutation();
+const { mutateAsync: changeRole, isPending: isRolePending } = useChangeUserRoleMutation();
+const { mutateAsync: updatePassword, isPending: isPasswordPending } = useUpdateUserPasswordMutation();
 
 const showWarning = computed(() => {
   if (!props.user || !targetRole.value) return false;
@@ -215,6 +289,35 @@ async function onUpdateRole() {
       message: error.response?.data?.message || 'Failed to update user authorization role.',
       type: 'error'
     });
+  }
+}
+
+async function onUpdatePassword() {
+  passwordError.value = '';
+  if (newPassword.value.length < 8) {
+    passwordError.value = 'Password must contain at least 8 characters.';
+    return;
+  }
+  if (newPassword.value !== confirmPassword.value) {
+    passwordError.value = 'The passwords do not match.';
+    return;
+  }
+
+  try {
+    await updatePassword({
+      id: props.user._id || props.user.id,
+      newPassword: newPassword.value,
+    });
+    store.dispatch('notifications/triggerToast', {
+      message: `Password updated for ${userDisplayName.value}. Their active sessions were revoked.`,
+      type: 'success',
+    });
+    newPassword.value = '';
+    confirmPassword.value = '';
+    emit('success');
+    emit('close');
+  } catch (error) {
+    passwordError.value = error.response?.data?.error?.message || error.response?.data?.message || 'Failed to update the user password.';
   }
 }
 </script>
