@@ -1,38 +1,4 @@
 import authApi from '@/modules/auth/api/endpoints';
-import { Capacitor } from '@capacitor/core';
-
-const NATIVE_REFRESH_TOKEN_KEY = 'trackdeal_native_refresh_token';
-
-function isNativePlatform() {
-  if (typeof Capacitor !== 'undefined' && Capacitor?.isNativePlatform?.()) {
-    return true;
-  }
-  if (typeof window !== 'undefined' && (
-    window.location.protocol === 'capacitor:' ||
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1'
-  )) {
-    return true;
-  }
-  return false;
-}
-
-function getNativeRefreshToken() {
-  if (isNativePlatform() && typeof localStorage !== 'undefined') {
-    return localStorage.getItem(NATIVE_REFRESH_TOKEN_KEY);
-  }
-  return null;
-}
-
-function setNativeRefreshToken(token) {
-  if (isNativePlatform() && typeof localStorage !== 'undefined') {
-    if (token) {
-      localStorage.setItem(NATIVE_REFRESH_TOKEN_KEY, token);
-    } else {
-      localStorage.removeItem(NATIVE_REFRESH_TOKEN_KEY);
-    }
-  }
-}
 
 function parseJwt(token) {
   if (!token) return null;
@@ -48,7 +14,8 @@ function parseJwt(token) {
 // Remove credentials and identity/authorization caches created by older builds.
 // Browser-readable storage must never be the source of session authority on web.
 [
-  'accessToken', 'refreshToken', 'sessionExpiresAt', 'currentUser',
+  'accessToken', 'refreshToken', 'trackdeal_native_refresh_token',
+  'sessionExpiresAt', 'currentUser',
   'capabilities', 'tenant_id', 'tenant_slug', 'tenant_vertical',
   'org_type', 'featuresFlags', 'branding',
 ].forEach((key) => localStorage.removeItem(key));
@@ -80,12 +47,9 @@ export default {
     }
   },
   actions: {
-    loginUser({ commit }, { accessToken, refreshToken, profile }) {
+    loginUser({ commit }, { accessToken, profile }) {
       commit('SET_TOKEN', { accessToken });
       commit('SET_USER_PROFILE', profile);
-      if (refreshToken) {
-        setNativeRefreshToken(refreshToken);
-      }
       
       const decoded = parseJwt(accessToken) || {};
       const permissions = decoded.permissions || profile?.permissions || [];
@@ -109,10 +73,8 @@ export default {
     },
     async logoutSession({ commit }) {
       try {
-        const nativeToken = getNativeRefreshToken();
-        await authApi.logout(nativeToken);
+        await authApi.logout();
       } finally {
-        setNativeRefreshToken(null);
         commit('CLEAR_SESSION');
         commit('permissions/CLEAR_CAPABILITIES', null, { root: true });
         commit('organization/CLEAR_ORGANIZATION', null, { root: true });
@@ -120,16 +82,11 @@ export default {
     },
     async refreshUserTokens({ commit }) {
       try {
-        const nativeToken = getNativeRefreshToken();
-        const data = await authApi.refreshTokens(nativeToken);
+        const data = await authApi.refreshTokens();
         const payload = data.data || data;
         
         commit('SET_TOKEN', { accessToken: payload.accessToken });
         commit('SET_USER_PROFILE', payload.user);
-        if (payload.refreshToken) {
-          setNativeRefreshToken(payload.refreshToken);
-        }
-
         const decoded = parseJwt(payload.accessToken) || {};
         const permissions = decoded.permissions || payload.user?.permissions || [];
         const tenantId = decoded.tenantId || payload.user?.tenantId || decoded.organizationId || payload.user?.organizationId;
@@ -150,9 +107,6 @@ export default {
         
         return payload;
       } catch (error) {
-        if (error.response?.status === 401 || error.response?.status === 403) {
-          setNativeRefreshToken(null);
-        }
         commit('CLEAR_SESSION');
         commit('permissions/CLEAR_CAPABILITIES', null, { root: true });
         commit('organization/CLEAR_ORGANIZATION', null, { root: true });

@@ -1,4 +1,5 @@
 import apiClient from '@/api/client';
+import { flushSessionCookies } from '@/services/sessionCookies';
 
 export async function login({ organization, tenant, email, password }) {
   const payload = { email, password };
@@ -7,6 +8,7 @@ export async function login({ organization, tenant, email, password }) {
     payload.organization = String(orgName).trim();
   }
   const response = await apiClient.post('/auth/login', payload);
+  await flushSessionCookies();
   return response.data;
 }
 
@@ -30,20 +32,21 @@ export async function acceptInvitation({ token, password }) {
   return response.data;
 }
 
-export async function refreshTokens(refreshToken) {
-  const headers = refreshToken ? { 'X-Refresh-Token': refreshToken } : {};
-  const response = await apiClient.post('/auth/refresh', {}, { headers });
+export async function refreshTokens() {
+  const response = await apiClient.post('/auth/refresh', {});
+  await flushSessionCookies();
   return response.data;
 }
 
-export async function logout(refreshToken) {
-  const headers = refreshToken ? { 'X-Refresh-Token': refreshToken } : {};
-  const response = await apiClient.post('/auth/logout', {}, { headers });
+export async function logout() {
+  const response = await apiClient.post('/auth/logout', {});
+  await flushSessionCookies();
   return response.data;
 }
 
 export async function verifyMfa({ mfaToken, code }) {
   const response = await apiClient.post('/auth/mfa/verify', { mfaToken, code });
+  await flushSessionCookies();
   return response.data;
 }
 

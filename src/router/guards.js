@@ -25,14 +25,9 @@ export function setupRouterGuards(router) {
           window.location.hostname === "localhost" ||
           window.location.hostname === "127.0.0.1"
         ));
-      const hasNativeToken = Boolean(
-        typeof localStorage !== "undefined" &&
-          localStorage.getItem("trackdeal_native_refresh_token")
-      );
       const shouldRestoreSession =
         !isAuthenticated &&
         (isNative ||
-          hasNativeToken ||
           to.path.startsWith("/login") ||
           to.matched.some((record) => record.meta.requiresAuth) ||
           ((to.path === "/" || to.name === "Home") && isAndroidUser()));
