@@ -1,4 +1,5 @@
 import authApi from '@/modules/auth/api/endpoints';
+import { clearSessionCookieBackup } from '@/services/sessionCookies';
 
 function parseJwt(token) {
   if (!token) return null;
@@ -75,6 +76,11 @@ export default {
       try {
         await authApi.logout();
       } finally {
+        try {
+          await clearSessionCookieBackup();
+        } catch (error) {
+          console.error('Unable to clear native session backup', error);
+        }
         commit('CLEAR_SESSION');
         commit('permissions/CLEAR_CAPABILITIES', null, { root: true });
         commit('organization/CLEAR_ORGANIZATION', null, { root: true });
@@ -107,6 +113,13 @@ export default {
         
         return payload;
       } catch (error) {
+        if (error.response?.status === 401) {
+          try {
+            await clearSessionCookieBackup();
+          } catch (clearError) {
+            console.error('Unable to clear invalid native session backup', clearError);
+          }
+        }
         commit('CLEAR_SESSION');
         commit('permissions/CLEAR_CAPABILITIES', null, { root: true });
         commit('organization/CLEAR_ORGANIZATION', null, { root: true });

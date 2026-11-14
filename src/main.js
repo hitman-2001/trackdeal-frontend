@@ -6,6 +6,9 @@ import { VueQueryPlugin } from "@tanstack/vue-query";
 import { injectStore } from "@/api/client";
 import AppIcon from "@/components/AppIcon.vue";
 import AppPagination from "@/components/AppPagination.vue";
+import { Capacitor } from "@capacitor/core";
+import { restoreSessionCookies } from "@/services/sessionCookies";
+import { markSessionChecked } from "@/router/guards";
 
 // Import Tailwind CSS layer configurations
 import "./assets/css/index.css";
@@ -34,7 +37,6 @@ app.use(VueQueryPlugin, {
 
 // 2. Register Vuex Store and Vue Router
 app.use(store);
-app.use(router);
 
 // Helper function to evaluate permissions reactively
 function evaluatePermission(el, binding) {
@@ -74,4 +76,20 @@ app.config.errorHandler = (error, vm, info) => {
   });
 };
 
-app.mount("#app");
+async function startApp() {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      await restoreSessionCookies();
+      await store.dispatch("auth/refreshUserTokens");
+    } catch (error) {
+      // A missing or expired session opens the login screen via the router.
+    } finally {
+      markSessionChecked();
+    }
+  }
+
+  app.use(router);
+  app.mount("#app");
+}
+
+startApp();

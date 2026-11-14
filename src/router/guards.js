@@ -1,7 +1,12 @@
 import store from "@/store";
 import { Capacitor } from "@capacitor/core";
+import { restoreSessionCookies } from "@/services/sessionCookies";
 
 let sessionChecked = false;
+
+export function markSessionChecked() {
+  sessionChecked = true;
+}
 
 function isAndroidUser() {
   if (Capacitor.isNativePlatform()) return true;
@@ -34,6 +39,7 @@ export function setupRouterGuards(router) {
 
       if (shouldRestoreSession) {
         try {
+          await restoreSessionCookies();
           await store.dispatch("auth/refreshUserTokens");
         } catch (error) {
           // Silent refresh failed, ignore and let standard guards handle redirects
